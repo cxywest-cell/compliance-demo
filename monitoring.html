@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tx/Address Monitoring — Compliance Demo</title>
-
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
@@ -20,32 +19,38 @@
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
   .content { flex: 1; overflow-y: auto; padding: 16px; }
-  .role-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; }
-  .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
-  .role-tab:hover { color: #1a1a1a; }
-  .role-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
-  .role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
-  .role-header .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .role-header h2 { font-size: 14px; font-weight: 600; }
-  .role-header .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f0f0f0; color: #666; margin-left: auto; }
-  .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-  .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
-  .flow-bar .sep { color: #ccc; }
   .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
   .card-body { padding: 10px 12px; }
   .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
   .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
   .k { color: #888; }
   .v { color: #1a1a1a; }
-  .custodian-bed { background: #fafbfc; border-top: 2px solid #e0e0e0; }
-  .placeholder { padding: 40px 16px; text-align: center; color: #888; }
-  .placeholder h3 { font-size: 14px; margin-bottom: 8px; color: #1a1a1a; }
-  .placeholder p { font-size: 12px; }
-  .role-page { display: none; }
-  .role-page.active { display: block; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-orange { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; background: #fafafa; border-bottom: 2px solid #e0e0e0; padding: 6px 10px; font-weight: 600; color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  tr:hover td { background: #fafafa; }
+  .risk-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .risk-dot.green { background: #16a34a; }
+  .risk-dot.orange { background: #d97706; }
+  .risk-dot.red { background: #dc2626; }
+  .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
+  .flow-bar .sep { color: #ccc; }
+  .cat-tag { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; background: #f3f4f6; color: #6b7280; margin-right: 3px; }
+  .summary-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .summary-card { flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; text-align: center; }
+  .summary-card .num { font-size: 22px; font-weight: 700; }
+  .summary-card .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
 </style>
-
 </head>
 <body>
 
@@ -65,11 +70,157 @@
   <div class="topbar">Tx/Address Monitoring</div>
   <div class="content">
 
-    <div class="placeholder">
-      <h3>Transaction / Address Monitoring</h3>
-      <p>Real-time transaction monitoring, wallet address screening,<br>and alert management.</p>
+    <!-- Summary -->
+    <div class="summary-row">
+      <div class="summary-card"><div class="num" style="color:#16a34a">12</div><div class="label">Addresses Monitored</div></div>
+      <div class="summary-card"><div class="num" style="color:#d97706">3</div><div class="label">Screenings Today</div></div>
+      <div class="summary-card"><div class="num" style="color:#16a34a">2</div><div class="label">Clean</div></div>
+      <div class="summary-card"><div class="num" style="color:#dc2626">1</div><div class="label">Flagged</div></div>
     </div>
+
+    <!-- Screening Provider -->
+    <div class="section-title">Screening Provider</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="cred-row"><span class="k">Provider</span><span class="v">Elliptic AML API v2</span></div>
+        <div class="cred-row"><span class="k">Endpoint</span><span class="v mono">aml-api.elliptic.co</span></div>
+        <div class="cred-row"><span class="k">Auth</span><span class="v">HMAC-SHA256 (x-access-key / x-access-sign)</span></div>
+        <div class="cred-row"><span class="k">Screening Types</span><span class="v">Transaction Analysis · Wallet Exposure</span></div>
+        <div class="cred-row"><span class="k">Risk Scale</span><span class="v"><span class="risk-dot green"></span> 0-3 Low · <span class="risk-dot orange"></span> 4-7 Medium · <span class="risk-dot red"></span> 8-10 High</span></div>
+      </div>
+    </div>
+
+    <!-- Monitored Addresses -->
+    <div class="section-title">Monitored Addresses (Wallet Exposure)</div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table>
+          <tr>
+            <th>Address</th>
+            <th>Owner</th>
+            <th>Network</th>
+            <th>Risk Score</th>
+            <th>Categories</th>
+            <th>Last Screened</th>
+          </tr>
+          <tr>
+            <td class="mono">0x5d3a...f812</td>
+            <td><span class="badge badge-blue">Entity A</span></td>
+            <td>Ethereum</td>
+            <td><span class="risk-dot green"></span> <span class="badge badge-green">1.2</span></td>
+            <td><span class="cat-tag">None</span></td>
+            <td>2026-07-10 09:14</td>
+          </tr>
+          <tr>
+            <td class="mono">0x8f2c...a47e</td>
+            <td><span class="badge badge-blue">Entity B</span></td>
+            <td>Ethereum</td>
+            <td><span class="risk-dot orange"></span> <span class="badge badge-orange">5.8</span></td>
+            <td><span class="cat-tag">Obfuscation</span><span class="cat-tag">Mixer</span></td>
+            <td>2026-07-10 09:14</td>
+          </tr>
+          <tr>
+            <td class="mono">0x7c4e...b93a</td>
+            <td><span class="badge badge-gray">Custodian A Hot</span></td>
+            <td>Ethereum</td>
+            <td><span class="risk-dot green"></span> <span class="badge badge-green">0.4</span></td>
+            <td><span class="cat-tag">None</span></td>
+            <td>2026-07-10 08:30</td>
+          </tr>
+          <tr>
+            <td class="mono">0x2d5a...e81c</td>
+            <td><span class="badge badge-gray">Custodian B Hot</span></td>
+            <td>Ethereum</td>
+            <td><span class="risk-dot green"></span> <span class="badge badge-green">0.8</span></td>
+            <td><span class="cat-tag">None</span></td>
+            <td>2026-07-10 08:30</td>
+          </tr>
+          <tr>
+            <td class="mono">0x3f8a...c71d</td>
+            <td><span class="badge badge-blue">Entity A</span></td>
+            <td>Ethereum</td>
+            <td><span class="risk-dot green"></span> <span class="badge badge-green">0.6</span></td>
+            <td><span class="cat-tag">None</span></td>
+            <td>2026-07-09 16:42</td>
+          </tr>
+          <tr>
+            <td class="mono">0x9e2b...d48f</td>
+            <td><span class="badge badge-blue">Entity B</span></td>
+            <td>Ethereum</td>
+            <td><span class="risk-dot orange"></span> <span class="badge badge-orange">6.3</span></td>
+            <td><span class="cat-tag">Sanctioned</span><span class="cat-tag">TF</span></td>
+            <td>2026-07-09 16:42</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Transaction Screenings -->
+    <div class="section-title">Recent Transaction Screenings</div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table>
+          <tr>
+            <th>TX Hash</th>
+            <th>Customer</th>
+            <th>Type</th>
+            <th>Asset</th>
+            <th>Risk Score</th>
+            <th>Categories</th>
+            <th>Status</th>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size:11px">0xd8537c...a4e1</td>
+            <td><span class="badge badge-blue">Entity A</span></td>
+            <td>Source of Funds</td>
+            <td>ETH</td>
+            <td><span class="risk-dot green"></span> <span class="badge badge-green">1.5</span></td>
+            <td><span class="cat-tag">None</span></td>
+            <td><span class="badge badge-green">Complete</span></td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size:11px">0x196670...b2f8</td>
+            <td><span class="badge badge-blue">Entity B</span></td>
+            <td>Source of Funds</td>
+            <td>ETH</td>
+            <td><span class="risk-dot red"></span> <span class="badge badge-red">8.7</span></td>
+            <td><span class="cat-tag">Illicit Activity</span><span class="cat-tag">Sanctioned</span></td>
+            <td><span class="badge badge-red">Flagged</span></td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size:11px">0xfa3b91...c0d4</td>
+            <td><span class="badge badge-blue">Entity A</span></td>
+            <td>Source of Funds</td>
+            <td>CLCC</td>
+            <td><span class="risk-dot green"></span> <span class="badge badge-green">2.1</span></td>
+            <td><span class="cat-tag">None</span></td>
+            <td><span class="badge badge-green">Complete</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Flagged Detail -->
+    <div class="section-title">Flagged Transaction Detail</div>
+    <div class="card" style="border-left:3px solid #dc2626">
+      <div class="card-header">
+        <span><span class="badge badge-red">HIGH RISK</span> 0x196670...b2f8</span>
+        <span class="badge badge-gray">Elliptic AML v2</span>
+      </div>
+      <div class="card-body">
+        <div class="cred-row"><span class="k">Analysis ID</span><span class="v mono">ana-8f2c-4a7e-9b12</span></div>
+        <div class="cred-row"><span class="k">Customer</span><span class="v">Entity B (Beneficiary VASP)</span></div>
+        <div class="cred-row"><span class="k">Analysis Type</span><span class="v">Source of Funds</span></div>
+        <div class="cred-row"><span class="k">Blockchain</span><span class="v">Ethereum</span></div>
+        <div class="cred-row"><span class="k">Risk Score</span><span class="v" style="color:#dc2626;font-weight:700">8.7 / 10</span></div>
+        <div class="cred-row"><span class="k">Flagged Categories</span><span class="v"><span class="cat-tag" style="background:#fee2e2;color:#991b1b">Illicit Activity</span><span class="cat-tag" style="background:#fee2e2;color:#991b1b">Sanctioned Entity</span></span></div>
+        <div class="cred-row"><span class="k">Counterparty</span><span class="v mono">0x4a71...3e89 (Sanctioned Wallet)</span></div>
+        <div class="cred-row"><span class="k">Action</span><span class="v" style="color:#dc2626">⚠ Block transfer · Notify compliance officer</span></div>
+      </div>
+    </div>
+
   </div>
 </div>
+
 </body>
 </html>
