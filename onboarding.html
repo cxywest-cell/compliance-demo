@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding — Compliance Demo</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 16px; border-bottom: 1px solid #e0e0e0; }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 600; }
+  .sidebar-logo h1 span { color: #5b4cdb; }
+  .sidebar-nav { padding: 12px 0; }
+  .nav-item { padding: 10px 16px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; display: flex; align-items: center; gap: 8px; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: #f5f5f5; color: #1a1a1a; }
+  .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .content { flex: 1; overflow-y: auto; padding: 16px; }
+  .role-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; }
+  .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
+  .role-tab:hover { color: #1a1a1a; }
+  .role-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+  .role-header .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .role-header h2 { font-size: 14px; font-weight: 600; }
+  .role-header .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f0f0f0; color: #666; margin-left: auto; }
+  .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
+  .flow-bar .sep { color: #ccc; }
+  .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-body { padding: 10px 12px; }
+  .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+  .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
+  .k { color: #888; }
+  .v { color: #1a1a1a; }
+  .custodian-bed { background: #fafbfc; border-top: 2px solid #e0e0e0; }
+  .placeholder { padding: 40px 16px; text-align: center; color: #888; }
+  .placeholder h3 { font-size: 14px; margin-bottom: 8px; color: #1a1a1a; }
+  .placeholder p { font-size: 12px; }
+  .role-page { display: none; }
+  .role-page.active { display: block; }
+</style>
+
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1><span>◈</span> Compliance Demo</h1>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item active" href="onboarding.html"><span class="icon">+</span> Onboarding</a>
+    <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Address Monitoring</a>
+    <a class="nav-item" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">Onboarding</div>
+  <div class="content">
+
+    <div class="placeholder">
+      <h3>Onboarding</h3>
+      <p>New entity/customer registration flow goes here.<br>Includes KYB workflow, document upload, and compliance review.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
