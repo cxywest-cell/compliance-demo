@@ -21,12 +21,8 @@
   .content { flex: 1; overflow-y: auto; padding: 16px; }
   .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
-  .card-header { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
   .card-body { padding: 10px 12px; }
-  .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
-  .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
-  .k { color: #888; }
-  .v { color: #1a1a1a; }
   .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
   .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
   .badge-green { background: #d1fae5; color: #065f46; }
@@ -34,6 +30,7 @@
   .badge-red { background: #fee2e2; color: #991b1b; }
   .badge-blue { background: #dbeafe; color: #1e40af; }
   .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
   th { text-align: left; background: #fafafa; border-bottom: 2px solid #e0e0e0; padding: 6px 10px; font-weight: 600; color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
   td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
@@ -42,14 +39,23 @@
   .risk-dot.green { background: #16a34a; }
   .risk-dot.orange { background: #d97706; }
   .risk-dot.red { background: #dc2626; }
-  .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-  .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
-  .flow-bar .sep { color: #ccc; }
   .cat-tag { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; background: #f3f4f6; color: #6b7280; margin-right: 3px; }
-  .summary-row { display: flex; gap: 12px; margin-bottom: 12px; }
-  .summary-card { flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; text-align: center; }
-  .summary-card .num { font-size: 22px; font-weight: 700; }
-  .summary-card .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .btn { padding: 6px 14px; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-run { background: #2563eb; color: #fff; }
+  .btn-run:hover { background: #1d4ed8; }
+  .btn-run:disabled { background: #94a3b8; cursor: not-allowed; }
+  .btn-reset { background: #475569; color: #fff; }
+  .btn-reset:hover { background: #334155; }
+  .spinner { border: 2px solid #cbd5e1; border-top: 2px solid #2563eb; border-radius: 50%; width: 14px; height: 14px; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-bar { height: 3px; background: #e5e7eb; border-radius: 2px; margin: 8px 0; }
+  .progress-fill { height: 100%; background: #2563eb; border-radius: 2px; transition: width 0.3s; }
+  .raw-json { background: #0d1117; border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px; margin-top: 8px; font-size: 10px; font-family: 'SF Mono', monospace; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; display: none; color: #c9d1d9; }
+  .raw-json.show { display: block; }
+  .result-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; border-top: 1px solid #f0f0f0; }
+  .result-row:first-child { border-top: none; }
+  .rk { color: #888; }
+  .rv { color: #1a1a1a; }
 </style>
 </head>
 <body>
@@ -70,157 +76,455 @@
   <div class="topbar">Tx/Address Monitoring</div>
   <div class="content">
 
-    <!-- Summary -->
-    <div class="summary-row">
-      <div class="summary-card"><div class="num" style="color:#16a34a">12</div><div class="label">Addresses Monitored</div></div>
-      <div class="summary-card"><div class="num" style="color:#d97706">3</div><div class="label">Screenings Today</div></div>
-      <div class="summary-card"><div class="num" style="color:#16a34a">2</div><div class="label">Clean</div></div>
-      <div class="summary-card"><div class="num" style="color:#dc2626">1</div><div class="label">Flagged</div></div>
-    </div>
-
     <!-- Screening Provider -->
     <div class="section-title">Screening Provider</div>
     <div class="card">
       <div class="card-body">
-        <div class="cred-row"><span class="k">Provider</span><span class="v">Elliptic AML API v2</span></div>
-        <div class="cred-row"><span class="k">Endpoint</span><span class="v mono">aml-api.elliptic.co</span></div>
-        <div class="cred-row"><span class="k">Auth</span><span class="v">HMAC-SHA256 (x-access-key / x-access-sign)</span></div>
-        <div class="cred-row"><span class="k">Screening Types</span><span class="v">Transaction Analysis · Wallet Exposure</span></div>
-        <div class="cred-row"><span class="k">Risk Scale</span><span class="v"><span class="risk-dot green"></span> 0-3 Low · <span class="risk-dot orange"></span> 4-7 Medium · <span class="risk-dot red"></span> 8-10 High</span></div>
+        <div class="result-row"><span class="rk">Provider</span><span class="rv">Elliptic AML API v2</span></div>
+        <div class="result-row"><span class="rk">Endpoint</span><span class="rv mono">aml-api.elliptic.co</span></div>
+        <div class="result-row"><span class="rk">Auth</span><span class="rv">HMAC-SHA256 (x-access-key / x-access-sign)</span></div>
+        <div class="result-row"><span class="rk">Risk Scale</span><span class="rv"><span class="risk-dot green"></span> 0-3 Low · <span class="risk-dot orange"></span> 4-7 Medium · <span class="risk-dot red"></span> 8-10 High</span></div>
       </div>
     </div>
 
-    <!-- Monitored Addresses -->
-    <div class="section-title">Monitored Addresses (Wallet Exposure)</div>
-    <div class="card">
-      <div class="card-body" style="padding:0">
-        <table>
+    <!-- ═══ Scenario 1: Pay-in Monitoring (Batch TX) ═══ -->
+    <div class="section-title">1. Pay-in Monitoring — Batch Transaction Check</div>
+    <div class="card" id="card-scenario1">
+      <div class="card-header">
+        <span>Batch TX Screening · <code class="mono" style="font-size:10px">POST /v2/analyses</code> → poll <code class="mono" style="font-size:10px">GET /v2/analyses/{id}</code></span>
+        <button class="btn btn-run" id="btn-s1" onclick="runScenario(1)">Run Batch</button>
+      </div>
+      <div class="card-body">
+        <p style="font-size:11px;color:#888;margin-bottom:8px">Incoming pay-ins from multiple sources screened as a batch. Async submit then poll for results.</p>
+        <div class="progress-bar" id="bar-s1" style="display:none"><div class="progress-fill" id="fill-s1" style="width:0%"></div></div>
+        <div id="label-s1" style="font-size:10px;color:#888;margin-bottom:4px"></div>
+        <table id="table-s1">
+          <tr><th>TX Hash</th><th>Customer</th><th>Asset</th><th>Amount</th><th>Risk</th><th>Status</th></tr>
           <tr>
-            <th>Address</th>
-            <th>Owner</th>
-            <th>Network</th>
-            <th>Risk Score</th>
-            <th>Categories</th>
-            <th>Last Screened</th>
+            <td class="mono" style="font-size:11px">0xd8537c...a4e1</td>
+            <td><span class="badge badge-blue">Entity A</span></td>
+            <td>ETH</td>
+            <td>50 ETH</td>
+            <td id="score-s1a">—</td>
+            <td id="status-s1a"><span class="badge badge-gray">pending</span></td>
           </tr>
+          <tr>
+            <td class="mono" style="font-size:11px">0x2c92fa...d0b3</td>
+            <td><span class="badge badge-blue">Entity A</span></td>
+            <td>ETH</td>
+            <td>12 ETH</td>
+            <td id="score-s1b">—</td>
+            <td id="status-s1b"><span class="badge badge-gray">pending</span></td>
+          </tr>
+          <tr>
+            <td class="mono" style="font-size:11px">0xfa3b91...c0d4</td>
+            <td><span class="badge badge-blue">Entity B</span></td>
+            <td>CLCC</td>
+            <td>100,000</td>
+            <td id="score-s1c">—</td>
+            <td id="status-s1c"><span class="badge badge-gray">pending</span></td>
+          </tr>
+        </table>
+        <div class="raw-json" id="raw-s1"></div>
+        <button onclick="toggleRaw('raw-s1')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
+      </div>
+    </div>
+
+    <!-- ═══ Scenario 2: Custody Addresses (Batch Address) ═══ -->
+    <div class="section-title">2. Addresses Under Custody — Batch Wallet Check</div>
+    <div class="card" id="card-scenario2">
+      <div class="card-header">
+        <span>Batch Wallet Exposure · <code class="mono" style="font-size:10px">POST /v2/wallet</code> → poll <code class="mono" style="font-size:10px">GET /v2/wallet/{id}</code></span>
+        <button class="btn btn-run" id="btn-s2" onclick="runScenario(2)">Run Batch</button>
+      </div>
+      <div class="card-body">
+        <p style="font-size:11px;color:#888;margin-bottom:8px">All addresses held in custody screened in one batch. Async wallet exposure analysis.</p>
+        <div class="progress-bar" id="bar-s2" style="display:none"><div class="progress-fill" id="fill-s2" style="width:0%"></div></div>
+        <div id="label-s2" style="font-size:10px;color:#888;margin-bottom:4px"></div>
+        <table id="table-s2">
+          <tr><th>Address</th><th>Owner</th><th>Network</th><th>Risk</th><th>Categories</th><th>Status</th></tr>
           <tr>
             <td class="mono">0x5d3a...f812</td>
             <td><span class="badge badge-blue">Entity A</span></td>
             <td>Ethereum</td>
-            <td><span class="risk-dot green"></span> <span class="badge badge-green">1.2</span></td>
-            <td><span class="cat-tag">None</span></td>
-            <td>2026-07-10 09:14</td>
+            <td id="score-s2a">—</td>
+            <td id="cat-s2a">—</td>
+            <td id="status-s2a"><span class="badge badge-gray">pending</span></td>
           </tr>
           <tr>
             <td class="mono">0x8f2c...a47e</td>
             <td><span class="badge badge-blue">Entity B</span></td>
             <td>Ethereum</td>
-            <td><span class="risk-dot orange"></span> <span class="badge badge-orange">5.8</span></td>
-            <td><span class="cat-tag">Obfuscation</span><span class="cat-tag">Mixer</span></td>
-            <td>2026-07-10 09:14</td>
+            <td id="score-s2b">—</td>
+            <td id="cat-s2b">—</td>
+            <td id="status-s2b"><span class="badge badge-gray">pending</span></td>
           </tr>
           <tr>
             <td class="mono">0x7c4e...b93a</td>
             <td><span class="badge badge-gray">Custodian A Hot</span></td>
             <td>Ethereum</td>
-            <td><span class="risk-dot green"></span> <span class="badge badge-green">0.4</span></td>
-            <td><span class="cat-tag">None</span></td>
-            <td>2026-07-10 08:30</td>
+            <td id="score-s2c">—</td>
+            <td id="cat-s2c">—</td>
+            <td id="status-s2c"><span class="badge badge-gray">pending</span></td>
           </tr>
           <tr>
             <td class="mono">0x2d5a...e81c</td>
             <td><span class="badge badge-gray">Custodian B Hot</span></td>
             <td>Ethereum</td>
-            <td><span class="risk-dot green"></span> <span class="badge badge-green">0.8</span></td>
-            <td><span class="cat-tag">None</span></td>
-            <td>2026-07-10 08:30</td>
-          </tr>
-          <tr>
-            <td class="mono">0x3f8a...c71d</td>
-            <td><span class="badge badge-blue">Entity A</span></td>
-            <td>Ethereum</td>
-            <td><span class="risk-dot green"></span> <span class="badge badge-green">0.6</span></td>
-            <td><span class="cat-tag">None</span></td>
-            <td>2026-07-09 16:42</td>
-          </tr>
-          <tr>
-            <td class="mono">0x9e2b...d48f</td>
-            <td><span class="badge badge-blue">Entity B</span></td>
-            <td>Ethereum</td>
-            <td><span class="risk-dot orange"></span> <span class="badge badge-orange">6.3</span></td>
-            <td><span class="cat-tag">Sanctioned</span><span class="cat-tag">TF</span></td>
-            <td>2026-07-09 16:42</td>
+            <td id="score-s2d">—</td>
+            <td id="cat-s2d">—</td>
+            <td id="status-s2d"><span class="badge badge-gray">pending</span></td>
           </tr>
         </table>
+        <div class="raw-json" id="raw-s2"></div>
+        <button onclick="toggleRaw('raw-s2')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
       </div>
     </div>
 
-    <!-- Recent Transaction Screenings -->
-    <div class="section-title">Recent Transaction Screenings</div>
-    <div class="card">
-      <div class="card-body" style="padding:0">
-        <table>
-          <tr>
-            <th>TX Hash</th>
-            <th>Customer</th>
-            <th>Type</th>
-            <th>Asset</th>
-            <th>Risk Score</th>
-            <th>Categories</th>
-            <th>Status</th>
-          </tr>
-          <tr>
-            <td class="mono" style="font-size:11px">0xd8537c...a4e1</td>
-            <td><span class="badge badge-blue">Entity A</span></td>
-            <td>Source of Funds</td>
-            <td>ETH</td>
-            <td><span class="risk-dot green"></span> <span class="badge badge-green">1.5</span></td>
-            <td><span class="cat-tag">None</span></td>
-            <td><span class="badge badge-green">Complete</span></td>
-          </tr>
-          <tr>
-            <td class="mono" style="font-size:11px">0x196670...b2f8</td>
-            <td><span class="badge badge-blue">Entity B</span></td>
-            <td>Source of Funds</td>
-            <td>ETH</td>
-            <td><span class="risk-dot red"></span> <span class="badge badge-red">8.7</span></td>
-            <td><span class="cat-tag">Illicit Activity</span><span class="cat-tag">Sanctioned</span></td>
-            <td><span class="badge badge-red">Flagged</span></td>
-          </tr>
-          <tr>
-            <td class="mono" style="font-size:11px">0xfa3b91...c0d4</td>
-            <td><span class="badge badge-blue">Entity A</span></td>
-            <td>Source of Funds</td>
-            <td>CLCC</td>
-            <td><span class="risk-dot green"></span> <span class="badge badge-green">2.1</span></td>
-            <td><span class="cat-tag">None</span></td>
-            <td><span class="badge badge-green">Complete</span></td>
-          </tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- Flagged Detail -->
-    <div class="section-title">Flagged Transaction Detail</div>
-    <div class="card" style="border-left:3px solid #dc2626">
+    <!-- ═══ Scenario 3: Withdraw (Real-time KYT) ═══ -->
+    <div class="section-title">3. Withdraw — Real-time Transaction Check</div>
+    <div class="card" id="card-scenario3">
       <div class="card-header">
-        <span><span class="badge badge-red">HIGH RISK</span> 0x196670...b2f8</span>
-        <span class="badge badge-gray">Elliptic AML v2</span>
+        <span>Sync TX Screening · <code class="mono" style="font-size:10px">POST /v2/analyses/synchronous</code></span>
+        <button class="btn btn-run" id="btn-s3" onclick="runScenario(3)">Run Check</button>
       </div>
       <div class="card-body">
-        <div class="cred-row"><span class="k">Analysis ID</span><span class="v mono">ana-8f2c-4a7e-9b12</span></div>
-        <div class="cred-row"><span class="k">Customer</span><span class="v">Entity B (Beneficiary VASP)</span></div>
-        <div class="cred-row"><span class="k">Analysis Type</span><span class="v">Source of Funds</span></div>
-        <div class="cred-row"><span class="k">Blockchain</span><span class="v">Ethereum</span></div>
-        <div class="cred-row"><span class="k">Risk Score</span><span class="v" style="color:#dc2626;font-weight:700">8.7 / 10</span></div>
-        <div class="cred-row"><span class="k">Flagged Categories</span><span class="v"><span class="cat-tag" style="background:#fee2e2;color:#991b1b">Illicit Activity</span><span class="cat-tag" style="background:#fee2e2;color:#991b1b">Sanctioned Entity</span></span></div>
-        <div class="cred-row"><span class="k">Counterparty</span><span class="v mono">0x4a71...3e89 (Sanctioned Wallet)</span></div>
-        <div class="cred-row"><span class="k">Action</span><span class="v" style="color:#dc2626">⚠ Block transfer · Notify compliance officer</span></div>
+        <p style="font-size:11px;color:#888;margin-bottom:8px">Outbound withdrawal blocked until real-time screening passes. Sync analysis returns immediate results.</p>
+        <div id="label-s3" style="font-size:10px;color:#888;margin-bottom:4px"></div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="flex:1">
+            <div class="result-row"><span class="rk">TX Hash</span><span class="rv mono">0x196670...b2f8</span></div>
+            <div class="result-row"><span class="rk">Customer</span><span class="rv"><span class="badge badge-blue">Entity B</span></span></div>
+            <div class="result-row"><span class="rk">Direction</span><span class="rv" style="color:#ef4444">Withdraw</span></div>
+            <div class="result-row"><span class="rk">Asset</span><span class="rv">ETH</span></div>
+            <div class="result-row"><span class="rk">Amount</span><span class="rv">75 ETH</span></div>
+            <div class="result-row"><span class="rk">Destination</span><span class="rv mono">0x4a71...3e89</span></div>
+            <div class="result-row"><span class="rk">Type</span><span class="rv">Source of Funds</span></div>
+          </div>
+          <div style="width:180px">
+            <div id="score-s3" style="font-size:28px;font-weight:700;text-align:center;margin:12px 0">—</div>
+            <div id="status-s3" style="text-align:center"><span class="badge badge-gray">pending</span></div>
+          </div>
+        </div>
+        <div id="detail-s3" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
+        <div class="raw-json" id="raw-s3"></div>
+        <button onclick="toggleRaw('raw-s3')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
+      </div>
+    </div>
+
+    <!-- ═══ Scenario 4: Deposit (Real-time KYT) ═══ -->
+    <div class="section-title">4. Deposit — Real-time Transaction Check</div>
+    <div class="card" id="card-scenario4">
+      <div class="card-header">
+        <span>Sync TX Screening · <code class="mono" style="font-size:10px">POST /v2/analyses/synchronous</code></span>
+        <button class="btn btn-run" id="btn-s4" onclick="runScenario(4)">Run Check</button>
+      </div>
+      <div class="card-body">
+        <p style="font-size:11px;color:#888;margin-bottom:8px">Inbound deposit checked in real-time before crediting to customer account. Sync analysis returns immediate results.</p>
+        <div id="label-s4" style="font-size:10px;color:#888;margin-bottom:4px"></div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="flex:1">
+            <div class="result-row"><span class="rk">TX Hash</span><span class="rv mono">0xfa3b91...c0d4</span></div>
+            <div class="result-row"><span class="rk">Customer</span><span class="rv"><span class="badge badge-blue">Entity A</span></span></div>
+            <div class="result-row"><span class="rk">Direction</span><span class="rv" style="color:#16a34a">Deposit</span></div>
+            <div class="result-row"><span class="rk">Asset</span><span class="rv">CLCC</span></div>
+            <div class="result-row"><span class="rk">Amount</span><span class="rv">250,000 CLCC</span></div>
+            <div class="result-row"><span class="rk">Source</span><span class="rv mono">0xd8537c...a4e1</span></div>
+            <div class="result-row"><span class="rk">Type</span><span class="rv">Source of Funds</span></div>
+          </div>
+          <div style="width:180px">
+            <div id="score-s4" style="font-size:28px;font-weight:700;text-align:center;margin:12px 0">—</div>
+            <div id="status-s4" style="text-align:center"><span class="badge badge-gray">pending</span></div>
+          </div>
+        </div>
+        <div id="detail-s4" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
+        <div class="raw-json" id="raw-s4"></div>
+        <button onclick="toggleRaw('raw-s4')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
       </div>
     </div>
 
   </div>
 </div>
+
+<script>
+function toggleRaw(id) {
+  document.getElementById(id).classList.toggle('show');
+}
+
+function scoreHTML(s) {
+  if (s === null || s === undefined) return '—';
+  var cls = s <= 3 ? 'badge-green' : s <= 7 ? 'badge-orange' : 'badge-red';
+  return '<span class="badge ' + cls + '">' + s.toFixed(1) + '</span>';
+}
+
+function scoreBig(s) {
+  if (s === null || s === undefined) return '—';
+  var c = s <= 3 ? '#16a34a' : s <= 7 ? '#d97706' : '#dc2626';
+  return '<span style="color:' + c + '">' + s.toFixed(1) + ' / 10</span>';
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+// Mock data for each scenario
+var mockResults = {
+  // Scenario 1: Batch TX - pay-in
+  s1: [
+    { id: 'ana-001', risk_score: 1.5, contributions: [{ entities: [{ name: 'Unknown', category: 'N/A' }]}], evaluation_detail: [] },
+    { id: 'ana-002', risk_score: 2.8, contributions: [{ entities: [{ name: 'Binance', category: 'Exchange' }]}], evaluation_detail: [{ rule_name: 'Exchange Exposure', risk_score: 2.8 }] },
+    { id: 'ana-003', risk_score: 6.2, contributions: [{ entities: [{ name: 'Tornado Cash', category: 'Mixer' }]}], evaluation_detail: [{ rule_name: 'Mixer Interaction', risk_score: 6.2 }, { rule_name: 'Obfuscation Protocol', risk_score: 3.1 }] }
+  ],
+  // Scenario 2: Batch Wallet - custody addresses
+  s2: [
+    { id: 'wal-001', risk_score: 0.6, cluster_entities: [], contributions: [] },
+    { id: 'wal-002', risk_score: 5.8, cluster_entities: [{ name: 'Obfuscation Cluster', category: 'Mixer' }], contributions: [{ entities: [{ name: 'Tornado Cash', category: 'Mixer' }]}] },
+    { id: 'wal-003', risk_score: 0.4, cluster_entities: [], contributions: [] },
+    { id: 'wal-004', risk_score: 1.2, cluster_entities: [], contributions: [{ entities: [{ name: 'Coinbase', category: 'Exchange' }]}] }
+  ],
+  // Scenario 3: Withdraw (flagged!)
+  s3: { id: 'ana-005', risk_score: 8.7, contributions: [{ entities: [{ name: 'Sanctioned Entity', category: 'Sanctions' }]}], evaluation_detail: [{ rule_name: 'Sanctioned Entity Interaction', risk_score: 8.7 }, { rule_name: 'Illicit Activity', risk_score: 4.3 }] },
+  // Scenario 4: Deposit (clean)
+  s4: { id: 'ana-006', risk_score: 1.1, contributions: [{ entities: [{ name: 'Unknown', category: 'N/A' }]}], evaluation_detail: [] }
+};
+
+function renderDetail(divId, data) {
+  var div = document.getElementById(divId);
+  if (!div) return;
+  div.style.display = 'block';
+  var html = '';
+
+  // Rules
+  var evals = [];
+  if (data.evaluation_detail && Array.isArray(data.evaluation_detail)) {
+    evals = data.evaluation_detail.filter(function(e) { return (e.risk_score || 0) > 0; });
+  }
+  if (evals.length > 0) {
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Triggered Rules</span>';
+    evals.forEach(function(r) {
+      html += '<div class="result-row"><span class="rk">Rule</span><span class="rv">' + r.rule_name + ' <span style="color:#888;font-size:10px">(' + r.risk_score.toFixed(2) + ')</span></span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Entity
+  var entityName = null, entityCat = null;
+  var contribs = data.contributions;
+  if (Array.isArray(contribs) && contribs.length > 0) {
+    var ents = contribs[0].entities;
+    if (ents && ents.length > 0 && ents[0].name && ents[0].name !== 'Unknown') {
+      entityName = ents[0].name; entityCat = ents[0].category;
+    }
+  }
+  if (!entityName && data.cluster_entities && Array.isArray(data.cluster_entities) && data.cluster_entities.length > 0 && data.cluster_entities[0].name !== 'Unknown') {
+    entityName = data.cluster_entities[0].name; entityCat = data.cluster_entities[0].category;
+  }
+  if (entityName) {
+    html += '<div class="result-row"><span class="rk">Entity</span><span class="rv">' + entityName + (entityCat ? ' <span style="color:#888;font-size:10px">(' + entityCat + ')</span>' : '') + '</span></div>';
+  }
+
+  html += '<div class="result-row"><span class="rk">Analysis ID</span><span class="rv mono">' + data.id + '</span></div>';
+
+  div.innerHTML = html;
+}
+
+async function runScenario(n) {
+  var btn = document.getElementById('btn-s' + n);
+  btn.disabled = true;
+  btn.className = 'btn btn-run';
+  btn.style.background = '#94a3b8';
+  btn.style.cursor = 'not-allowed';
+
+  var raw = document.getElementById('raw-s' + n);
+
+  if (n === 1) {
+    // Batch TX - submit + poll
+    btn.textContent = 'Submitting...';
+    var bar = document.getElementById('bar-s1');
+    var fill = document.getElementById('fill-s1');
+    var label = document.getElementById('label-s1');
+    bar.style.display = 'block';
+    fill.style.width = '15%';
+    label.textContent = 'Submitting 3 transactions...';
+    raw.textContent = '';
+    await sleep(600);
+
+    fill.style.width = '40%';
+    label.textContent = 'Polling results...';
+    await sleep(800);
+
+    var items = mockResults.s1;
+    var ids = ['s1a', 's1b', 's1c'];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var score = Math.round(item.risk_score * 100) / 100;
+      document.getElementById('score-' + ids[i]).innerHTML = scoreHTML(score);
+      var st = document.getElementById('status-' + ids[i]);
+      if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
+      else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
+      else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
+      fill.style.width = (40 + (i + 1) * 20) + '%';
+      await sleep(400);
+    }
+
+    fill.style.width = '100%';
+    fill.style.background = '#16a34a';
+    label.textContent = 'All 3 complete';
+    raw.textContent = JSON.stringify(items, null, 2);
+
+    btn.textContent = 'Reset';
+    btn.className = 'btn btn-reset';
+    btn.style.background = '';
+    btn.style.cursor = '';
+    btn.onclick = function() { resetScenario(1); };
+
+  } else if (n === 2) {
+    // Batch Wallet - submit + poll
+    btn.textContent = 'Submitting...';
+    var bar = document.getElementById('bar-s2');
+    var fill = document.getElementById('fill-s2');
+    var label = document.getElementById('label-s2');
+    bar.style.display = 'block';
+    fill.style.width = '15%';
+    label.textContent = 'Submitting 4 addresses...';
+    raw.textContent = '';
+    await sleep(600);
+
+    fill.style.width = '40%';
+    label.textContent = 'Polling results...';
+    await sleep(800);
+
+    var items = mockResults.s2;
+    var ids = ['s2a', 's2b', 's2c', 's2d'];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var score = Math.round(item.risk_score * 100) / 100;
+      document.getElementById('score-' + ids[i]).innerHTML = scoreHTML(score);
+      // Categories
+      var cats = [];
+      if (item.cluster_entities) {
+        item.cluster_entities.forEach(function(e) { if (e.category) cats.push(e.name); });
+      }
+      if (item.contributions) {
+        item.contributions.forEach(function(c) {
+          if (c.entities) c.entities.forEach(function(e) { if (e.category && cats.indexOf(e.name) < 0) cats.push(e.name); });
+        });
+      }
+      var catEl = document.getElementById('cat-' + ids[i]);
+      if (cats.length > 0) {
+        catEl.innerHTML = '';
+        cats.forEach(function(c) { catEl.innerHTML += '<span class="cat-tag">' + c + '</span>'; });
+      } else {
+        catEl.innerHTML = '<span class="cat-tag">None</span>';
+      }
+      var st = document.getElementById('status-' + ids[i]);
+      if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
+      else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
+      else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
+      fill.style.width = (40 + (i + 1) * 15) + '%';
+      await sleep(400);
+    }
+
+    fill.style.width = '100%';
+    fill.style.background = '#16a34a';
+    label.textContent = 'All 4 complete';
+    raw.textContent = JSON.stringify(items, null, 2);
+
+    btn.textContent = 'Reset';
+    btn.className = 'btn btn-reset';
+    btn.style.background = '';
+    btn.style.cursor = '';
+    btn.onclick = function() { resetScenario(2); };
+
+  } else if (n === 3) {
+    // Withdraw - sync (flagged!)
+    btn.textContent = 'Checking...';
+    document.getElementById('label-s3').textContent = 'Sending sync request...';
+    raw.textContent = '';
+    await sleep(1200);
+
+    var data = mockResults.s3;
+    var score = Math.round(data.risk_score * 100) / 100;
+    document.getElementById('score-s3').innerHTML = scoreBig(score);
+    document.getElementById('status-s3').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
+    document.getElementById('label-s3').textContent = 'Complete — BLOCK TRANSFER';
+    renderDetail('detail-s3', data);
+    raw.textContent = JSON.stringify(data, null, 2);
+
+    btn.textContent = 'Reset';
+    btn.className = 'btn btn-reset';
+    btn.style.background = '';
+    btn.style.cursor = '';
+    btn.onclick = function() { resetScenario(3); };
+
+  } else if (n === 4) {
+    // Deposit - sync (clean)
+    btn.textContent = 'Checking...';
+    document.getElementById('label-s4').textContent = 'Sending sync request...';
+    raw.textContent = '';
+    await sleep(1200);
+
+    var data = mockResults.s4;
+    var score = Math.round(data.risk_score * 100) / 100;
+    document.getElementById('score-s4').innerHTML = scoreBig(score);
+    document.getElementById('status-s4').innerHTML = '<span class="badge badge-green">✓ Clean — Credit Account</span>';
+    document.getElementById('label-s4').textContent = 'Complete — CREDIT ALLOWED';
+    renderDetail('detail-s4', data);
+    raw.textContent = JSON.stringify(data, null, 2);
+
+    btn.textContent = 'Reset';
+    btn.className = 'btn btn-reset';
+    btn.style.background = '';
+    btn.style.cursor = '';
+    btn.onclick = function() { resetScenario(4); };
+  }
+}
+
+function resetScenario(n) {
+  var btn = document.getElementById('btn-s' + n);
+  btn.textContent = n <= 2 ? 'Run Batch' : 'Run Check';
+  btn.className = 'btn btn-run';
+  btn.style.background = '';
+  btn.style.cursor = '';
+  btn.onclick = function() { runScenario(n); };
+  btn.disabled = false;
+
+  var raw = document.getElementById('raw-s' + n);
+  raw.textContent = '';
+  raw.classList.remove('show');
+
+  if (n === 1) {
+    document.getElementById('bar-s1').style.display = 'none';
+    document.getElementById('fill-s1').style.width = '0%';
+    document.getElementById('fill-s1').style.background = '#2563eb';
+    document.getElementById('label-s1').textContent = '';
+    ['s1a','s1b','s1c'].forEach(function(id) {
+      document.getElementById('score-' + id).textContent = '—';
+      document.getElementById('status-' + id).innerHTML = '<span class="badge badge-gray">pending</span>';
+    });
+  } else if (n === 2) {
+    document.getElementById('bar-s2').style.display = 'none';
+    document.getElementById('fill-s2').style.width = '0%';
+    document.getElementById('fill-s2').style.background = '#2563eb';
+    document.getElementById('label-s2').textContent = '';
+    ['s2a','s2b','s2c','s2d'].forEach(function(id) {
+      document.getElementById('score-' + id).textContent = '—';
+      document.getElementById('cat-' + id).textContent = '—';
+      document.getElementById('status-' + id).innerHTML = '<span class="badge badge-gray">pending</span>';
+    });
+  } else if (n === 3) {
+    document.getElementById('label-s3').textContent = '';
+    document.getElementById('score-s3').textContent = '—';
+    document.getElementById('status-s3').innerHTML = '<span class="badge badge-gray">pending</span>';
+    document.getElementById('detail-s3').style.display = 'none';
+    document.getElementById('detail-s3').innerHTML = '';
+  } else if (n === 4) {
+    document.getElementById('label-s4').textContent = '';
+    document.getElementById('score-s4').textContent = '—';
+    document.getElementById('status-s4').innerHTML = '<span class="badge badge-gray">pending</span>';
+    document.getElementById('detail-s4').style.display = 'none';
+    document.getElementById('detail-s4').innerHTML = '';
+  }
+}
+</script>
 
 </body>
 </html>
