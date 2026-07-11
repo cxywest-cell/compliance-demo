@@ -348,8 +348,11 @@ async function runScenario(n) {
     await sleep(600);
 
     fill.style.width = '40%';
+    label.textContent = 'Processing (800ms × 3 = 2,400ms)...';
+    await sleep(2400);
+
+    fill.style.width = '70%';
     label.textContent = 'Polling results...';
-    await sleep(800);
 
     var items = mockResults.s1;
     var ids = ['s1a', 's1b', 's1c'];
@@ -389,8 +392,11 @@ async function runScenario(n) {
     await sleep(600);
 
     fill.style.width = '40%';
+    label.textContent = 'Processing (800ms × 4 = 3,200ms)...';
+    await sleep(3200);
+
+    fill.style.width = '70%';
     label.textContent = 'Polling results...';
-    await sleep(800);
 
     var items = mockResults.s2;
     var ids = ['s2a', 's2b', 's2c', 's2d'];
