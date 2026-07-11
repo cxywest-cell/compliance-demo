@@ -83,7 +83,7 @@
 </div>
 
 <div class="main">
-  <div class="topbar">Tx/Address Monitoring</div>
+  <div class="topbar"><span>Tx/Address Monitoring</span><button class="btn btn-reset" style="float:right;padding:3px 10px;font-size:10px" onclick="resetAll()">Reset All</button></div>
   <div class="content">
 
     <!-- Screening Provider -->
@@ -599,6 +599,9 @@ function resetScenario(n) {
     document.getElementById('detail-s4').style.display = 'none';
     document.getElementById('detail-s4').innerHTML = '';
   }
+}
+function resetAll() {
+  for (var i = 1; i <= 4; i++) resetScenario(i);
 }
 </script>
 
