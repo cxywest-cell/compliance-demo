@@ -417,11 +417,8 @@ async function runScenario(n) {
     label.textContent = 'All 3 complete';
     raw.textContent = JSON.stringify(items, null, 2);
 
-    btn.textContent = 'Reset';
-    btn.className = 'btn btn-reset';
-    btn.style.background = '';
-    btn.style.cursor = '';
-    btn.onclick = function() { resetScenario(1); };
+    btn.disabled = false;
+    btn.textContent = 'Run Batch';
 
   } else if (n === 2) {
     // Batch Wallet - submit + poll
@@ -487,11 +484,8 @@ async function runScenario(n) {
     label.textContent = 'All 4 complete';
     raw.textContent = JSON.stringify(items, null, 2);
 
-    btn.textContent = 'Reset';
-    btn.className = 'btn btn-reset';
-    btn.style.background = '';
-    btn.style.cursor = '';
-    btn.onclick = function() { resetScenario(2); };
+    btn.disabled = false;
+    btn.textContent = 'Run Batch';
 
   } else if (n === 3) {
     // Withdraw - sync (flagged!)
@@ -516,11 +510,8 @@ async function runScenario(n) {
     renderDetail('detail-s3', data);
     raw.textContent = JSON.stringify(data, null, 2);
 
-    btn.textContent = 'Reset';
-    btn.className = 'btn btn-reset';
-    btn.style.background = '';
-    btn.style.cursor = '';
-    btn.onclick = function() { resetScenario(3); };
+    btn.disabled = false;
+    btn.textContent = 'Run Check';
 
   } else if (n === 4) {
     // Deposit - sync (clean)
@@ -545,11 +536,8 @@ async function runScenario(n) {
     renderDetail('detail-s4', data);
     raw.textContent = JSON.stringify(data, null, 2);
 
-    btn.textContent = 'Reset';
-    btn.className = 'btn btn-reset';
-    btn.style.background = '';
-    btn.style.cursor = '';
-    btn.onclick = function() { resetScenario(4); };
+    btn.disabled = false;
+    btn.textContent = 'Run Check';
   }
 }
 
