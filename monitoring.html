@@ -52,6 +52,16 @@
   .progress-fill { height: 100%; background: #2563eb; border-radius: 2px; transition: width 0.3s; }
   .raw-json { background: #0d1117; border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px; margin-top: 8px; font-size: 10px; font-family: 'SF Mono', monospace; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; display: none; color: #c9d1d9; }
   .raw-json.show { display: block; }
+  .log-area { background: #0d1117; border: 1px solid #e0e0e0; border-radius: 4px; padding: 8px 10px; margin-top: 8px; font-size: 10px; font-family: 'SF Mono', monospace; max-height: 180px; overflow-y: auto; display: none; color: #c9d1d9; }
+  .log-area.show { display: block; }
+  .log-entry { padding: 1px 0; border-bottom: 1px solid #161b22; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: #6e7681; }
+  .log-api { color: #79c0ff; }
+  .log-action { color: #d2a8ff; }
+  .log-ok { color: #7ee787; }
+  .log-warn { color: #ffa657; }
+  .log-err { color: #ff7b72; }
   .result-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; border-top: 1px solid #f0f0f0; }
   .result-row:first-child { border-top: none; }
   .rk { color: #888; }
@@ -126,7 +136,8 @@
           </tr>
         </table>
         <div class="raw-json" id="raw-s1"></div>
-        <button onclick="toggleRaw('raw-s1')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
+        <div style="margin-top:6px;display:flex;gap:8px"><button onclick="toggleRaw('raw-s1')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Raw JSON</button><button onclick="toggleRaw('log-s1')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Run Log</button></div>
+        <div class="log-area" id="log-s1"></div>
       </div>
     </div>
 
@@ -177,7 +188,8 @@
           </tr>
         </table>
         <div class="raw-json" id="raw-s2"></div>
-        <button onclick="toggleRaw('raw-s2')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
+        <div style="margin-top:6px;display:flex;gap:8px"><button onclick="toggleRaw('raw-s2')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Raw JSON</button><button onclick="toggleRaw('log-s2')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Run Log</button></div>
+        <div class="log-area" id="log-s2"></div>
       </div>
     </div>
 
@@ -208,7 +220,8 @@
         </div>
         <div id="detail-s3" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
         <div class="raw-json" id="raw-s3"></div>
-        <button onclick="toggleRaw('raw-s3')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
+        <div style="margin-top:6px;display:flex;gap:8px"><button onclick="toggleRaw('raw-s3')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Raw JSON</button><button onclick="toggleRaw('log-s3')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Run Log</button></div>
+        <div class="log-area" id="log-s3"></div>
       </div>
     </div>
 
@@ -239,7 +252,8 @@
         </div>
         <div id="detail-s4" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0"></div>
         <div class="raw-json" id="raw-s4"></div>
-        <button onclick="toggleRaw('raw-s4')" style="font-size:10px;color:#888;cursor:pointer;margin-top:6px;background:none;border:none;padding:0">Show Raw JSON</button>
+        <div style="margin-top:6px;display:flex;gap:8px"><button onclick="toggleRaw('raw-s4')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Raw JSON</button><button onclick="toggleRaw('log-s4')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Run Log</button></div>
+        <div class="log-area" id="log-s4"></div>
       </div>
     </div>
 
@@ -249,6 +263,27 @@
 <script>
 function toggleRaw(id) {
   document.getElementById(id).classList.toggle('show');
+}
+
+function now() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function log(id, cls, text) {
+  var el = document.getElementById('log-' + id);
+  if (!el) return;
+  el.style.display = 'block';
+  el.classList.add('show');
+  var entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = '<span class="log-time">' + now() + '</span> <span class="' + cls + '">' + text + '</span>';
+  el.appendChild(entry);
+  el.scrollTop = el.scrollHeight;
+}
+
+function logClear(id) {
+  var el = document.getElementById('log-' + id);
+  if (el) { el.innerHTML = ''; el.classList.remove('show'); el.style.display = 'none'; }
 }
 
 function scoreHTML(s) {
@@ -337,6 +372,8 @@ async function runScenario(n) {
 
   if (n === 1) {
     // Batch TX - submit + poll
+    logClear('s1');
+    log('s1', 'log-api', 'POST /v2/analyses — batch 3 transactions');
     btn.textContent = 'Submitting...';
     var bar = document.getElementById('bar-s1');
     var fill = document.getElementById('fill-s1');
@@ -345,29 +382,36 @@ async function runScenario(n) {
     fill.style.width = '15%';
     label.textContent = 'Submitting 3 transactions...';
     raw.textContent = '';
+    log('s1', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
     await sleep(600);
 
     fill.style.width = '40%';
+    var waitMs = 800 * 3;
+    log('s1', 'log-warn', 'Waiting ' + waitMs + 'ms (800ms × 3 items) before first poll...');
     label.textContent = 'Processing (800ms × 3 = 2,400ms)...';
-    await sleep(2400);
+    await sleep(waitMs);
+    log('s1', 'log-action', 'Minimum processing time elapsed — starting poll');
 
     fill.style.width = '70%';
     label.textContent = 'Polling results...';
 
     var items = mockResults.s1;
     var ids = ['s1a', 's1b', 's1c'];
+    var txHashes = ['0xd8537c...a4e1', '0x2c92fa...d0b3', '0xfa3b91...c0d4'];
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       var score = Math.round(item.risk_score * 100) / 100;
+      log('s1', 'log-api', 'GET /v2/analyses/' + item.id + ' → ' + (score <= 3 ? '200 OK (clean)' : score <= 7 ? '200 OK (review)' : '200 OK (flagged)'));
       document.getElementById('score-' + ids[i]).innerHTML = scoreHTML(score);
       var st = document.getElementById('status-' + ids[i]);
       if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
       else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
       else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
       fill.style.width = (40 + (i + 1) * 20) + '%';
-      await sleep(400);
+      await sleep(300);
     }
 
+    log('s1', 'log-ok', 'All 3 transactions screened successfully');
     fill.style.width = '100%';
     fill.style.background = '#16a34a';
     label.textContent = 'All 3 complete';
@@ -381,6 +425,8 @@ async function runScenario(n) {
 
   } else if (n === 2) {
     // Batch Wallet - submit + poll
+    logClear('s2');
+    log('s2', 'log-api', 'POST /v2/wallet — batch 4 addresses (holistic exposure)');
     btn.textContent = 'Submitting...';
     var bar = document.getElementById('bar-s2');
     var fill = document.getElementById('fill-s2');
@@ -389,20 +435,26 @@ async function runScenario(n) {
     fill.style.width = '15%';
     label.textContent = 'Submitting 4 addresses...';
     raw.textContent = '';
+    log('s2', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
     await sleep(600);
 
     fill.style.width = '40%';
+    var waitMs = 800 * 4;
+    log('s2', 'log-warn', 'Waiting ' + waitMs + 'ms (800ms × 4 items) before first poll...');
     label.textContent = 'Processing (800ms × 4 = 3,200ms)...';
-    await sleep(3200);
+    await sleep(waitMs);
+    log('s2', 'log-action', 'Minimum processing time elapsed — starting poll');
 
     fill.style.width = '70%';
     label.textContent = 'Polling results...';
 
     var items = mockResults.s2;
     var ids = ['s2a', 's2b', 's2c', 's2d'];
+    var addrs = ['0x5d3a...f812', '0x8f2c...a47e', '0x7c4e...b93a', '0x2d5a...e81c'];
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       var score = Math.round(item.risk_score * 100) / 100;
+      log('s2', 'log-api', 'GET /v2/wallet/' + item.id + ' → ' + (score <= 3 ? '200 OK (clean)' : score <= 7 ? '200 OK (review)' : '200 OK (flagged)'));
       document.getElementById('score-' + ids[i]).innerHTML = scoreHTML(score);
       // Categories
       var cats = [];
@@ -426,9 +478,10 @@ async function runScenario(n) {
       else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
       else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
       fill.style.width = (40 + (i + 1) * 15) + '%';
-      await sleep(400);
+      await sleep(300);
     }
 
+    log('s2', 'log-ok', 'All 4 addresses screened successfully');
     fill.style.width = '100%';
     fill.style.background = '#16a34a';
     label.textContent = 'All 4 complete';
@@ -442,16 +495,24 @@ async function runScenario(n) {
 
   } else if (n === 3) {
     // Withdraw - sync (flagged!)
+    logClear('s3');
+    log('s3', 'log-api', 'POST /v2/analyses/synchronous — tx 0x196670...b2f8 (source_of_funds)');
     btn.textContent = 'Checking...';
     document.getElementById('label-s3').textContent = 'Sending sync request...';
     raw.textContent = '';
-    await sleep(1200);
+    log('s3', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
+    log('s3', 'log-action', 'Payload: {"customer_reference":"entity_b","subject":{"hash":"0x196670...b2f8","type":"transaction","asset":"ETH"},"type":"source_of_funds"}');
+    await sleep(800);
+    log('s3', 'log-warn', 'Waiting for synchronous analysis (blocking call)...');
+    await sleep(400);
 
     var data = mockResults.s3;
     var score = Math.round(data.risk_score * 100) / 100;
+    log('s3', 'log-api', 'Response: risk_score=' + score + ', analysis_id=' + data.id);
     document.getElementById('score-s3').innerHTML = scoreBig(score);
     document.getElementById('status-s3').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
     document.getElementById('label-s3').textContent = 'Complete — BLOCK TRANSFER';
+    log('s3', 'log-err', 'BLOCKED: Score 8.7/10 — Sanctioned Entity Interaction (8.70)');
     renderDetail('detail-s3', data);
     raw.textContent = JSON.stringify(data, null, 2);
 
@@ -463,16 +524,24 @@ async function runScenario(n) {
 
   } else if (n === 4) {
     // Deposit - sync (clean)
+    logClear('s4');
+    log('s4', 'log-api', 'POST /v2/analyses/synchronous — tx 0xfa3b91...c0d4 (source_of_funds)');
     btn.textContent = 'Checking...';
     document.getElementById('label-s4').textContent = 'Sending sync request...';
     raw.textContent = '';
-    await sleep(1200);
+    log('s4', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
+    log('s4', 'log-action', 'Payload: {"customer_reference":"entity_a","subject":{"hash":"0xfa3b91...c0d4","type":"transaction","asset":"CLCC"},"type":"source_of_funds"}');
+    await sleep(800);
+    log('s4', 'log-warn', 'Waiting for synchronous analysis (blocking call)...');
+    await sleep(400);
 
     var data = mockResults.s4;
     var score = Math.round(data.risk_score * 100) / 100;
+    log('s4', 'log-api', 'Response: risk_score=' + score + ', analysis_id=' + data.id);
     document.getElementById('score-s4').innerHTML = scoreBig(score);
     document.getElementById('status-s4').innerHTML = '<span class="badge badge-green">✓ Clean — Credit Account</span>';
     document.getElementById('label-s4').textContent = 'Complete — CREDIT ALLOWED';
+    log('s4', 'log-ok', 'CLEARED: Score 1.1/10 — No triggered rules');
     renderDetail('detail-s4', data);
     raw.textContent = JSON.stringify(data, null, 2);
 
@@ -485,6 +554,7 @@ async function runScenario(n) {
 }
 
 function resetScenario(n) {
+  logClear('s' + n);
   var btn = document.getElementById('btn-s' + n);
   btn.textContent = n <= 2 ? 'Run Batch' : 'Run Check';
   btn.className = 'btn btn-run';
