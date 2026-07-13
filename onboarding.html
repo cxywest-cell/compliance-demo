@@ -188,79 +188,78 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- TAB 2: Individual Onboarding                    -->
+    <!-- TAB 2: Individual Onboarding (Doc KYC)          -->
     <!-- ═══════════════════════════════════════════════ -->
     <div class="tab-pane" id="tab-individual">
 
-      <div class="info-note"><strong>KYC</strong> Full individual verification with government-issued ID, proof of address, and liveness check.</div>
+      <div class="info-note"><strong>Sumsub KYC (Doc)</strong> L2 level — document upload + selfie/liveness. Applicant created → WebSDK link generated → user completes on Sumsub → webhook fires back.</div>
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step"><span class="step-num done">1</span><span class="step-label done">Personal Info</span></div>
-        <span class="step-arrow done">→</span>
-        <div class="step"><span class="step-num done">2</span><span class="step-label done">ID Upload</span></div>
-        <span class="step-arrow done">→</span>
-        <div class="step"><span class="step-num active">3</span><span class="step-label active">Liveness Check</span></div>
-        <span class="step-arrow">→</span>
-        <div class="step"><span class="step-num">4</span><span class="step-label">POA Verification</span></div>
-        <span class="step-arrow">→</span>
-        <div class="step"><span class="step-num">5</span><span class="step-label">Custodian Wallet</span></div>
+        <div class="step" id="s-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
+        <span class="step-arrow" id="s-arrow-1">→</span>
+        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">Generate WebSDK Link</span></div>
+        <span class="step-arrow" id="s-arrow-2">→</span>
+        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">User Completes</span></div>
+        <span class="step-arrow" id="s-arrow-3">→</span>
+        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">AML Screening</span></div>
+        <span class="step-arrow" id="s-arrow-4">→</span>
+        <div class="step" id="s-step-5"><span class="step-num">5</span><span class="step-label">Decision</span></div>
       </div>
 
-      <!-- Personal Info -->
-      <div class="section-title">Personal Information</div>
-      <div class="card">
+      <!-- Applicant Profile -->
+      <div class="section-title">Applicant Profile</div>
+      <div class="card" id="doc-applicant-card">
+        <div class="card-header">
+          <span>Individual Applicant</span>
+          <span class="badge badge-gray" id="doc-applicant-status">Not Created</span>
+        </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">Full Name</span><span class="rv">Wang Xiaoming</span></div>
           <div class="result-row"><span class="rk">Date of Birth</span><span class="rv">1988-03-15</span></div>
           <div class="result-row"><span class="rk">Nationality</span><span class="rv">🇨🇳 PRC</span></div>
-          <div class="result-row"><span class="rk">DID</span><span class="rv mono">did:trisa:individual-wang-0x7e2d</span></div>
-          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-orange">In Progress</span></span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv mono">wang@example.com</span></div>
+          <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="doc-ext-id">—</span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-app-id">—</span></div>
+          <div class="result-row"><span class="rk">Level Name</span><span class="rv mono">kyc-test-daniel-260618</span></div>
         </div>
       </div>
 
-      <!-- ID Document -->
-      <div class="section-title">Identity Document</div>
+      <!-- Actions -->
+      <div class="section-title">Actions</div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-run" id="doc-btn-create" onclick="docCreateApplicant()">Create Applicant</button>
+            <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()" disabled>Generate WebSDK Link</button>
+            <button class="btn btn-run" id="doc-btn-complete" onclick="docSimulateComplete()" disabled>Simulate Completion</button>
+            <button class="btn btn-run" id="doc-btn-aml" onclick="docRunAML()" disabled>Run AML Check</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Webhook Log -->
+      <div class="section-title">Webhook Events</div>
       <div class="card">
         <div class="card-header">
-          <span>Government-Issued ID</span>
-          <span class="badge badge-green">Verified</span>
+          <span>Event Log</span>
+          <button onclick="docClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
         </div>
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Document Type</span><span class="rv"><span class="badge badge-blue">PRC Resident ID Card</span></span></div>
-          <div class="result-row"><span class="rk">ID Number</span><span class="rv mono">11010519880315XXXX</span></div>
-          <div class="result-row"><span class="rk">Issuing Authority</span><span class="rv">Beijing Chaoyang PSB</span></div>
-          <div class="result-row"><span class="rk">Expiry Date</span><span class="rv">2038-03-15</span></div>
-          <div class="result-row"><span class="rk">OCR Match</span><span class="rv"><span class="badge badge-green">Name ✓ DOB ✓ Photo ✓</span></span></div>
+        <div class="log-area" id="doc-log" style="background:#0d1117;border:none;border-radius:0;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
+          <div style="color:#6e7681">Waiting for events...</div>
         </div>
       </div>
 
-      <!-- Liveness Check -->
-      <div class="section-title">Liveness Verification</div>
+      <!-- Verification Result -->
+      <div class="section-title">Verification Result</div>
       <div class="card">
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-orange">Pending</span></span></div>
-          <div class="result-row"><span class="rk">Method</span><span class="rv">Face liveness detection (blink + head turn)</span></div>
-          <div class="result-row"><span class="rk">Photo Match</span><span class="rv"><span class="badge badge-gray">Not Yet Compared</span></span></div>
-        </div>
-      </div>
-
-      <!-- Proof of Address -->
-      <div class="section-title">Proof of Address</div>
-      <div class="card">
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray">Not Started</span></span></div>
-          <div class="result-row"><span class="rk">Accepted Documents</span><span class="rv">Utility bill, bank statement, or tax notice (< 3 months)</span></div>
-          <div class="result-row"><span class="rk">Address</span><span class="rv">Room 1201, Tower B, SOHO, Chaoyang Dist, Beijing</span></div>
-        </div>
-      </div>
-
-      <!-- Custodian Wallet -->
-      <div class="section-title">Custodian Wallet Assignment</div>
-      <div class="card">
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Custodian</span><span class="rv"><span class="badge badge-blue">Custodian A</span></span></div>
-          <div class="result-row"><span class="rk">Wallet Status</span><span class="rv"><span class="badge badge-gray">Generated on completion</span></span></div>
+        <div class="card-body" id="doc-result">
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-review-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Documents</span><span class="rv" id="doc-docs-status">—</span></div>
+          <div class="result-row"><span class="rk">Liveness</span><span class="rv" id="doc-liveness-status">—</span></div>
+          <div class="result-row"><span class="rk">AML</span><span class="rv" id="doc-aml-status">—</span></div>
+          <div class="result-row"><span class="rk">Custodian Wallet</span><span class="rv" id="doc-wallet-status"><span class="badge badge-gray">Generated on approval</span></span></div>
         </div>
       </div>
 
@@ -271,66 +270,70 @@
     <!-- ═══════════════════════════════════════════════ -->
     <div class="tab-pane" id="tab-nondoc">
 
-      <div class="warning-note"><strong>Low-Tier KYC</strong> No document upload required. Self-declaration + wallet binding + risk acknowledgment. Suitable for low-value accounts with transaction limits.</div>
+      <div class="info-note"><strong>Sumsub KYC (Non-Doc)</strong> L3 level — ID number entry + liveness only. No document upload. Available for ~18 supported countries. ~97% conversion rate, ~4.5s processing.</div>
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step"><span class="step-num done">1</span><span class="step-label done">Basic Info</span></div>
-        <span class="step-arrow done">→</span>
-        <div class="step"><span class="step-num active">2</span><span class="step-label active">Risk Acknowledgment</span></div>
-        <span class="step-arrow">→</span>
-        <div class="step"><span class="step-num">3</span><span class="step-label">Wallet Binding</span></div>
-        <span class="step-arrow">→</span>
-        <div class="step"><span class="step-num">4</span><span class="step-label">Limits Applied</span></div>
+        <div class="step" id="n-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
+        <span class="step-arrow" id="n-arrow-1">→</span>
+        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">Generate WebSDK Link</span></div>
+        <span class="step-arrow" id="n-arrow-2">→</span>
+        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">User Completes</span></div>
+        <span class="step-arrow" id="n-arrow-3">→</span>
+        <div class="step" id="n-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
       </div>
 
-      <!-- Basic Info -->
-      <div class="section-title">Basic Information (Self-Declaration)</div>
-      <div class="card">
+      <!-- Applicant Profile -->
+      <div class="section-title">Applicant Profile</div>
+      <div class="card" id="nondoc-applicant-card">
+        <div class="card-header">
+          <span>Individual Applicant (Non-Doc)</span>
+          <span class="badge badge-gray" id="nondoc-applicant-status">Not Created</span>
+        </div>
         <div class="card-body">
-          <div class="result-row"><span class="rk">Display Name</span><span class="rv">CryptoTrader_2024</span></div>
-          <div class="result-row"><span class="rk">Email</span><span class="rv mono">trader2024@example.com</span></div>
-          <div class="result-row"><span class="rk">Country</span><span class="rv"><span class="badge badge-blue">🇨🇳 PRC</span></span></div>
-          <div class="result-row"><span class="rk">DID</span><span class="rv mono">did:trisa:nondoc-0x9a3f</span></div>
-          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-green">Active</span></span></div>
+          <div class="result-row"><span class="rk">Full Name</span><span class="rv">Chen Fang</span></div>
+          <div class="result-row"><span class="rk">Date of Birth</span><span class="rv">1992-07-22</span></div>
+          <div class="result-row"><span class="rk">Nationality</span><span class="rv">🇸🇬 Singapore</span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv mono">chenf@example.com</span></div>
+          <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="nondoc-ext-id">—</span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-app-id">—</span></div>
+          <div class="result-row"><span class="rk">Level Name</span><span class="rv mono" id="nondoc-level">non-doc-kyc-level</span></div>
         </div>
       </div>
 
-      <!-- Risk Acknowledgment -->
-      <div class="section-title">Risk Acknowledgment</div>
+      <!-- Actions -->
+      <div class="section-title">Actions</div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-run" id="nondoc-btn-create" onclick="nondocCreateApplicant()">Create Applicant</button>
+            <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()" disabled>Generate WebSDK Link</button>
+            <button class="btn btn-run" id="nondoc-btn-complete" onclick="nondocSimulateComplete()" disabled>Simulate Completion</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Webhook Log -->
+      <div class="section-title">Webhook Events</div>
       <div class="card">
         <div class="card-header">
-          <span>Declarations Signed</span>
-          <span class="badge badge-green">Complete</span>
+          <span>Event Log</span>
+          <button onclick="nondocClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
         </div>
-        <div class="card-body">
-          <div class="doc-check"><span class="doc-icon">✓</span> I confirm I am not a sanctioned individual or entity</div>
-          <div class="doc-check"><span class="doc-icon">✓</span> I understand transaction limits apply to this account</div>
-          <div class="doc-check"><span class="doc-icon">✓</span> I declare the wallet address belongs to me</div>
-          <div class="doc-check"><span class="doc-icon">✓</span> I accept the platform Terms of Service</div>
-          <div class="result-row" style="margin-top:8px"><span class="rk">Timestamp</span><span class="rv mono">2024-11-20 14:32:07 UTC</span></div>
+        <div class="log-area" id="nondoc-log" style="background:#0d1117;border:none;border-radius:0;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
+          <div style="color:#6e7681">Waiting for events...</div>
         </div>
       </div>
 
-      <!-- Wallet Binding -->
-      <div class="section-title">Wallet Binding</div>
+      <!-- Verification Result -->
+      <div class="section-title">Verification Result</div>
       <div class="card">
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Wallet Address</span><span class="rv mono">0x9a3f...2e71</span></div>
-          <div class="result-row"><span class="rk">Chain</span><span class="rv">Ethereum</span></div>
-          <div class="result-row"><span class="rk">Verification</span><span class="rv"><span class="badge badge-green">Signature Verified</span></span></div>
-          <div class="result-row"><span class="rk">Custodian</span><span class="rv"><span class="badge badge-blue">Custodian B</span></span></div>
-        </div>
-      </div>
-
-      <!-- Transaction Limits -->
-      <div class="section-title">Account Limits (Non-Doc Tier)</div>
-      <div class="card">
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Daily Limit</span><span class="rv"><span class="badge badge-orange">5,000 CLCC</span></span></div>
-          <div class="result-row"><span class="rk">Monthly Limit</span><span class="rv"><span class="badge badge-orange">50,000 CLCC</span></span></div>
-          <div class="result-row"><span class="rk">Max Single Transfer</span><span class="rv"><span class="badge badge-orange">10,000 CLCC</span></span></div>
-          <div class="result-row"><span class="rk">Upgrade Path</span><span class="rv">Complete full KYC to remove limits</span></div>
+        <div class="card-body" id="nondoc-result">
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="nondoc-review-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="nondoc-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">ID Verification</span><span class="rv" id="nondoc-id-status">—</span></div>
+          <div class="result-row"><span class="rk">Liveness</span><span class="rv" id="nondoc-liveness-status">—</span></div>
+          <div class="result-row"><span class="rk">Custodian Wallet</span><span class="rv" id="nondoc-wallet-status"><span class="badge badge-gray">Generated on approval</span></span></div>
         </div>
       </div>
 
@@ -349,6 +352,259 @@ function switchTab(n) {
   }
   tabs[n].classList.add('active');
   panes[n].classList.add('active');
+}
+
+// ─── Shared helpers ───
+function now() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function setStep(prefix, n, maxSteps) {
+  for (var i = 1; i <= maxSteps; i++) {
+    var step = document.getElementById(prefix + '-step-' + i);
+    var arrow = document.getElementById(prefix + '-arrow-' + i);
+    if (!step) continue;
+    var numEl = step.querySelector('.step-num');
+    var labelEl = step.querySelector('.step-label');
+    if (i < n) {
+      numEl.className = 'step-num done';
+      labelEl.className = 'step-label done';
+      if (arrow) arrow.className = 'step-arrow done';
+    } else if (i === n) {
+      numEl.className = 'step-num active';
+      labelEl.className = 'step-label active';
+      if (arrow) arrow.className = 'step-arrow';
+    } else {
+      numEl.className = 'step-num';
+      labelEl.className = 'step-label';
+      if (arrow) arrow.className = 'step-arrow';
+    }
+  }
+}
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+// ─── Doc KYC (Tab 2) ───
+var docState = { created: false, linked: false, completed: false, amlDone: false, approved: false };
+
+function docLog(cls, text) {
+  var el = document.getElementById('doc-log');
+  var entry = document.createElement('div');
+  entry.style.padding = '2px 0';
+  entry.style.borderBottom = '1px solid #161b22';
+  entry.innerHTML = '<span style="color:#6e7681">' + now() + '</span> <span style="color:' + cls + '">' + text + '</span>';
+  // Remove placeholder
+  if (el.children.length > 0 && el.children[0].style.color === 'rgb(110, 118, 129)') el.innerHTML = '';
+  el.appendChild(entry);
+  el.scrollTop = el.scrollHeight;
+}
+function docClearLog() { document.getElementById('doc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
+
+async function docCreateApplicant() {
+  docState = { created: false, linked: false, completed: false, amlDone: false, approved: false };
+  document.getElementById('doc-ext-id').textContent = '—';
+  document.getElementById('doc-app-id').textContent = '—';
+  document.getElementById('doc-applicant-status').textContent = 'Not Created';
+  document.getElementById('doc-applicant-status').className = 'badge badge-gray';
+  ['doc-review-status','doc-review-answer','doc-docs-status','doc-liveness-status','doc-aml-status'].forEach(function(id) {
+    document.getElementById(id).innerHTML = '<span class="badge badge-gray">—</span>';
+  });
+  document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
+  docClearLog();
+  setStep('s', 0, 5);
+
+  var btn = document.getElementById('doc-btn-create');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  docLog('#79c0ff', 'POST /resources/applicants?levelName=kyc-test-daniel-260618');
+  docLog('#d2a8ff', 'Body: { "externalUserId": "user-wang-xiaoming", "info": { "firstName": "Xiaoming", "lastName": "Wang", "country": "CHN" } }');
+  await sleep(800);
+
+  var appid = '68a3f2e1b4c9d0000a123456';
+  document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
+  document.getElementById('doc-app-id').textContent = appid;
+  document.getElementById('doc-applicant-status').textContent = 'init';
+  document.getElementById('doc-applicant-status').className = 'badge badge-gray';
+
+  docLog('#79c0ff', '200 OK — applicantId: ' + appid);
+  docLog('#ffa657', 'Webhook: applicantCreated (externalUserId: user-wang-xiaoming)');
+  await sleep(400);
+  docLog('#7ee787', 'Applicant created successfully');
+
+  setStep('s', 1, 5);
+  docState.created = true;
+  document.getElementById('doc-btn-link').disabled = false;
+  btn.textContent = 'Recreate Applicant'; btn.disabled = false;
+}
+
+async function docGenLink() {
+  if (!docState.created) return;
+  var btn = document.getElementById('doc-btn-link');
+  btn.disabled = true; btn.textContent = 'Generating...';
+
+  docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
+  docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
+  await sleep(600);
+
+  var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
+  docLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+  docLog('#ffa657', 'Webhook: applicantPending (applicant started SDK session)');
+  await sleep(300);
+  document.getElementById('doc-applicant-status').textContent = 'pending';
+  document.getElementById('doc-applicant-status').className = 'badge badge-blue';
+
+  setStep('s', 2, 5);
+  docState.linked = true;
+  document.getElementById('doc-btn-complete').disabled = false;
+  btn.textContent = 'Regenerate Link'; btn.disabled = false;
+}
+
+async function docSimulateComplete() {
+  if (!docState.linked) return;
+  var btn = document.getElementById('doc-btn-complete');
+  btn.disabled = true; btn.textContent = 'Processing...';
+
+  docLog('#ffa657', 'Webhook: applicantReviewed (reviewStatus: onHold)');
+  await sleep(600);
+  document.getElementById('doc-applicant-status').textContent = 'onHold';
+  document.getElementById('doc-applicant-status').className = 'badge badge-yellow';
+
+  docLog('#d2a8ff', 'Simulating user submission: ID document + selfie + liveness...');
+  await sleep(800);
+
+  // Simulate OCR and liveness results
+  document.getElementById('doc-docs-status').innerHTML = '<span class="badge badge-green">PRC ID Card — OCR verified</span>';
+  document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7% confidence)</span>';
+  docLog('#7ee787', 'ID document: PRC Resident ID Card — OCR match ✓');
+  docLog('#7ee787', 'Liveness: Pass (98.7% face match confidence)');
+
+  setStep('s', 3, 5);
+  document.getElementById('doc-btn-aml').disabled = false;
+  btn.textContent = 'Simulate Again'; btn.disabled = false;
+  docState.completed = true;
+}
+
+async function docRunAML() {
+  if (!docState.completed) return;
+  var btn = document.getElementById('doc-btn-aml');
+  btn.disabled = true; btn.textContent = 'Running...';
+
+  docLog('#79c0ff', 'POST /resources/applicants/{id}/recheck/aml');
+  await sleep(1000);
+
+  var riskLevel = 'low';
+  var pepHit = false;
+  docLog('#7ee787', 'AML screening complete — risk level: ' + riskLevel + ', PEP: ' + (pepHit ? 'YES' : 'no'));
+
+  document.getElementById('doc-aml-status').innerHTML = '<span class="badge badge-green">Clear (low risk)</span>';
+  document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+  document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+  document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
+  document.getElementById('doc-applicant-status').textContent = 'approved';
+  document.getElementById('doc-applicant-status').className = 'badge badge-green';
+
+  setStep('s', 5, 5);
+  docState.approved = true;
+  btn.textContent = 'Recheck AML'; btn.disabled = false;
+}
+
+// ─── Non-Doc KYC (Tab 3) ───
+var ndState = { created: false, linked: false, completed: false, approved: false };
+
+function ndLog(cls, text) {
+  var el = document.getElementById('nondoc-log');
+  var entry = document.createElement('div');
+  entry.style.padding = '2px 0';
+  entry.style.borderBottom = '1px solid #161b22';
+  entry.innerHTML = '<span style="color:#6e7681">' + now() + '</span> <span style="color:' + cls + '">' + text + '</span>';
+  if (el.children.length > 0 && el.children[0].style.color === 'rgb(110, 118, 129)') el.innerHTML = '';
+  el.appendChild(entry);
+  el.scrollTop = el.scrollHeight;
+}
+function ndClearLog() { document.getElementById('nondoc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
+
+async function nondocCreateApplicant() {
+  ndState = { created: false, linked: false, completed: false, approved: false };
+  document.getElementById('nondoc-ext-id').textContent = '—';
+  document.getElementById('nondoc-app-id').textContent = '—';
+  document.getElementById('nondoc-applicant-status').textContent = 'Not Created';
+  document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
+  ['nondoc-review-status','nondoc-review-answer','nondoc-id-status','nondoc-liveness-status'].forEach(function(id) {
+    document.getElementById(id).innerHTML = '<span class="badge badge-gray">—</span>';
+  });
+  document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
+  ndClearLog();
+  setStep('n', 0, 4);
+
+  var btn = document.getElementById('nondoc-btn-create');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  ndLog('#79c0ff', 'POST /resources/applicants?levelName=non-doc-kyc-level');
+  ndLog('#d2a8ff', 'Body: { "externalUserId": "user-chen-fang", "info": { "firstName": "Fang", "lastName": "Chen", "country": "SGP" } }');
+  await sleep(800);
+
+  var appid = '68a3f2e1b4c9d0000a654321';
+  document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
+  document.getElementById('nondoc-app-id').textContent = appid;
+  document.getElementById('nondoc-applicant-status').textContent = 'init';
+  document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
+
+  ndLog('#79c0ff', '200 OK — applicantId: ' + appid);
+  ndLog('#ffa657', 'Webhook: applicantCreated');
+  await sleep(400);
+  ndLog('#7ee787', 'Applicant created successfully (Non-Doc L3)');
+
+  setStep('n', 1, 4);
+  ndState.created = true;
+  document.getElementById('nondoc-btn-link').disabled = false;
+  btn.textContent = 'Recreate'; btn.disabled = false;
+}
+
+async function nondocGenLink() {
+  if (!ndState.created) return;
+  var btn = document.getElementById('nondoc-btn-link');
+  btn.disabled = true; btn.textContent = 'Generating...';
+
+  ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
+  ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
+  await sleep(600);
+
+  var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
+  ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+  ndLog('#ffa657', 'Webhook: applicantPending');
+  await sleep(300);
+  document.getElementById('nondoc-applicant-status').textContent = 'pending';
+  document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
+
+  setStep('n', 2, 4);
+  ndState.linked = true;
+  document.getElementById('nondoc-btn-complete').disabled = false;
+  btn.textContent = 'Regenerate Link'; btn.disabled = false;
+}
+
+async function nondocSimulateComplete() {
+  if (!ndState.linked) return;
+  var btn = document.getElementById('nondoc-btn-complete');
+  btn.disabled = true; btn.textContent = 'Processing...';
+
+  ndLog('#d2a8ff', 'Simulating Non-Doc flow: ID number entry + liveness...');
+  await sleep(500);
+  ndLog('#ffa657', 'Webhook: applicantReviewed (reviewStatus: pending → completed)');
+  await sleep(600);
+
+  document.getElementById('nondoc-id-status').innerHTML = '<span class="badge badge-green">SG NRIC verified via API</span>';
+  document.getElementById('nondoc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (99.2% confidence)</span>';
+  ndLog('#7ee787', 'ID verified: Singapore NRIC (no document upload required)');
+  ndLog('#7ee787', 'Liveness: Pass (99.2% face match confidence)');
+  ndLog('#7ee787', 'Non-Doc processing time: 4.5s');
+
+  document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+  document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+  document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
+  document.getElementById('nondoc-applicant-status').textContent = 'approved';
+  document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
+
+  setStep('n', 4, 4);
+  ndState.approved = true;
+  btn.textContent = 'Simulate Again'; btn.disabled = false;
 }
 </script>
 
