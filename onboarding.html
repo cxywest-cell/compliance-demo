@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Onboarding — Compliance Demo</title>
+<title>Onboard — Compliance Demo</title>
 
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,32 +18,54 @@
   .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
   .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
   .content { flex: 1; overflow-y: auto; padding: 16px; }
-  .role-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; }
-  .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
-  .role-tab:hover { color: #1a1a1a; }
-  .role-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
-  .role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
-  .role-header .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .role-header h2 { font-size: 14px; font-weight: 600; }
-  .role-header .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f0f0f0; color: #666; margin-left: auto; }
-  .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-  .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
-  .flow-bar .sep { color: #ccc; }
+  .tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; }
+  .tab { padding: 10px 14px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+  .tab:hover { color: #1a1a1a; }
+  .tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
   .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
   .card-body { padding: 10px 12px; }
-  .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
-  .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
-  .k { color: #888; }
-  .v { color: #1a1a1a; }
-  .custodian-bed { background: #fafbfc; border-top: 2px solid #e0e0e0; }
-  .placeholder { padding: 40px 16px; text-align: center; color: #888; }
-  .placeholder h3 { font-size: 14px; margin-bottom: 8px; color: #1a1a1a; }
-  .placeholder p { font-size: 12px; }
-  .role-page { display: none; }
-  .role-page.active { display: block; }
+  .result-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+  .result-row + .result-row { border-top: 1px solid #f0f0f0; }
+  .rk { color: #888; }
+  .rv { color: #1a1a1a; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-orange { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .flow-steps { display: flex; align-items: center; gap: 0; margin-bottom: 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; overflow-x: auto; }
+  .step { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: #e5e7eb; color: #6b7280; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .step-num.done { background: #5b4cdb; color: #fff; }
+  .step-num.active { background: #5b4cdb; color: #fff; }
+  .step-label { font-size: 11px; font-weight: 500; color: #888; }
+  .step-label.done { color: #1a1a1a; }
+  .step-label.active { color: #5b4cdb; }
+  .step-arrow { color: #e0e0e0; font-size: 14px; margin: 0 6px; flex-shrink: 0; }
+  .step-arrow.done { color: #5b4cdb; }
+  .doc-check { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+  .doc-check + .doc-check { border-top: 1px solid #f0f0f0; }
+  .doc-icon { width: 16px; text-align: center; }
+  .btn { padding: 6px 14px; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-run { background: #2563eb; color: #fff; }
+  .btn-run:hover { background: #1d4ed8; }
+  .status-indicator { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .status-dot.green { background: #16a34a; }
+  .status-dot.orange { background: #d97706; }
+  .status-dot.gray { background: #9ca3af; }
+  .info-note { background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 12px; font-size: 11px; color: #1e40af; margin-bottom: 12px; }
+  .info-note strong { font-weight: 600; }
+  .warning-note { background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 12px; font-size: 11px; color: #92400e; margin-bottom: 12px; }
 </style>
 
 </head>
@@ -54,22 +76,281 @@
     <h1><span>◈</span> Compliance Demo</h1>
   </div>
   <div class="sidebar-nav">
-    <a class="nav-item active" href="onboarding.html"><span class="icon">+</span> Onboarding</a>
+    <a class="nav-item active" href="onboarding.html"><span class="icon">+</span> Onboard</a>
     <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
-    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Address Monitoring</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
     <a class="nav-item" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
   </div>
 </div>
 
 <div class="main">
-  <div class="topbar">Onboarding</div>
+  <div class="topbar"><span>Onboard</span></div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">Corporate Onboarding</div>
+    <div class="tab" onclick="switchTab(1)">Individual Onboarding</div>
+    <div class="tab" onclick="switchTab(2)">Non-Doc Individual Onboarding</div>
+  </div>
   <div class="content">
 
-    <div class="placeholder">
-      <h3>Onboarding</h3>
-      <p>New entity/customer registration flow goes here.<br>Includes KYB workflow, document upload, and compliance review.</p>
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 1: Corporate Onboarding                     -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-pane active" id="tab-corporate">
+
+      <div class="info-note"><strong>KB</strong> Know Your Business — corporate entity verification with UBO disclosure, document collection, and custodian linkage.</div>
+
+      <!-- Flow Steps -->
+      <div class="flow-steps">
+        <div class="step"><span class="step-num done">1</span><span class="step-label done">Entity Info</span></div>
+        <span class="step-arrow done">→</span>
+        <div class="step"><span class="step-num done">2</span><span class="step-label done">UBO Disclosure</span></div>
+        <span class="step-arrow done">→</span>
+        <div class="step"><span class="step-num active">3</span><span class="step-label active">Documents</span></div>
+        <span class="step-arrow">→</span>
+        <div class="step"><span class="step-num">4</span><span class="step-label">Compliance Review</span></div>
+        <span class="step-arrow">→</span>
+        <div class="step"><span class="step-num">5</span><span class="step-label">Custodian Link</span></div>
+      </div>
+
+      <!-- Entity Information -->
+      <div class="section-title">Entity Information</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Entity Name</span><span class="rv">Cregis Digital Assets Ltd</span></div>
+          <div class="result-row"><span class="rk">Legal Type</span><span class="rv"><span class="badge badge-blue">Limited Company</span></span></div>
+          <div class="result-row"><span class="rk">Jurisdiction</span><span class="rv">British Virgin Islands (BVI)</span></div>
+          <div class="result-row"><span class="rk">Registration No</span><span class="rv mono">BVI-20485719</span></div>
+          <div class="result-row"><span class="rk">DID</span><span class="rv mono">did:trisa:entity-a-0x3f8a</span></div>
+          <div class="result-row"><span class="rk">VASP Code</span><span class="rv">VASP-CN-0892</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-orange">In Progress</span></span></div>
+        </div>
+      </div>
+
+      <!-- UBO Disclosure -->
+      <div class="section-title">UBO Disclosure (Ultimate Beneficial Owners)</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Beneficial Ownership Structure</span>
+          <span class="badge badge-green">3 UBOs Identified</span>
+        </div>
+        <div class="card-body">
+          <table>
+            <tr><th>Name</th><th>Ownership %</th><th>Nationality</th><th>Role</th><th>Verified</th></tr>
+            <tr>
+              <td>Zhang Wei</td>
+              <td>42%</td>
+              <td>🇨🇳 PRC</td>
+              <td>CEO & Director</td>
+              <td><span class="badge badge-green">Verified</span></td>
+            </tr>
+            <tr>
+              <td>Li Ming</td>
+              <td>33%</td>
+              <td>🇸🇬 Singapore</td>
+              <td>CTO & Director</td>
+              <td><span class="badge badge-green">Verified</span></td>
+            </tr>
+            <tr>
+              <td>Chen Jie</td>
+              <td>25%</td>
+              <td>🇭🇰 Hong Kong</td>
+              <td>CFO</td>
+              <td><span class="badge badge-orange">Pending</span></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Document Checklist -->
+      <div class="section-title">Document Checklist</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="doc-check"><span class="doc-icon">✓</span> Certificate of Incorporation <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
+          <div class="doc-check"><span class="doc-icon">✓</span> Articles of Association <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
+          <div class="doc-check"><span class="doc-icon">✓</span> Register of Directors <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
+          <div class="doc-check"><span class="doc-icon">✓</span> Register of Members / Shareholders <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
+          <div class="doc-check"><span class="doc-icon">⏳</span> UBO Passport Copies <span class="badge badge-orange" style="margin-left:auto">2/3 Received</span></div>
+          <div class="doc-check"><span class="doc-icon">✗</span> Proof of Business Address <span class="badge badge-gray" style="margin-left:auto">Not Received</span></div>
+        </div>
+      </div>
+
+      <!-- Custodian Link -->
+      <div class="section-title">Custodian Linkage</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Custodian</span><span class="rv"><span class="badge badge-blue">Custodian A</span></span></div>
+          <div class="result-row"><span class="rk">VASP DID</span><span class="rv mono">did:trisa:custodian-a-vasp</span></div>
+          <div class="result-row"><span class="rk">Hot Wallet</span><span class="rv mono">0x7c4e...b93a</span></div>
+          <div class="result-row"><span class="rk">Link Status</span><span class="rv"><span class="badge badge-gray">Pending</span></span></div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 2: Individual Onboarding                    -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-individual">
+
+      <div class="info-note"><strong>KYC</strong> Full individual verification with government-issued ID, proof of address, and liveness check.</div>
+
+      <!-- Flow Steps -->
+      <div class="flow-steps">
+        <div class="step"><span class="step-num done">1</span><span class="step-label done">Personal Info</span></div>
+        <span class="step-arrow done">→</span>
+        <div class="step"><span class="step-num done">2</span><span class="step-label done">ID Upload</span></div>
+        <span class="step-arrow done">→</span>
+        <div class="step"><span class="step-num active">3</span><span class="step-label active">Liveness Check</span></div>
+        <span class="step-arrow">→</span>
+        <div class="step"><span class="step-num">4</span><span class="step-label">POA Verification</span></div>
+        <span class="step-arrow">→</span>
+        <div class="step"><span class="step-num">5</span><span class="step-label">Custodian Wallet</span></div>
+      </div>
+
+      <!-- Personal Info -->
+      <div class="section-title">Personal Information</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Full Name</span><span class="rv">Wang Xiaoming</span></div>
+          <div class="result-row"><span class="rk">Date of Birth</span><span class="rv">1988-03-15</span></div>
+          <div class="result-row"><span class="rk">Nationality</span><span class="rv">🇨🇳 PRC</span></div>
+          <div class="result-row"><span class="rk">DID</span><span class="rv mono">did:trisa:individual-wang-0x7e2d</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-orange">In Progress</span></span></div>
+        </div>
+      </div>
+
+      <!-- ID Document -->
+      <div class="section-title">Identity Document</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Government-Issued ID</span>
+          <span class="badge badge-green">Verified</span>
+        </div>
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Document Type</span><span class="rv"><span class="badge badge-blue">PRC Resident ID Card</span></span></div>
+          <div class="result-row"><span class="rk">ID Number</span><span class="rv mono">11010519880315XXXX</span></div>
+          <div class="result-row"><span class="rk">Issuing Authority</span><span class="rv">Beijing Chaoyang PSB</span></div>
+          <div class="result-row"><span class="rk">Expiry Date</span><span class="rv">2038-03-15</span></div>
+          <div class="result-row"><span class="rk">OCR Match</span><span class="rv"><span class="badge badge-green">Name ✓ DOB ✓ Photo ✓</span></span></div>
+        </div>
+      </div>
+
+      <!-- Liveness Check -->
+      <div class="section-title">Liveness Verification</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-orange">Pending</span></span></div>
+          <div class="result-row"><span class="rk">Method</span><span class="rv">Face liveness detection (blink + head turn)</span></div>
+          <div class="result-row"><span class="rk">Photo Match</span><span class="rv"><span class="badge badge-gray">Not Yet Compared</span></span></div>
+        </div>
+      </div>
+
+      <!-- Proof of Address -->
+      <div class="section-title">Proof of Address</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray">Not Started</span></span></div>
+          <div class="result-row"><span class="rk">Accepted Documents</span><span class="rv">Utility bill, bank statement, or tax notice (< 3 months)</span></div>
+          <div class="result-row"><span class="rk">Address</span><span class="rv">Room 1201, Tower B, SOHO, Chaoyang Dist, Beijing</span></div>
+        </div>
+      </div>
+
+      <!-- Custodian Wallet -->
+      <div class="section-title">Custodian Wallet Assignment</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Custodian</span><span class="rv"><span class="badge badge-blue">Custodian A</span></span></div>
+          <div class="result-row"><span class="rk">Wallet Status</span><span class="rv"><span class="badge badge-gray">Generated on completion</span></span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 3: Non-Doc Individual Onboarding             -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-nondoc">
+
+      <div class="warning-note"><strong>Low-Tier KYC</strong> No document upload required. Self-declaration + wallet binding + risk acknowledgment. Suitable for low-value accounts with transaction limits.</div>
+
+      <!-- Flow Steps -->
+      <div class="flow-steps">
+        <div class="step"><span class="step-num done">1</span><span class="step-label done">Basic Info</span></div>
+        <span class="step-arrow done">→</span>
+        <div class="step"><span class="step-num active">2</span><span class="step-label active">Risk Acknowledgment</span></div>
+        <span class="step-arrow">→</span>
+        <div class="step"><span class="step-num">3</span><span class="step-label">Wallet Binding</span></div>
+        <span class="step-arrow">→</span>
+        <div class="step"><span class="step-num">4</span><span class="step-label">Limits Applied</span></div>
+      </div>
+
+      <!-- Basic Info -->
+      <div class="section-title">Basic Information (Self-Declaration)</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Display Name</span><span class="rv">CryptoTrader_2024</span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv mono">trader2024@example.com</span></div>
+          <div class="result-row"><span class="rk">Country</span><span class="rv"><span class="badge badge-blue">🇨🇳 PRC</span></span></div>
+          <div class="result-row"><span class="rk">DID</span><span class="rv mono">did:trisa:nondoc-0x9a3f</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-green">Active</span></span></div>
+        </div>
+      </div>
+
+      <!-- Risk Acknowledgment -->
+      <div class="section-title">Risk Acknowledgment</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Declarations Signed</span>
+          <span class="badge badge-green">Complete</span>
+        </div>
+        <div class="card-body">
+          <div class="doc-check"><span class="doc-icon">✓</span> I confirm I am not a sanctioned individual or entity</div>
+          <div class="doc-check"><span class="doc-icon">✓</span> I understand transaction limits apply to this account</div>
+          <div class="doc-check"><span class="doc-icon">✓</span> I declare the wallet address belongs to me</div>
+          <div class="doc-check"><span class="doc-icon">✓</span> I accept the platform Terms of Service</div>
+          <div class="result-row" style="margin-top:8px"><span class="rk">Timestamp</span><span class="rv mono">2024-11-20 14:32:07 UTC</span></div>
+        </div>
+      </div>
+
+      <!-- Wallet Binding -->
+      <div class="section-title">Wallet Binding</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Wallet Address</span><span class="rv mono">0x9a3f...2e71</span></div>
+          <div class="result-row"><span class="rk">Chain</span><span class="rv">Ethereum</span></div>
+          <div class="result-row"><span class="rk">Verification</span><span class="rv"><span class="badge badge-green">Signature Verified</span></span></div>
+          <div class="result-row"><span class="rk">Custodian</span><span class="rv"><span class="badge badge-blue">Custodian B</span></span></div>
+        </div>
+      </div>
+
+      <!-- Transaction Limits -->
+      <div class="section-title">Account Limits (Non-Doc Tier)</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="result-row"><span class="rk">Daily Limit</span><span class="rv"><span class="badge badge-orange">5,000 CLCC</span></span></div>
+          <div class="result-row"><span class="rk">Monthly Limit</span><span class="rv"><span class="badge badge-orange">50,000 CLCC</span></span></div>
+          <div class="result-row"><span class="rk">Max Single Transfer</span><span class="rv"><span class="badge badge-orange">10,000 CLCC</span></span></div>
+          <div class="result-row"><span class="rk">Upgrade Path</span><span class="rv">Complete full KYC to remove limits</span></div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </div>
+
+<script>
+function switchTab(n) {
+  var tabs = document.querySelectorAll('.tab');
+  var panes = document.querySelectorAll('.tab-pane');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.remove('active');
+    panes[i].classList.remove('active');
+  }
+  tabs[n].classList.add('active');
+  panes[n].classList.add('active');
+}
+</script>
+
 </body>
 </html>
