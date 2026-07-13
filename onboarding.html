@@ -86,7 +86,13 @@
 </div>
 
 <div class="main">
-  <div class="topbar"><span>Onboard</span></div>
+  <div class="topbar"><span>Onboard</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;color:#888">Mode:</span>
+      <button class="btn btn-run" id="mode-mock" style="padding:2px 8px;font-size:10px" onclick="setMode('mock')">Mock</button>
+      <button class="btn btn-reset" id="mode-real" style="padding:2px 8px;font-size:10px;background:#2563eb;color:#fff" onclick="setMode('real')">Real</button>
+    </div>
+  </div>
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">Corporate Onboarding</div>
     <div class="tab" onclick="switchTab(1)">Individual Onboarding</div>
@@ -357,6 +363,15 @@
 </div>
 
 <script>
+var kycMode = 'real'; // default: real API
+
+function setMode(m) {
+  kycMode = m;
+  document.getElementById('mode-mock').style.background = m === 'mock' ? '#2563eb' : '#475569';
+  document.getElementById('mode-real').style.background = m === 'real' ? '#2563eb' : '#475569';
+}
+setMode('real');
+
 function switchTab(n) {
   var tabs = document.querySelectorAll('.tab');
   var panes = document.querySelectorAll('.tab-pane');
@@ -405,7 +420,6 @@ function docLog(cls, text) {
   entry.style.padding = '2px 0';
   entry.style.borderBottom = '1px solid #161b22';
   entry.innerHTML = '<span style="color:#6e7681">' + now() + '</span> <span style="color:' + cls + '">' + text + '</span>';
-  // Remove placeholder
   if (el.children.length > 0 && el.children[0].style.color === 'rgb(110, 118, 129)') el.innerHTML = '';
   el.appendChild(entry);
   el.scrollTop = el.scrollHeight;
@@ -428,20 +442,53 @@ async function docCreateApplicant() {
   var btn = document.getElementById('doc-btn-create');
   btn.disabled = true; btn.textContent = 'Creating...';
 
-  docLog('#79c0ff', 'POST /resources/applicants?levelName=kyc-test-daniel-260618');
-  docLog('#d2a8ff', 'Body: { "externalUserId": "user-wang-xiaoming", "info": { "firstName": "Xiaoming", "lastName": "Wang", "country": "CHN" } }');
-  await sleep(800);
+  if (kycMode === 'real') {
+    docLog('#79c0ff', 'POST /api/websdk-link (preparing applicant creation)');
+    docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "externalUserId": "user-wang-xiaoming", "email": "wang@example.com" }');
+    btn.textContent = 'Requesting...';
+  } else {
+    docLog('#79c0ff', 'POST /resources/applicants?levelName=kyc-test-daniel-260618');
+    docLog('#d2a8ff', 'Body: { "externalUserId": "user-wang-xiaoming", "info": { "firstName": "Xiaoming", "lastName": "Wang", "country": "CHN" } }');
+    await sleep(800);
+  }
 
-  var appid = '68a3f2e1b4c9d0000a123456';
-  document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
-  document.getElementById('doc-app-id').textContent = appid;
-  document.getElementById('doc-applicant-status').textContent = 'init';
-  document.getElementById('doc-applicant-status').className = 'badge badge-gray';
-
-  docLog('#79c0ff', '200 OK — applicantId: ' + appid);
-  docLog('#ffa657', 'Webhook: applicantCreated (externalUserId: user-wang-xiaoming)');
-  await sleep(400);
-  docLog('#7ee787', 'Applicant created successfully');
+  if (kycMode === 'real') {
+    // Real mode: generate access token (applicant created lazily on SDK interaction)
+    try {
+      docLog('#79c0ff', 'POST /api/token?externalUserId=user-wang-xiaoming');
+      var res = await fetch('/api/token?externalUserId=user-wang-xiaoming', { method: 'POST' });
+      var data = await res.json();
+      if (data.token) {
+        document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
+        document.getElementById('doc-app-id').textContent = '(lazy on SDK)';
+        document.getElementById('doc-applicant-status').textContent = 'init';
+        document.getElementById('doc-applicant-status').className = 'badge badge-gray';
+        docLog('#79c0ff', '200 OK — token generated');
+        docLog('#d2a8ff', 'Token: ' + data.token.substring(0, 30) + '...');
+        await sleep(400);
+        docLog('#ffa657', 'Webhook: applicantCreated (will fire on SDK interaction)');
+        docLog('#7ee787', 'Token ready — applicant will be created when WebSDK loads');
+      } else {
+        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        btn.textContent = 'Retry'; btn.disabled = false;
+        return;
+      }
+    } catch(e) {
+      docLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+      return;
+    }
+  } else {
+    var appid = '68a3f2e1b4c9d0000a123456';
+    document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
+    document.getElementById('doc-app-id').textContent = appid;
+    document.getElementById('doc-applicant-status').textContent = 'init';
+    document.getElementById('doc-applicant-status').className = 'badge badge-gray';
+    docLog('#79c0ff', '200 OK — applicantId: ' + appid);
+    docLog('#ffa657', 'Webhook: applicantCreated (externalUserId: user-wang-xiaoming)');
+    await sleep(400);
+    docLog('#7ee787', 'Applicant created successfully');
+  }
 
   setStep('s', 1, 5);
   docState.created = true;
@@ -454,21 +501,76 @@ async function docGenLink() {
   var btn = document.getElementById('doc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-  docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
-  await sleep(600);
+  var successUrl = window.location.protocol + '//' + window.location.host + '/callback?action=success&externalUserId=user-wang-xiaoming';
+  var rejectUrl = window.location.protocol + '//' + window.location.host + '/callback?action=reject&externalUserId=user-wang-xiaoming';
 
-  var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
-  docLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
-  docLog('#ffa657', 'Webhook: applicantPending (applicant started SDK session)');
-  await sleep(300);
-  document.getElementById('doc-applicant-status').textContent = 'pending';
-  document.getElementById('doc-applicant-status').className = 'badge badge-blue';
+  if (kycMode === 'real') {
+    docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
+    docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
+    docLog('#d2a8ff', 'redirect: { successUrl: "' + successUrl + '", rejectUrl: "' + rejectUrl + '" }');
 
-  setStep('s', 2, 5);
-  docState.linked = true;
-  document.getElementById('doc-btn-complete').disabled = false;
-  btn.textContent = 'Regenerate Link'; btn.disabled = false;
+    try {
+      var res = await fetch('/api/websdk-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          levelName: 'kyc-test-daniel-260618',
+          externalUserId: 'user-wang-xiaoming',
+          email: 'wang@example.com',
+          successUrl: successUrl,
+          rejectUrl: rejectUrl
+        })
+      });
+      var data = await res.json();
+      if (data.url) {
+        docLog('#79c0ff', '200 OK — WebSDK URL: ' + data.url.substring(0, 60) + '...');
+        docLog('#ffa657', 'Webhook: applicantPending (SDK session started)');
+        await sleep(300);
+        document.getElementById('doc-applicant-status').textContent = 'pending';
+        document.getElementById('doc-applicant-status').className = 'badge badge-blue';
+        docLog('#d2a8ff', 'Applicant ID: ' + data.applicantId);
+        document.getElementById('doc-app-id').textContent = data.applicantId;
+
+        // Show the WebSDK link
+        var linkDiv = document.createElement('div');
+        linkDiv.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;margin-top:8px;font-size:10px;font-family:monospace';
+        linkDiv.innerHTML = '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div><a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a>';
+        var oldLink = document.getElementById('doc-websdk-link');
+        if (oldLink) oldLink.remove();
+        linkDiv.id = 'doc-websdk-link';
+        var logEl = document.getElementById('doc-log');
+        logEl.parentNode.insertBefore(linkDiv, logEl.nextSibling);
+
+        setStep('s', 2, 5);
+        docState.linked = true;
+        document.getElementById('doc-btn-complete').disabled = false;
+        btn.textContent = 'Regenerate Link'; btn.disabled = false;
+      } else {
+        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        btn.textContent = 'Retry'; btn.disabled = false;
+      }
+    } catch(e) {
+      docLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    // Mock mode
+    docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
+    docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirect": { "successUrl": "' + successUrl + '", "rejectUrl": "' + rejectUrl + '" } }');
+    await sleep(600);
+
+    var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
+    docLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+    docLog('#ffa657', 'Webhook: applicantPending (applicant started SDK session)');
+    await sleep(300);
+    document.getElementById('doc-applicant-status').textContent = 'pending';
+    document.getElementById('doc-applicant-status').className = 'badge badge-blue';
+
+    setStep('s', 2, 5);
+    docState.linked = true;
+    document.getElementById('doc-btn-complete').disabled = false;
+    btn.textContent = 'Regenerate Link'; btn.disabled = false;
+  }
 }
 
 async function docSimulateComplete() {
@@ -484,7 +586,6 @@ async function docSimulateComplete() {
   docLog('#d2a8ff', 'Simulating user submission: ID document + selfie + liveness...');
   await sleep(800);
 
-  // Simulate OCR and liveness results
   document.getElementById('doc-docs-status').innerHTML = '<span class="badge badge-green">PRC ID Card — OCR verified</span>';
   document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7% confidence)</span>';
   docLog('#7ee787', 'ID document: PRC Resident ID Card — OCR match ✓');
@@ -551,20 +652,45 @@ async function nondocCreateApplicant() {
   var btn = document.getElementById('nondoc-btn-create');
   btn.disabled = true; btn.textContent = 'Creating...';
 
-  ndLog('#79c0ff', 'POST /resources/applicants?levelName=non-doc-kyc-level');
-  ndLog('#d2a8ff', 'Body: { "externalUserId": "user-chen-fang", "info": { "firstName": "Fang", "lastName": "Chen", "country": "SGP" } }');
-  await sleep(800);
-
-  var appid = '68a3f2e1b4c9d0000a654321';
-  document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
-  document.getElementById('nondoc-app-id').textContent = appid;
-  document.getElementById('nondoc-applicant-status').textContent = 'init';
-  document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
-
-  ndLog('#79c0ff', '200 OK — applicantId: ' + appid);
-  ndLog('#ffa657', 'Webhook: applicantCreated');
-  await sleep(400);
-  ndLog('#7ee787', 'Applicant created successfully (Non-Doc L3)');
+  if (kycMode === 'real') {
+    ndLog('#79c0ff', 'POST /api/token?externalUserId=user-chen-fang');
+    try {
+      var res = await fetch('/api/token?externalUserId=user-chen-fang', { method: 'POST' });
+      var data = await res.json();
+      if (data.token) {
+        document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
+        document.getElementById('nondoc-app-id').textContent = '(lazy on SDK)';
+        document.getElementById('nondoc-applicant-status').textContent = 'init';
+        document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
+        ndLog('#79c0ff', '200 OK — token generated');
+        ndLog('#d2a8ff', 'Token: ' + data.token.substring(0, 30) + '...');
+        await sleep(400);
+        ndLog('#ffa657', 'Webhook: applicantCreated (will fire on SDK interaction)');
+        ndLog('#7ee787', 'Token ready — applicant will be created when WebSDK loads');
+      } else {
+        ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        btn.textContent = 'Retry'; btn.disabled = false;
+        return;
+      }
+    } catch(e) {
+      ndLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+      return;
+    }
+  } else {
+    ndLog('#79c0ff', 'POST /resources/applicants?levelName=non-doc-kyc-level');
+    ndLog('#d2a8ff', 'Body: { "externalUserId": "user-chen-fang", "info": { "firstName": "Fang", "lastName": "Chen", "country": "SGP" } }');
+    await sleep(800);
+    var appid = '68a3f2e1b4c9d0000a654321';
+    document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
+    document.getElementById('nondoc-app-id').textContent = appid;
+    document.getElementById('nondoc-applicant-status').textContent = 'init';
+    document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
+    ndLog('#79c0ff', '200 OK — applicantId: ' + appid);
+    ndLog('#ffa657', 'Webhook: applicantCreated');
+    await sleep(400);
+    ndLog('#7ee787', 'Applicant created successfully (Non-Doc L3)');
+  }
 
   setStep('n', 1, 4);
   ndState.created = true;
@@ -577,21 +703,72 @@ async function nondocGenLink() {
   var btn = document.getElementById('nondoc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-  ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
-  await sleep(600);
+  var successUrl = window.location.protocol + '//' + window.location.host + '/callback?action=success&externalUserId=user-chen-fang';
+  var rejectUrl = window.location.protocol + '//' + window.location.host + '/callback?action=reject&externalUserId=user-chen-fang';
 
-  var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
-  ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
-  ndLog('#ffa657', 'Webhook: applicantPending');
-  await sleep(300);
-  document.getElementById('nondoc-applicant-status').textContent = 'pending';
-  document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
+  if (kycMode === 'real') {
+    ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
+    ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
+    ndLog('#d2a8ff', 'redirect: { successUrl: "' + successUrl + '", rejectUrl: "' + rejectUrl + '" }');
 
-  setStep('n', 2, 4);
-  ndState.linked = true;
-  document.getElementById('nondoc-btn-complete').disabled = false;
-  btn.textContent = 'Regenerate Link'; btn.disabled = false;
+    try {
+      var res = await fetch('/api/websdk-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          levelName: 'non-doc-kyc-level',
+          externalUserId: 'user-chen-fang',
+          email: 'chenf@example.com',
+          successUrl: successUrl,
+          rejectUrl: rejectUrl
+        })
+      });
+      var data = await res.json();
+      if (data.url) {
+        ndLog('#79c0ff', '200 OK — WebSDK URL: ' + data.url.substring(0, 60) + '...');
+        ndLog('#ffa657', 'Webhook: applicantPending');
+        await sleep(300);
+        document.getElementById('nondoc-applicant-status').textContent = 'pending';
+        document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
+        ndLog('#d2a8ff', 'Applicant ID: ' + data.applicantId);
+        document.getElementById('nondoc-app-id').textContent = data.applicantId;
+
+        var linkDiv = document.createElement('div');
+        linkDiv.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;margin-top:8px;font-size:10px;font-family:monospace';
+        linkDiv.innerHTML = '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div><a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a>';
+        var oldLink = document.getElementById('nondoc-websdk-link');
+        if (oldLink) oldLink.remove();
+        linkDiv.id = 'nondoc-websdk-link';
+        var logEl = document.getElementById('nondoc-log');
+        logEl.parentNode.insertBefore(linkDiv, logEl.nextSibling);
+
+        setStep('n', 2, 4);
+        ndState.linked = true;
+        document.getElementById('nondoc-btn-complete').disabled = false;
+        btn.textContent = 'Regenerate Link'; btn.disabled = false;
+      } else {
+        ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        btn.textContent = 'Retry'; btn.disabled = false;
+      }
+    } catch(e) {
+      ndLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
+    ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
+    await sleep(600);
+    var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
+    ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+    ndLog('#ffa657', 'Webhook: applicantPending');
+    await sleep(300);
+    document.getElementById('nondoc-applicant-status').textContent = 'pending';
+    document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
+    setStep('n', 2, 4);
+    ndState.linked = true;
+    document.getElementById('nondoc-btn-complete').disabled = false;
+    btn.textContent = 'Regenerate Link'; btn.disabled = false;
+  }
 }
 
 async function nondocSimulateComplete() {
