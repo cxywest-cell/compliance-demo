@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webhooks — Compliance Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 16px; border-bottom: 1px solid #e0e0e0; }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 600; }
+  .sidebar-logo h1 span { color: #5b4cdb; }
+  .sidebar-nav { padding: 12px 0; }
+  .nav-item { padding: 10px 16px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; display: flex; align-items: center; gap: 8px; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: #f5f5f5; color: #1a1a1a; }
+  .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .content { flex: 1; overflow-y: auto; padding: 16px; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+  .card-body { padding: 12px; }
+  .btn { padding: 6px 14px; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-run { background: #2563eb; color: #fff; }
+  .btn-run:hover { background: #1d4ed8; }
+  .btn-reset { background: #475569; color: #fff; }
+  .btn-reset:hover { background: #334155; }
+
+  /* Webhook list */
+  .wh-list { display: flex; flex-direction: column; gap: 6px; }
+  .wh-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+  .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
+  .wh-item.selected { background: #f0efff; border-color: #5b4cdb; }
+  .wh-time { font-size: 10px; color: #888; font-family: monospace; min-width: 60px; }
+  .wh-type { font-size: 11px; font-weight: 600; min-width: 160px; }
+  .wh-user { font-size: 10px; color: #666; font-family: monospace; }
+  .wh-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+  .wh-badge-ok { background: #d1fae5; color: #065f46; }
+  .wh-badge-fail { background: #fee2e2; color: #991b1b; }
+
+  /* JSON viewer */
+  .json-viewer { background: #0d1117; border-radius: 4px; padding: 12px; font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace; color: #c9d1d9; overflow-x: auto; white-space: pre; line-height: 1.7; max-height: 70vh; overflow-y: auto; }
+  .json-key { color: #79c0ff; }
+  .json-str { color: #a5d6ff; }
+  .json-num { color: #79c0ff; }
+  .json-bool { color: #ff7b72; }
+  .json-null { color: #8b949e; }
+
+  /* Summary bar */
+  .summary-bar { display: flex; gap: 12px; margin-bottom: 12px; }
+  .summary-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 14px; flex: 1; text-align: center; }
+  .summary-val { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .summary-label { font-size: 10px; color: #888; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1><span>◈</span> Compliance Demo</h1>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item" href="onboarding.html"><span class="icon">+</span> Onboard</a>
+    <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
+    <a class="nav-item" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
+    <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
+    <a class="nav-item active" href="webhooks.html"><span class="icon">📋</span> Webhooks</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <span>Webhook Console</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="wh-live-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ca3af"></span>
+      <span style="font-size:10px;color:#888" id="wh-poll-status">Polling...</span>
+    </div>
+  </div>
+  <div class="content">
+
+    <div class="summary-bar">
+      <div class="summary-card"><div class="summary-val" id="sum-total">0</div><div class="summary-label">Total Events</div></div>
+      <div class="summary-card"><div class="summary-val" id="sum-verified">0</div><div class="summary-label">Verified</div></div>
+      <div class="summary-card"><div class="summary-val" id="sum-unverified">0</div><div class="summary-label">Unverified</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:320px 1fr;gap:12px;height:calc(100vh - 180px)">
+      <!-- Left: event list -->
+      <div>
+        <div class="card" style="height:100%;display:flex;flex-direction:column">
+          <div class="card-header">
+            <span>Events</span>
+            <button class="btn btn-reset" onclick="clearLog()" style="padding:2px 8px;font-size:10px">Clear</button>
+          </div>
+          <div id="wh-list" class="wh-list" style="padding:8px;overflow-y:auto;flex:1">
+            <div style="color:#888;font-size:12px;padding:8px">Waiting for webhooks...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: JSON detail -->
+      <div>
+        <div class="card" style="height:100%;display:flex;flex-direction:column">
+          <div class="card-header">
+            <span id="detail-title">Select an event</span>
+            <button class="btn btn-run" onclick="copyJSON()" style="padding:2px 8px;font-size:10px">Copy JSON</button>
+          </div>
+          <div class="card-body" style="padding:8px;overflow:hidden;flex:1;display:flex;flex-direction:column">
+            <div id="json-viewer" class="json-viewer" style="flex:1;min-height:0">// Click an event to see full payload</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var currentData = [];
+var selectedIndex = -1;
+var selectedPayload = null;
+
+function now() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false });
+}
+
+function colorType(type) {
+  if (type === 'applicantReviewed') return '#7ee787';
+  if (type === 'applicantCreated') return '#79c0ff';
+  if (type === 'applicantOnHold') return '#d2a8ff';
+  if (type === 'applicantPending') return '#ffa657';
+  if (type === 'applicantWorkflowCompleted') return '#ff7b72';
+  return '#c9d1d9';
+}
+
+function renderList(entries) {
+  currentData = entries;
+  var el = document.getElementById('wh-list');
+  if (!entries || entries.length === 0) {
+    el.innerHTML = '<div style="color:#888;font-size:12px;padding:8px">Waiting for webhooks...</div>';
+    updateSummary(0, 0, 0);
+    return;
+  }
+
+  var total = entries.length;
+  var verified = entries.filter(function(e) { return e.verified; }).length;
+  var unverified = total - verified;
+  updateSummary(total, verified, unverified);
+
+  var html = '';
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    var cls = selectedIndex === i ? 'wh-item selected' : 'wh-item';
+    var badge = e.verified
+      ? '<span class="wh-badge wh-badge-ok">OK</span>'
+      : '<span class="wh-badge wh-badge-fail">BAD SIG</span>';
+    var tColor = colorType(e.type || 'unknown');
+    var time = e.timestamp ? e.timestamp.slice(11, 19) : '—';
+    html += '<div class="' + cls + '" onclick="selectEntry(' + i + ')">' +
+      '<span class="wh-time">' + time + '</span>' +
+      '<span class="wh-type" style="color:' + tColor + '">' + (e.type || 'unknown') + '</span>' +
+      badge +
+      '<span class="wh-user">' + (e.externalUserId || '—') + '</span>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function selectEntry(idx) {
+  selectedIndex = idx;
+  selectedPayload = currentData[idx];
+  renderList(currentData);
+
+  var titleEl = document.getElementById('detail-title');
+  titleEl.textContent = selectedPayload.type || 'Unknown event';
+
+  var viewer = document.getElementById('json-viewer');
+  viewer.innerHTML = syntaxHighlight(JSON.stringify(selectedPayload, null, 2));
+}
+
+function copyJSON() {
+  if (!selectedPayload) return;
+  var text = JSON.stringify(selectedPayload, null, 2);
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+  } else {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        return '<span class="json-key">' + match.replace(/"/g, '').replace(/:$/, '') + '</span>:';
+      }
+      return '<span class="json-str">' + match + '</span>';
+    }
+    if (/true|false/.test(match)) return '<span class="json-bool">' + match + '</span>';
+    if (/null/.test(match)) return '<span class="json-null">' + match + '</span>';
+    return '<span class="json-num">' + match + '</span>';
+  });
+}
+
+function updateSummary(total, verified, unverified) {
+  document.getElementById('sum-total').textContent = total;
+  document.getElementById('sum-verified').textContent = verified;
+  document.getElementById('sum-unverified').textContent = unverified;
+}
+
+async function clearLog() {
+  if (!confirm('Clear all webhook logs?')) return;
+  await fetch('/api/webhooks/clear', { method: 'POST' });
+  selectedIndex = -1;
+  selectedPayload = null;
+  document.getElementById('detail-title').textContent = 'Select an event';
+  document.getElementById('json-viewer').innerHTML = '// Click an event to see full payload';
+  pollWebhooks();
+}
+
+var liveDot = document.getElementById('wh-live-dot');
+var pollStatus = document.getElementById('wh-poll-status');
+var pollActive = false;
+
+function pollWebhooks() {
+  pollActive = true;
+  fetch('/api/webhooks').then(function(r) { return r.json(); }).then(function(data) {
+    renderList(data);
+    liveDot.style.background = '#16a34a';
+    pollStatus.textContent = data.length + ' events';
+    pollActive = false;
+  }).catch(function() {
+    liveDot.style.background = '#dc2626';
+    pollStatus.textContent = 'Offline';
+    pollActive = false;
+  });
+}
+
+pollWebhooks();
+setInterval(pollWebhooks, 2000);
+</script>
+
+</body>
+</html>
