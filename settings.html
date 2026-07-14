@@ -569,7 +569,10 @@ async function toggleTunnel() {
   } else {
     btn.textContent = 'Starting...';
     try {
-      var res = await fetch('/api/tunnel/start', { method: 'POST' });
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
+      var res = await fetch('/api/tunnel/start', { method: 'POST', signal: controller.signal });
+      clearTimeout(timeoutId);
       var data = await res.json();
       if (data.error) {
         btn.textContent = 'Start Tunnel';
@@ -581,7 +584,9 @@ async function toggleTunnel() {
     } catch(e) {
       btn.textContent = 'Start Tunnel';
       btn.disabled = false;
-      alert('Failed to start tunnel: ' + e.message);
+      // Diagnose the error
+      var detail = e.name === 'AbortError' ? 'Request timed out (30s)' : e.message;
+      alert('Failed to start tunnel: ' + detail + '\n\nCheck: is the server running at ' + location.origin + '?');
     }
   }
 }
@@ -700,6 +705,15 @@ function updatePreviews() {
 
 // Load on start
 var saved = loadSettings();
+
+// Check if page is served via HTTP (not file://)
+if (location.protocol === 'file:') {
+  document.getElementById('tunnel-btn').disabled = true;
+  document.getElementById('tunnel-btn').textContent = 'Must serve via HTTP';
+  document.getElementById('tunnel-btn').title = 'Open http://localhost:8000/settings instead of opening the file directly';
+  document.querySelectorAll('.tunnel-action-btn').forEach(function(b) { b.disabled = true; });
+}
+
 var fieldMap = {
   's-baseurl': saved.baseUrl, 's-webhookurl': saved.webhookUrl,
   's-doclevel': saved.docLevel,
