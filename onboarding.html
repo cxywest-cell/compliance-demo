@@ -517,13 +517,12 @@ async function docGenLink() {
   var btn = document.getElementById('doc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  var successUrl = getBaseUrl() + '/callback?action=success&externalUserId=user-wang-xiaoming';
-  var rejectUrl = getBaseUrl() + '/callback?action=reject&externalUserId=user-wang-xiaoming';
+  var redirectUrl = getBaseUrl() + '/callback?externalUserId=user-wang-xiaoming';
 
   if (kycMode === 'real') {
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
     docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
-    docLog('#d2a8ff', 'redirect: { successUrl: "' + successUrl + '", rejectUrl: "' + rejectUrl + '" }');
+    docLog('#d2a8ff', 'redirectUrl: "' + redirectUrl + '"');
 
     try {
       var res = await fetch('/api/websdk-link', {
@@ -533,8 +532,7 @@ async function docGenLink() {
           levelName: getDocLevel(),
           externalUserId: 'user-wang-xiaoming',
           email: 'wang@example.com',
-          successUrl: successUrl,
-          rejectUrl: rejectUrl
+          redirectUrl: redirectUrl
         })
       });
       var data = await res.json();
@@ -572,7 +570,7 @@ async function docGenLink() {
   } else {
     // Mock mode
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirect": { "successUrl": "' + successUrl + '", "rejectUrl": "' + rejectUrl + '" } }');
+    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
     await sleep(600);
 
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
@@ -719,13 +717,12 @@ async function nondocGenLink() {
   var btn = document.getElementById('nondoc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  var successUrl = getBaseUrl() + '/callback?action=success&externalUserId=user-chen-fang';
-  var rejectUrl = getBaseUrl() + '/callback?action=reject&externalUserId=user-chen-fang';
+  var redirectUrl = getBaseUrl() + '/callback?externalUserId=user-chen-fang';
 
   if (kycMode === 'real') {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
     ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
-    ndLog('#d2a8ff', 'redirect: { successUrl: "' + successUrl + '", rejectUrl: "' + rejectUrl + '" }');
+    ndLog('#d2a8ff', 'redirectUrl: "' + redirectUrl + '"');
 
     try {
       var res = await fetch('/api/websdk-link', {
@@ -735,8 +732,7 @@ async function nondocGenLink() {
           levelName: getNonDocLevel(),
           externalUserId: 'user-chen-fang',
           email: 'chenf@example.com',
-          successUrl: successUrl,
-          rejectUrl: rejectUrl
+          redirectUrl: redirectUrl
         })
       });
       var data = await res.json();
