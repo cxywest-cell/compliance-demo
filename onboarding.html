@@ -453,6 +453,63 @@ function setStep(prefix, n, maxSteps) {
 }
 function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
+// ─── State persistence ───
+function saveState() {
+  var state = {
+    doc: { userId: docState.userId, linked: docState.linked, email: document.getElementById('doc-email').value,
+           extId: document.getElementById('doc-ext-id').textContent,
+           appId: document.getElementById('doc-app-id').textContent,
+           status: document.getElementById('doc-applicant-status').textContent,
+           statusClass: document.getElementById('doc-applicant-status').className },
+    nd: { userId: ndState.userId, linked: ndState.linked, email: document.getElementById('nondoc-email').value,
+          extId: document.getElementById('nondoc-ext-id').textContent,
+          appId: document.getElementById('nondoc-app-id').textContent,
+          status: document.getElementById('nondoc-applicant-status').textContent,
+          statusClass: document.getElementById('nondoc-applicant-status').className }
+  };
+  try { localStorage.setItem('onboarding-state', JSON.stringify(state)); } catch(e) {}
+}
+
+function restoreState() {
+  try {
+    var raw = localStorage.getItem('onboarding-state');
+    if (!raw) return;
+    var state = JSON.parse(raw);
+    if (state.doc && state.doc.userId) {
+      docState.userId = state.doc.userId;
+      docState.linked = state.doc.linked || false;
+      if (state.doc.email) document.getElementById('doc-email').value = state.doc.email;
+      if (state.doc.extId) document.getElementById('doc-ext-id').textContent = state.doc.extId;
+      if (state.doc.appId) document.getElementById('doc-app-id').textContent = state.doc.appId;
+      if (state.doc.status) {
+        document.getElementById('doc-applicant-status').textContent = state.doc.status;
+        document.getElementById('doc-applicant-status').className = state.doc.statusClass || 'badge badge-gray';
+      }
+      if (state.doc.userId) {
+        document.getElementById('doc-btn-link').disabled = false;
+        document.getElementById('doc-btn-status').disabled = false;
+        var btn = document.getElementById('doc-btn-link');
+        btn.textContent = state.doc.linked ? 'Regenerate Link' : 'Generate';
+      }
+    }
+    if (state.nd && state.nd.userId) {
+      ndState.userId = state.nd.userId;
+      ndState.linked = state.nd.linked || false;
+      if (state.nd.email) document.getElementById('nondoc-email').value = state.nd.email;
+      if (state.nd.extId) document.getElementById('nondoc-ext-id').textContent = state.nd.extId;
+      if (state.nd.appId) document.getElementById('nondoc-app-id').textContent = state.nd.appId;
+      if (state.nd.status) {
+        document.getElementById('nondoc-applicant-status').textContent = state.nd.status;
+        document.getElementById('nondoc-applicant-status').className = state.nd.statusClass || 'badge badge-gray';
+      }
+      if (state.nd.userId) {
+        document.getElementById('nondoc-btn-link').disabled = false;
+        document.getElementById('nondoc-btn-status').disabled = false;
+      }
+    }
+  } catch(e) {}
+}
+
 // ─── Doc KYC (Tab 2) ───
 var docState = { userId: null, email: null, linked: false };
 
@@ -492,6 +549,7 @@ function docSetUserId() {
 
   setStep('s', 1, 4);
   document.getElementById('doc-btn-link').disabled = false;
+  saveState();
 }
 
 async function docGenLink() {
@@ -536,6 +594,7 @@ async function docGenLink() {
         docState.linked = true;
         document.getElementById('doc-btn-status').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
+        saveState();
       } else {
         docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
         btn.textContent = 'Retry'; btn.disabled = false;
@@ -561,6 +620,7 @@ async function docGenLink() {
     docState.linked = true;
     document.getElementById('doc-btn-status').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
+    saveState();
   }
 }
 
@@ -617,6 +677,7 @@ async function docCheckStatus() {
         docLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
       }
       btn.textContent = 'Refresh Status'; btn.disabled = false;
+      saveState();
     } catch(e) {
       docLog('#ff7b72', 'Network error: ' + e.message);
       btn.textContent = 'Retry'; btn.disabled = false;
@@ -751,6 +812,7 @@ function nondocSetUserId() {
 
   setStep('n', 1, 4);
   document.getElementById('nondoc-btn-link').disabled = false;
+  saveState();
 }
 
 async function nondocGenLink() {
@@ -795,6 +857,7 @@ async function nondocGenLink() {
         ndState.linked = true;
         document.getElementById('nondoc-btn-status').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
+        saveState();
       } else {
         ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
         btn.textContent = 'Retry'; btn.disabled = false;
@@ -820,6 +883,7 @@ async function nondocGenLink() {
     ndState.linked = true;
     document.getElementById('nondoc-btn-status').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
+    saveState();
   }
 }
 
@@ -876,6 +940,7 @@ async function nondocCheckStatus() {
         ndLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
       }
       btn.textContent = 'Refresh Status'; btn.disabled = false;
+      saveState();
     } catch(e) {
       ndLog('#ff7b72', 'Network error: ' + e.message);
       btn.textContent = 'Retry'; btn.disabled = false;
@@ -970,4 +1035,6 @@ async function nondocDecision() {
     btn.textContent = 'Decision'; btn.disabled = false;
   }
 }
+
+restoreState();
 </script>
