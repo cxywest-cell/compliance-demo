@@ -234,11 +234,16 @@
         <div class="card-header">WebSDK</div>
         <div class="card-body">
           <div class="field">
-            <label>Redirect URL (Cloudflare Tunnel)</label>
+            <label>Redirect URL</label>
             <input type="text" id="s-baseurl" placeholder="https://abc123.trycloudflare.com/callback">
-            <div class="hint">Browser redirect after user completes KYC in WebSDK. Signed JWT appended if secret key is set.</div>
+            <div class="hint">Browser redirect after user completes KYC in WebSDK. A signed JWT is appended if a secret key is set.</div>
           </div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
+          <div class="field" style="margin-top:12px">
+            <label>Allowed Domains</label>
+            <input type="text" id="s-websdkdomains" placeholder="localhost, https://app.example.com">
+            <div class="hint">Comma-separated list of domains allowed to embed the WebSDK iframe</div>
+          </div>
         </div>
       </div>
 
@@ -261,7 +266,7 @@
               <div class="field">
                 <label>WebSDK Secret (JWT)</label>
                 <input type="text" id="s-websdksecret" placeholder="dbkXTP...">
-                <div class="hint">Used for generating WebSDK tokens</div>
+                <div class="hint">If provided, Sumsub uses this key to sign JWTs (e.g. on redirect or auth code generation)</div>
               </div>
               <div class="field">
                 <label>API Base URL</label>
@@ -380,6 +385,7 @@ var defaults = {
   apiSecret: 'SX1TV5oUsneQNYhnxOFIHMLB7glt0Ry4',
   websdkSecret: 'dbkXTPisF5WJ4E6-hP_mi8myVpwelq_cO-R1DV_1JPQ',
   sumsubBaseUrl: 'https://api.sumsub.com',
+  websdkDomains: 'localhost',
   ellipticKey: '77f3e28752d79b7f37b1e7f9c4e753bc',
   ellipticSecret: '5fc70fdd01205490b1a3d386cbb4fe78',
   ellipticEndpoint: 'aml-api.elliptic.co',
@@ -411,6 +417,7 @@ function saveAll() {
     apiSecret: document.getElementById('s-apisecret').value,
     websdkSecret: document.getElementById('s-websdksecret').value,
     sumsubBaseUrl: document.getElementById('s-sumsubbaseurl').value,
+    websdkDomains: document.getElementById('s-websdkdomains').value,
     ellipticKey: document.getElementById('s-elliptickey').value,
     ellipticSecret: document.getElementById('s-ellipticsecret').value,
     ellipticEndpoint: document.getElementById('s-ellipticendpoint').value,
@@ -440,7 +447,7 @@ function saveAll() {
 }
 function resetDefaults() {
   var ids = ['s-baseurl','s-webhookurl','s-doclevel','s-nondoclevel','s-kyblevel',
-    's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl',
+    's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl','s-websdkdomains',
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
     's-notabene-baseurl','s-notabene-apikey',
     's-ea-did','s-ea-apikey','s-ea-apisecret','s-ea-wallet',
@@ -448,7 +455,7 @@ function resetDefaults() {
     's-eb-did','s-eb-apikey','s-eb-apisecret','s-eb-wallet',
     's-cb-did','s-cb-apikey','s-cb-apisecret','s-cb-wallet'];
   var keys = ['baseUrl','webhookUrl','docLevel','nonDocLevel','kybLevel',
-    'appToken','apiSecret','websdkSecret','sumsubBaseUrl',
+    'appToken','apiSecret','websdkSecret','sumsubBaseUrl','websdkDomains',
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
     'notabeneBaseUrl','notabeneApiKey',
     'eaDid','eaApikey','eaApisecret','eaWallet',
@@ -538,7 +545,7 @@ var fieldMap = {
   's-nondoclevel': saved.nonDocLevel, 's-kyblevel': saved.kybLevel,
   's-apptoken': saved.appToken,
   's-apisecret': saved.apiSecret, 's-websdksecret': saved.websdkSecret,
-  's-sumsubbaseurl': saved.sumsubBaseUrl,
+  's-sumsubbaseurl': saved.sumsubBaseUrl, 's-websdkdomains': saved.websdkDomains,
   's-elliptickey': saved.ellipticKey, 's-ellipticsecret': saved.ellipticSecret,
   's-ellipticendpoint': saved.ellipticEndpoint, 's-ellipticsign': saved.ellipticSign,
   's-notabene-baseurl': saved.notabeneBaseUrl, 's-notabene-apikey': saved.notabeneApiKey,
