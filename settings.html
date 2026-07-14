@@ -217,21 +217,65 @@
     <!-- ═══ SUMSUB TAB ═══ -->
     <div class="settings-panel" id="panel-sumsub">
 
-      <div class="section-title">Connection</div>
+      <div class="section-title">Sys Config</div>
+
       <div class="card">
-        <div class="card-header">WebSDK Redirect URL</div>
+        <div class="card-header">Webhook</div>
         <div class="card-body">
           <div class="field">
-            <label>Base URL (Cloudflare Tunnel)</label>
-            <input type="text" id="s-baseurl" placeholder="https://abc123.trycloudflare.com">
-            <div class="hint">Browser redirect target after user completes KYC in the WebSDK. Sumsub appends a signed JWT if a secret key is set.</div>
+            <label>Webhook URL</label>
+            <input type="text" id="s-webhookurl" placeholder="https://your-server.com/sumsub/webhook">
+            <div class="hint">Sumsub sends webhook events here on applicant status changes</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">WebSDK</div>
+        <div class="card-body">
+          <div class="field">
+            <label>Redirect URL (Cloudflare Tunnel)</label>
+            <input type="text" id="s-baseurl" placeholder="https://abc123.trycloudflare.com/callback">
+            <div class="hint">Browser redirect after user completes KYC in WebSDK. Signed JWT appended if secret key is set.</div>
           </div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header">WebSDK Link Config</div>
+        <div class="card-header">Credentials</div>
+        <div class="card-body">
+          <div class="grid-2">
+            <div>
+              <div class="field">
+                <label>App Token</label>
+                <input type="text" id="s-apptoken" placeholder="sbx:...">
+              </div>
+              <div class="field">
+                <label>API Secret (HMAC-SHA256)</label>
+                <input type="text" id="s-apisecret" placeholder="SX1TV5...">
+                <div class="hint">Used for signing API requests</div>
+              </div>
+            </div>
+            <div>
+              <div class="field">
+                <label>WebSDK Secret (JWT)</label>
+                <input type="text" id="s-websdksecret" placeholder="dbkXTP...">
+                <div class="hint">Used for generating WebSDK tokens</div>
+              </div>
+              <div class="field">
+                <label>API Base URL</label>
+                <input type="text" id="s-sumsubbaseurl" placeholder="https://api.sumsub.com">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Soft Config</div>
+
+      <div class="card">
+        <div class="card-header">Individual Applicant</div>
         <div class="card-body">
           <div class="grid-2">
             <div>
@@ -240,49 +284,25 @@
                 <input type="text" id="s-doclevel" placeholder="kyc-test-daniel-260618">
                 <div class="hint">Document upload + liveness verification</div>
               </div>
+            </div>
+            <div>
               <div class="field">
                 <label>Non-Doc KYC Level (L3)</label>
                 <input type="text" id="s-nondoclevel" placeholder="non-doc-kyc-level">
                 <div class="hint">ID number + liveness, no document upload</div>
               </div>
             </div>
-            <div>
-              <div class="field">
-                <label>KYB Level (L1)</label>
-                <input type="text" id="s-kyblevel" placeholder="kyb-test-daniel-0626">
-                <div class="hint">Company verification (not active in demo yet)</div>
-              </div>
-              <div class="field">
-                <label>WebSDK TTL (seconds)</label>
-                <input type="text" id="s-ttl" value="3600" style="width:80px">
-                <div class="hint">Token expiration time</div>
-              </div>
-            </div>
           </div>
-          <div id="s-sumsub-preview" class="preview-box" style="display:none"></div>
         </div>
       </div>
 
-      <div class="section-title">Credentials</div>
       <div class="card">
+        <div class="card-header">Company Applicant</div>
         <div class="card-body">
           <div class="field">
-            <label>App Token</label>
-            <input type="text" id="s-apptoken" placeholder="sbx:...">
-          </div>
-          <div class="field">
-            <label>API Secret (HMAC-SHA256)</label>
-            <input type="text" id="s-apisecret" placeholder="SX1TV5...">
-            <div class="hint">Used for signing API requests</div>
-          </div>
-          <div class="field">
-            <label>WebSDK Secret (JWT)</label>
-            <input type="text" id="s-websdksecret" placeholder="dbkXTP...">
-            <div class="hint">Used for generating WebSDK tokens</div>
-          </div>
-          <div class="field">
-            <label>API Base URL</label>
-            <input type="text" id="s-sumsubbaseurl" placeholder="https://api.sumsub.com">
+            <label>KYB Level (L1)</label>
+            <input type="text" id="s-kyblevel" placeholder="kyb-test-daniel-0626">
+            <div class="hint">Company verification flow</div>
           </div>
         </div>
       </div>
@@ -352,10 +372,10 @@
 <script>
 var defaults = {
   baseUrl: 'https://localhost:8000',
+  webhookUrl: 'https://localhost:8000/sumsub/webhook',
   docLevel: 'kyc-test-daniel-260618',
   nonDocLevel: 'non-doc-kyc-level',
   kybLevel: 'kyb-test-daniel-0626',
-  ttl: '3600',
   appToken: 'sbx:XlavCZsZv8bpT0XlO55p2RP3.q86zg7sLn2enTIR8Mq0EJWFtsIt3jLLC',
   apiSecret: 'SX1TV5oUsneQNYhnxOFIHMLB7glt0Ry4',
   websdkSecret: 'dbkXTPisF5WJ4E6-hP_mi8myVpwelq_cO-R1DV_1JPQ',
@@ -383,10 +403,10 @@ function storeSettings(s) {
 function saveAll() {
   var s = {
     baseUrl: document.getElementById('s-baseurl').value.replace(/\/$/, ''),
+    webhookUrl: document.getElementById('s-webhookurl').value,
     docLevel: document.getElementById('s-doclevel').value,
     nonDocLevel: document.getElementById('s-nondoclevel').value,
     kybLevel: document.getElementById('s-kyblevel').value,
-    ttl: document.getElementById('s-ttl').value,
     appToken: document.getElementById('s-apptoken').value,
     apiSecret: document.getElementById('s-apisecret').value,
     websdkSecret: document.getElementById('s-websdksecret').value,
@@ -419,7 +439,7 @@ function saveAll() {
   showGlobalStatus('Settings saved to localStorage', 'ok');
 }
 function resetDefaults() {
-  var ids = ['s-baseurl','s-doclevel','s-nondoclevel','s-kyblevel','s-ttl',
+  var ids = ['s-baseurl','s-webhookurl','s-doclevel','s-nondoclevel','s-kyblevel',
     's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl',
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
     's-notabene-baseurl','s-notabene-apikey',
@@ -427,7 +447,7 @@ function resetDefaults() {
     's-ca-did','s-ca-apikey','s-ca-apisecret','s-ca-wallet',
     's-eb-did','s-eb-apikey','s-eb-apisecret','s-eb-wallet',
     's-cb-did','s-cb-apikey','s-cb-apisecret','s-cb-wallet'];
-  var keys = ['baseUrl','docLevel','nonDocLevel','kybLevel','ttl',
+  var keys = ['baseUrl','webhookUrl','docLevel','nonDocLevel','kybLevel',
     'appToken','apiSecret','websdkSecret','sumsubBaseUrl',
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
     'notabeneBaseUrl','notabeneApiKey',
@@ -506,21 +526,16 @@ function updatePreviews() {
   var up = document.getElementById('s-url-preview');
   if (up) {
     up.style.display = 'block';
-    up.innerHTML = '<span class="k">redirectUrl:</span> <span class="v">' + s.baseUrl + '/callback?externalUserId={userId}&amp;jwt={jwt}</span>';
-  }
-  var sp = document.getElementById('s-sumsub-preview');
-  if (sp) {
-    sp.style.display = 'block';
-    sp.innerHTML = '<span class="k">levels:</span> Doc=<span class="v">' + s.docLevel + '</span>  NonDoc=<span class="v">' + s.nonDocLevel + '</span>  KYB=<span class="v">' + s.kybLevel + '</span>';
-  }
+    up.innerHTML = '<span class="k">redirectUrl:</span> <span class="v">' + s.baseUrl + '/callback?externalUserId={userId}&amp;jwt={jwt}</span>';\n  }
 }
 
 // Load on start
 var saved = loadSettings();
 var fieldMap = {
-  's-baseurl': saved.baseUrl, 's-doclevel': saved.docLevel,
+  's-baseurl': saved.baseUrl, 's-webhookurl': saved.webhookUrl,
+  's-doclevel': saved.docLevel,
   's-nondoclevel': saved.nonDocLevel, 's-kyblevel': saved.kybLevel,
-  's-ttl': saved.ttl, 's-apptoken': saved.appToken,
+  's-apptoken': saved.appToken,
   's-apisecret': saved.apiSecret, 's-websdksecret': saved.websdkSecret,
   's-sumsubbaseurl': saved.sumsubBaseUrl,
   's-elliptickey': saved.ellipticKey, 's-ellipticsecret': saved.ellipticSecret,
