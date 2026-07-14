@@ -585,13 +585,8 @@ function resetAll() {
 function loadEllipticSettings() {
   try {
     var s = JSON.parse(localStorage.getItem('compliance-demo-settings') || '{}');
-    var endpoint = s.ellipticEndpoint || defaults.ellipticEndpoint;
-    var key = s.ellipticKey || defaults.ellipticKey;
-    var sign = s.ellipticSign || defaults.ellipticSign;
-    // Log uses these values in scenario runs
-    defaults.ellipticEndpoint = endpoint;
-    defaults.ellipticKey = key;
-    defaults.ellipticSign = sign;
+    if (s.ellipticEndpoint) console.log('[Settings] Elliptic endpoint:', s.ellipticEndpoint);
+    if (s.ellipticKey) console.log('[Settings] Elliptic key:', s.ellipticKey.substring(0, 8) + '...');
   } catch(e) {}
 }
 loadEllipticSettings();
