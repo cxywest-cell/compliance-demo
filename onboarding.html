@@ -217,15 +217,13 @@
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step" id="s-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
+        <div class="step" id="s-step-1"><span class="step-num">1</span><span class="step-label">Generate WebSDK Link</span></div>
         <span class="step-arrow" id="s-arrow-1">→</span>
-        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">Generate WebSDK Link</span></div>
+        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">User Completes</span></div>
         <span class="step-arrow" id="s-arrow-2">→</span>
-        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">User Completes</span></div>
+        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">AML Screening</span></div>
         <span class="step-arrow" id="s-arrow-3">→</span>
-        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">AML Screening</span></div>
-        <span class="step-arrow" id="s-arrow-4">→</span>
-        <div class="step" id="s-step-5"><span class="step-num">5</span><span class="step-label">Decision</span></div>
+        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
       </div>
 
       <!-- Applicant Profile -->
@@ -233,7 +231,7 @@
       <div class="card" id="doc-applicant-card">
         <div class="card-header">
           <span>Individual Applicant</span>
-          <span class="badge badge-gray" id="doc-applicant-status">Not Created</span>
+          <span class="badge badge-gray" id="doc-applicant-status">Not Started</span>
         </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">Full Name</span><span class="rv">Wang Xiaoming</span></div>
@@ -251,8 +249,7 @@
       <div class="card">
         <div class="card-body">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-run" id="doc-btn-create" onclick="docCreateApplicant()">Create Applicant</button>
-            <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()" disabled>Generate WebSDK Link</button>
+            <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()">Generate WebSDK Link</button>
             <button class="btn btn-run" id="doc-btn-complete" onclick="docSimulateComplete()" disabled>Simulate Completion</button>
             <button class="btn btn-run" id="doc-btn-aml" onclick="docRunAML()" disabled>Run AML Check</button>
           </div>
@@ -295,13 +292,11 @@
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step" id="n-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
+        <div class="step" id="n-step-1"><span class="step-num">1</span><span class="step-label">Generate WebSDK Link</span></div>
         <span class="step-arrow" id="n-arrow-1">→</span>
-        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">Generate WebSDK Link</span></div>
+        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">User Completes</span></div>
         <span class="step-arrow" id="n-arrow-2">→</span>
-        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">User Completes</span></div>
-        <span class="step-arrow" id="n-arrow-3">→</span>
-        <div class="step" id="n-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
+        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">Decision</span></div>
       </div>
 
       <!-- Applicant Profile -->
@@ -309,7 +304,7 @@
       <div class="card" id="nondoc-applicant-card">
         <div class="card-header">
           <span>Individual Applicant (Non-Doc)</span>
-          <span class="badge badge-gray" id="nondoc-applicant-status">Not Created</span>
+          <span class="badge badge-gray" id="nondoc-applicant-status">Not Started</span>
         </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">Full Name</span><span class="rv">Chen Fang</span></div>
@@ -327,8 +322,7 @@
       <div class="card">
         <div class="card-body">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-run" id="nondoc-btn-create" onclick="nondocCreateApplicant()">Create Applicant</button>
-            <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()" disabled>Generate WebSDK Link</button>
+            <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()">Generate WebSDK Link</button>
             <button class="btn btn-run" id="nondoc-btn-complete" onclick="nondocSimulateComplete()" disabled>Simulate Completion</button>
           </div>
         </div>
@@ -428,7 +422,7 @@ function setStep(prefix, n, maxSteps) {
 function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
 // ─── Doc KYC (Tab 2) ───
-var docState = { created: false, linked: false, completed: false, amlDone: false, approved: false };
+var docState = { linked: false, completed: false, amlDone: false, approved: false };
 
 function docLog(cls, text) {
   var el = document.getElementById('doc-log');
@@ -442,78 +436,22 @@ function docLog(cls, text) {
 }
 function docClearLog() { document.getElementById('doc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
 
-async function docCreateApplicant() {
-  docState = { created: false, linked: false, completed: false, amlDone: false, approved: false };
+async function docGenLink() {
+  // Reset state
+  docState = { linked: false, completed: false, amlDone: false, approved: false };
   document.getElementById('doc-ext-id').textContent = '—';
   document.getElementById('doc-app-id').textContent = '—';
-  document.getElementById('doc-applicant-status').textContent = 'Not Created';
+  document.getElementById('doc-applicant-status').textContent = 'Not Started';
   document.getElementById('doc-applicant-status').className = 'badge badge-gray';
   ['doc-review-status','doc-review-answer','doc-docs-status','doc-liveness-status','doc-aml-status'].forEach(function(id) {
     document.getElementById(id).innerHTML = '<span class="badge badge-gray">—</span>';
   });
   document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
+  document.getElementById('doc-btn-complete').disabled = true;
+  document.getElementById('doc-btn-aml').disabled = true;
   docClearLog();
-  setStep('s', 0, 5);
+  setStep('s', 0, 4);
 
-  var btn = document.getElementById('doc-btn-create');
-  btn.disabled = true; btn.textContent = 'Creating...';
-
-  if (kycMode === 'real') {
-    docLog('#79c0ff', 'POST /api/websdk-link (preparing applicant creation)');
-    docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "externalUserId": "user-wang-xiaoming", "email": "wang@example.com" }');
-    btn.textContent = 'Requesting...';
-  } else {
-    docLog('#79c0ff', 'POST /resources/applicants?levelName=kyc-test-daniel-260618');
-    docLog('#d2a8ff', 'Body: { "externalUserId": "user-wang-xiaoming", "info": { "firstName": "Xiaoming", "lastName": "Wang", "country": "CHN" } }');
-    await sleep(800);
-  }
-
-  if (kycMode === 'real') {
-    // Real mode: generate access token (applicant created lazily on SDK interaction)
-    try {
-      docLog('#79c0ff', 'POST /api/token?externalUserId=user-wang-xiaoming&levelName=' + getDocLevel());
-      var res = await fetch('/api/token?externalUserId=user-wang-xiaoming', { method: 'POST' });
-      var data = await res.json();
-      if (data.token) {
-        document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
-        document.getElementById('doc-app-id').textContent = '(lazy on SDK)';
-        document.getElementById('doc-applicant-status').textContent = 'init';
-        document.getElementById('doc-applicant-status').className = 'badge badge-gray';
-        docLog('#79c0ff', '200 OK — token generated');
-        docLog('#d2a8ff', 'Token: ' + data.token.substring(0, 30) + '...');
-        await sleep(400);
-        docLog('#ffa657', 'Webhook: applicantCreated (will fire on SDK interaction)');
-        docLog('#7ee787', 'Token ready — applicant will be created when WebSDK loads');
-      } else {
-        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
-        btn.textContent = 'Retry'; btn.disabled = false;
-        return;
-      }
-    } catch(e) {
-      docLog('#ff7b72', 'Network error: ' + e.message);
-      btn.textContent = 'Retry'; btn.disabled = false;
-      return;
-    }
-  } else {
-    var appid = '68a3f2e1b4c9d0000a123456';
-    document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
-    document.getElementById('doc-app-id').textContent = appid;
-    document.getElementById('doc-applicant-status').textContent = 'init';
-    document.getElementById('doc-applicant-status').className = 'badge badge-gray';
-    docLog('#79c0ff', '200 OK — applicantId: ' + appid);
-    docLog('#ffa657', 'Webhook: applicantCreated (externalUserId: user-wang-xiaoming)');
-    await sleep(400);
-    docLog('#7ee787', 'Applicant created successfully');
-  }
-
-  setStep('s', 1, 5);
-  docState.created = true;
-  document.getElementById('doc-btn-link').disabled = false;
-  btn.textContent = 'Recreate Applicant'; btn.disabled = false;
-}
-
-async function docGenLink() {
-  if (!docState.created) return;
   var btn = document.getElementById('doc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
@@ -521,8 +459,7 @@ async function docGenLink() {
 
   if (kycMode === 'real') {
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
-    docLog('#d2a8ff', 'redirectUrl: "' + redirectUrl + '"');
+    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "applicantIdentifiers": { "email": "wang@example.com" }, "ttlInSecs": 3600 }');
 
     try {
       var res = await fetch('/api/websdk-link', {
@@ -537,13 +474,14 @@ async function docGenLink() {
       });
       var data = await res.json();
       if (data.url) {
-        docLog('#79c0ff', '200 OK — WebSDK URL: ' + data.url.substring(0, 60) + '...');
-        docLog('#ffa657', 'Webhook: applicantPending (SDK session started)');
-        await sleep(300);
+        document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
+        document.getElementById('doc-app-id').textContent = data.applicantId || '(lazy)';
         document.getElementById('doc-applicant-status').textContent = 'pending';
         document.getElementById('doc-applicant-status').className = 'badge badge-blue';
-        docLog('#d2a8ff', 'Applicant ID: ' + data.applicantId);
-        document.getElementById('doc-app-id').textContent = data.applicantId;
+        docLog('#79c0ff', '200 OK — WebSDK URL received');
+        docLog('#ffa657', 'Applicant created lazily by Sumsub on first link open');
+        await sleep(300);
+        if (data.applicantId) docLog('#d2a8ff', 'applicantId: ' + data.applicantId);
 
         // Show the WebSDK link
         var linkDiv = document.createElement('div');
@@ -555,7 +493,7 @@ async function docGenLink() {
         var logEl = document.getElementById('doc-log');
         logEl.parentNode.insertBefore(linkDiv, logEl.nextSibling);
 
-        setStep('s', 2, 5);
+        setStep('s', 1, 4);
         docState.linked = true;
         document.getElementById('doc-btn-complete').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
@@ -573,14 +511,16 @@ async function docGenLink() {
     docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
     await sleep(600);
 
+    var appid = '68a3f2e1b4c9d0000a123456';
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
-    docLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
-    docLog('#ffa657', 'Webhook: applicantPending (applicant started SDK session)');
-    await sleep(300);
+    document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
+    document.getElementById('doc-app-id').textContent = appid;
     document.getElementById('doc-applicant-status').textContent = 'pending';
     document.getElementById('doc-applicant-status').className = 'badge badge-blue';
+    docLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+    docLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
 
-    setStep('s', 2, 5);
+    setStep('s', 1, 4);
     docState.linked = true;
     document.getElementById('doc-btn-complete').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
@@ -605,7 +545,7 @@ async function docSimulateComplete() {
   docLog('#7ee787', 'ID document: PRC Resident ID Card — OCR match ✓');
   docLog('#7ee787', 'Liveness: Pass (98.7% face match confidence)');
 
-  setStep('s', 3, 5);
+  setStep('s', 2, 4);
   document.getElementById('doc-btn-aml').disabled = false;
   btn.textContent = 'Simulate Again'; btn.disabled = false;
   docState.completed = true;
@@ -630,13 +570,13 @@ async function docRunAML() {
   document.getElementById('doc-applicant-status').textContent = 'approved';
   document.getElementById('doc-applicant-status').className = 'badge badge-green';
 
-  setStep('s', 5, 5);
+  setStep('s', 4, 4);
   docState.approved = true;
   btn.textContent = 'Recheck AML'; btn.disabled = false;
 }
 
 // ─── Non-Doc KYC (Tab 3) ───
-var ndState = { created: false, linked: false, completed: false, approved: false };
+var ndState = { linked: false, completed: false, approved: false };
 
 function ndLog(cls, text) {
   var el = document.getElementById('nondoc-log');
@@ -650,70 +590,21 @@ function ndLog(cls, text) {
 }
 function ndClearLog() { document.getElementById('nondoc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
 
-async function nondocCreateApplicant() {
-  ndState = { created: false, linked: false, completed: false, approved: false };
+async function nondocGenLink() {
+  // Reset state
+  ndState = { linked: false, completed: false, approved: false };
   document.getElementById('nondoc-ext-id').textContent = '—';
   document.getElementById('nondoc-app-id').textContent = '—';
-  document.getElementById('nondoc-applicant-status').textContent = 'Not Created';
+  document.getElementById('nondoc-applicant-status').textContent = 'Not Started';
   document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
   ['nondoc-review-status','nondoc-review-answer','nondoc-id-status','nondoc-liveness-status'].forEach(function(id) {
     document.getElementById(id).innerHTML = '<span class="badge badge-gray">—</span>';
   });
   document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
+  document.getElementById('nondoc-btn-complete').disabled = true;
   ndClearLog();
-  setStep('n', 0, 4);
+  setStep('n', 0, 3);
 
-  var btn = document.getElementById('nondoc-btn-create');
-  btn.disabled = true; btn.textContent = 'Creating...';
-
-  if (kycMode === 'real') {
-    ndLog('#79c0ff', 'POST /api/token?externalUserId=user-chen-fang');
-    try {
-      var res = await fetch('/api/token?externalUserId=user-chen-fang', { method: 'POST' });
-      var data = await res.json();
-      if (data.token) {
-        document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
-        document.getElementById('nondoc-app-id').textContent = '(lazy on SDK)';
-        document.getElementById('nondoc-applicant-status').textContent = 'init';
-        document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
-        ndLog('#79c0ff', '200 OK — token generated');
-        ndLog('#d2a8ff', 'Token: ' + data.token.substring(0, 30) + '...');
-        await sleep(400);
-        ndLog('#ffa657', 'Webhook: applicantCreated (will fire on SDK interaction)');
-        ndLog('#7ee787', 'Token ready — applicant will be created when WebSDK loads');
-      } else {
-        ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
-        btn.textContent = 'Retry'; btn.disabled = false;
-        return;
-      }
-    } catch(e) {
-      ndLog('#ff7b72', 'Network error: ' + e.message);
-      btn.textContent = 'Retry'; btn.disabled = false;
-      return;
-    }
-  } else {
-    ndLog('#79c0ff', 'POST /resources/applicants?levelName=non-doc-kyc-level');
-    ndLog('#d2a8ff', 'Body: { "externalUserId": "user-chen-fang", "info": { "firstName": "Fang", "lastName": "Chen", "country": "SGP" } }');
-    await sleep(800);
-    var appid = '68a3f2e1b4c9d0000a654321';
-    document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
-    document.getElementById('nondoc-app-id').textContent = appid;
-    document.getElementById('nondoc-applicant-status').textContent = 'init';
-    document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
-    ndLog('#79c0ff', '200 OK — applicantId: ' + appid);
-    ndLog('#ffa657', 'Webhook: applicantCreated');
-    await sleep(400);
-    ndLog('#7ee787', 'Applicant created successfully (Non-Doc L3)');
-  }
-
-  setStep('n', 1, 4);
-  ndState.created = true;
-  document.getElementById('nondoc-btn-link').disabled = false;
-  btn.textContent = 'Recreate'; btn.disabled = false;
-}
-
-async function nondocGenLink() {
-  if (!ndState.created) return;
   var btn = document.getElementById('nondoc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
@@ -721,8 +612,7 @@ async function nondocGenLink() {
 
   if (kycMode === 'real') {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
-    ndLog('#d2a8ff', 'redirectUrl: "' + redirectUrl + '"');
+    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "applicantIdentifiers": { "email": "chenf@example.com" }, "ttlInSecs": 3600 }');
 
     try {
       var res = await fetch('/api/websdk-link', {
@@ -737,13 +627,14 @@ async function nondocGenLink() {
       });
       var data = await res.json();
       if (data.url) {
-        ndLog('#79c0ff', '200 OK — WebSDK URL: ' + data.url.substring(0, 60) + '...');
-        ndLog('#ffa657', 'Webhook: applicantPending');
-        await sleep(300);
+        document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
+        document.getElementById('nondoc-app-id').textContent = data.applicantId || '(lazy)';
         document.getElementById('nondoc-applicant-status').textContent = 'pending';
         document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
-        ndLog('#d2a8ff', 'Applicant ID: ' + data.applicantId);
-        document.getElementById('nondoc-app-id').textContent = data.applicantId;
+        ndLog('#79c0ff', '200 OK — WebSDK URL received');
+        ndLog('#ffa657', 'Applicant created lazily by Sumsub on first link open');
+        await sleep(300);
+        if (data.applicantId) ndLog('#d2a8ff', 'applicantId: ' + data.applicantId);
 
         var linkDiv = document.createElement('div');
         linkDiv.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;margin-top:8px;font-size:10px;font-family:monospace';
@@ -754,7 +645,7 @@ async function nondocGenLink() {
         var logEl = document.getElementById('nondoc-log');
         logEl.parentNode.insertBefore(linkDiv, logEl.nextSibling);
 
-        setStep('n', 2, 4);
+        setStep('n', 1, 3);
         ndState.linked = true;
         document.getElementById('nondoc-btn-complete').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
@@ -768,15 +659,19 @@ async function nondocGenLink() {
     }
   } else {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
+    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
     await sleep(600);
+
+    var appid = '68a3f2e1b4c9d0000a654321';
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
-    ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
-    ndLog('#ffa657', 'Webhook: applicantPending');
-    await sleep(300);
+    document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
+    document.getElementById('nondoc-app-id').textContent = appid;
     document.getElementById('nondoc-applicant-status').textContent = 'pending';
     document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
-    setStep('n', 2, 4);
+    ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+    ndLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
+
+    setStep('n', 1, 3);
     ndState.linked = true;
     document.getElementById('nondoc-btn-complete').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
@@ -805,7 +700,7 @@ async function nondocSimulateComplete() {
   document.getElementById('nondoc-applicant-status').textContent = 'approved';
   document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
 
-  setStep('n', 4, 4);
+  setStep('n', 3, 3);
   ndState.approved = true;
   btn.textContent = 'Simulate Again'; btn.disabled = false;
 }
