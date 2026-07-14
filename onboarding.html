@@ -581,8 +581,11 @@ async function docCheckStatus() {
         var review = data.review || {};
         var reviewResult = review.reviewResult || {};
         docLog('#79c0ff', '200 OK');
+        docLog('#d2a8ff', 'applicantId: ' + (data.id || '\u2014'));
         docLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
         if (reviewResult.reviewAnswer) docLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
+
+        if (data.id) document.getElementById('doc-app-id').textContent = data.id;
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
@@ -831,8 +834,11 @@ async function nondocCheckStatus() {
         var review = data.review || {};
         var reviewResult = review.reviewResult || {};
         ndLog('#79c0ff', '200 OK');
+        ndLog('#d2a8ff', 'applicantId: ' + (data.id || '\u2014'));
         ndLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
         if (reviewResult.reviewAnswer) ndLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
+
+        if (data.id) document.getElementById('nondoc-app-id').textContent = data.id;
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
