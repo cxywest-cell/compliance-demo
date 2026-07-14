@@ -223,7 +223,7 @@
         </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="doc-ext-id">—</span></div>
-          <div class="result-row"><span class="rk">Email</span><span class="rv mono" id="doc-email">—</span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv"><input type="text" id="doc-email" value="wangxiaoming@demo.cregis.io" style="font-family:inherit;font-size:12px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:3px;padding:2px 6px;width:220px" /></span></div>
           <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-app-id">—</span></div>
           <div class="result-row"><span class="rk">Level Name</span><span class="rv mono">kyc-test-daniel-260618</span></div>
           <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="doc-applicant-status">Not Started</span></span></div>
@@ -314,7 +314,7 @@
         </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="nondoc-ext-id">—</span></div>
-          <div class="result-row"><span class="rk">Email</span><span class="rv mono" id="nondoc-email">—</span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv"><input type="text" id="nondoc-email" value="chenjie@demo.cregis.io" style="font-family:inherit;font-size:12px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:3px;padding:2px 6px;width:220px" /></span></div>
           <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-app-id">—</span></div>
           <div class="result-row"><span class="rk">Level Name</span><span class="rv mono" id="nondoc-level">non-doc-kyc-level</span></div>
           <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="nondoc-applicant-status">Not Started</span></span></div>
@@ -466,7 +466,7 @@ function docClearLog() { document.getElementById('doc-log').innerHTML = '<div st
 function docSetUserId() {
   docState = { userId: null, email: null, linked: false };
   document.getElementById('doc-ext-id').textContent = '\u2014';
-  document.getElementById('doc-email').textContent = '\u2014';
+  document.getElementById('doc-email').value = 'wangxiaoming@demo.cregis.io';
   document.getElementById('doc-app-id').textContent = '\u2014';
   document.getElementById('doc-applicant-status').textContent = 'Not Started';
   document.getElementById('doc-applicant-status').className = 'badge badge-gray';
@@ -481,10 +481,9 @@ function docSetUserId() {
 
   var ts = Date.now().toString(36).slice(-6);
   docState.userId = 'user-kyc-' + ts;
-  docState.email = 'kyc-' + ts + '@demo.cregis.io';
+  docState.email = document.getElementById('doc-email').value;
 
   document.getElementById('doc-ext-id').textContent = docState.userId;
-  document.getElementById('doc-email').textContent = docState.email;
   docLog('#7ee787', 'User context set: ' + docState.userId);
 
   setStep('s', 1, 4);
@@ -718,7 +717,7 @@ function ndClearLog() { document.getElementById('nondoc-log').innerHTML = '<div 
 function nondocSetUserId() {
   ndState = { userId: null, email: null, linked: false };
   document.getElementById('nondoc-ext-id').textContent = '\u2014';
-  document.getElementById('nondoc-email').textContent = '\u2014';
+  document.getElementById('nondoc-email').value = 'chenjie@demo.cregis.io';
   document.getElementById('nondoc-app-id').textContent = '\u2014';
   document.getElementById('nondoc-applicant-status').textContent = 'Not Started';
   document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
@@ -733,10 +732,9 @@ function nondocSetUserId() {
 
   var ts = Date.now().toString(36).slice(-6);
   ndState.userId = 'user-nondoc-' + ts;
-  ndState.email = 'nondoc-' + ts + '@demo.cregis.io';
+  ndState.email = document.getElementById('nondoc-email').value;
 
   document.getElementById('nondoc-ext-id').textContent = ndState.userId;
-  document.getElementById('nondoc-email').textContent = ndState.email;
   ndLog('#7ee787', 'User context set: ' + ndState.userId);
 
   setStep('n', 1, 4);
