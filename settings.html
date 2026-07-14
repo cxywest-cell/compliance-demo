@@ -219,12 +219,12 @@
 
       <div class="section-title">Connection</div>
       <div class="card">
-        <div class="card-header">Callback Redirect URL</div>
+        <div class="card-header">WebSDK Redirect URL</div>
         <div class="card-body">
           <div class="field">
             <label>Base URL (Cloudflare Tunnel)</label>
             <input type="text" id="s-baseurl" placeholder="https://abc123.trycloudflare.com">
-            <div class="hint">Sumsub redirects here after successful verification. A signed JWT is appended if a secret key is set.</div>
+            <div class="hint">Browser redirect target after user completes KYC in the WebSDK. Sumsub appends a signed JWT if a secret key is set.</div>
           </div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
         </div>
