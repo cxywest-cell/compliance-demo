@@ -341,6 +341,19 @@
         <button class="btn btn-reset" onclick="testSumsubConnection()">Test Sumsub Connection</button>
       </div>
       <div id="s-status-sumsub" class="status-bar"></div>
+
+      <div class="section-title">Webhook Console</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Incoming Webhooks</span>
+          <span style="font-size:10px;font-weight:400;color:#888" id="wh-count">0 events</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div id="wh-console" style="background:#0d1117;max-height:300px;overflow-y:auto;font-size:10px;font-family:'SF Mono',monospace;color:#c9d1d9;min-height:80px;padding:8px 10px">
+            <div style="color:#6e7681">Waiting for webhooks...</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ ELLIPTIC TAB ═══ -->
@@ -685,6 +698,64 @@ for (var id in fieldMap) {
 }
 updatePreviews();
 checkTunnelStatus();
+
+// ─── Webhook Console ───
+var whSeen = new Set();
+
+function renderWebhooks(entries) {
+  var el = document.getElementById('wh-console');
+  var countEl = document.getElementById('wh-count');
+  if (!el) return;
+  if (!entries || entries.length === 0) return;
+
+  countEl.textContent = entries.length + ' events';
+  var html = '';
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    var key = e.timestamp + e.applicantId + e.type;
+    var isNew = !whSeen.has(key);
+    whSeen.add(key);
+
+    var vTag = e.verified
+      ? '<span style="color:#7ee787">\u2713</span>'
+      : '<span style="color:#ff7b72">\u2717</span>';
+    var typeColor = e.type === 'applicantReviewed' ? '#7ee787'
+                  : e.type === 'applicantCreated' ? '#79c0ff'
+                  : e.type === 'applicantOnHold' ? '#d2a8ff'
+                  : e.type === 'applicantPending' ? '#ffa657'
+                  : '#c9d1d9';
+    var review = '';
+    if (e.reviewResult && e.reviewResult.reviewAnswer) {
+      var ans = e.reviewResult.reviewAnswer;
+      var ansColor = ans === 'GREEN' ? '#7ee787' : '#ff7b72';
+      review = ' <span style="color:' + ansColor + '">' + ans + '</span>';
+      if (e.reviewResult.reviewRejectType) review += ' (' + e.reviewResult.reviewRejectType + ')';
+    }
+    var statusBadge = e.reviewStatus === 'completed' ? '\u26ab'
+                    : e.reviewStatus === 'onHold' ? '\u23f8'
+                    : e.reviewStatus === 'pending' ? '\u23f3'
+                    : '\u25cb';
+
+    var bg = isNew ? 'background:rgba(56,139,253,0.08)' : '';
+    html += '<div style="padding:3px 0;border-bottom:1px solid #161b22;' + bg + '">' +
+      '<span style="color:#6e7681">' + e.timestamp.slice(11, 19) + '</span> ' +
+      vTag + ' ' +
+      statusBadge + ' ' +
+      '<span style="color:' + typeColor + '">' + e.type.replace('applicant', '') + '</span>' +
+      review +
+      '<br/><span style="color:#6e7681;margin-left:16px">' + (e.externalUserId || '\u2014') + ' \u00b7 ' + (e.applicantId || '\u2014').slice(-8) + '</span>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function pollWebhooks() {
+  fetch('/api/webhooks').then(function(r) { return r.json(); }).then(function(data) {
+    renderWebhooks(data);
+  }).catch(function() {});
+}
+setInterval(pollWebhooks, 2000);
+pollWebhooks();
 </script>
 
 </body>
