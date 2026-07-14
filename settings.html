@@ -235,7 +235,12 @@
           <div class="field">
             <label>Webhook URL</label>
             <input type="text" id="s-webhookurl" placeholder="Start tunnel to auto-fill" readonly style="background:#f8f8f8">
-            <div class="hint">Sumsub sends webhook events here. Set via tunnel (Generate URL above) — cannot be edited manually.</div>
+            <div class="hint">Sumsub sends webhook events here. Set via tunnel (Generate URL above).</div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label>Webhook Secret (HMAC-SHA256)</label>
+            <input type="text" id="s-webhooksecret" placeholder="SukZpD1QZhvzyo5cAcWiROJJant">
+            <div class="hint">Used to verify the X-Payload-HMAC-SHA256 header on incoming webhooks</div>
           </div>
           <div class="url-display show" id="tunnel-webhook-preview" style="display:none"></div>
         </div>
@@ -396,6 +401,7 @@
 var defaults = {
   baseUrl: 'https://localhost:8000',
   webhookUrl: '',
+  webhookSecret: 'SukZpD1QZhvzyo5cAcWiROJJant',
   docLevel: 'kyc-test-daniel-260618',
   nonDocLevel: 'non-doc-kyc-level',
   kybLevel: 'kyb-test-daniel-0626',
@@ -428,6 +434,7 @@ function saveAll() {
   var s = {
     baseUrl: document.getElementById('s-baseurl').value.replace(/\/$/, ''),
     webhookUrl: document.getElementById('s-webhookurl').value,
+    webhookSecret: document.getElementById('s-webhooksecret').value,
     docLevel: document.getElementById('s-doclevel').value,
     nonDocLevel: document.getElementById('s-nondoclevel').value,
     kybLevel: document.getElementById('s-kyblevel').value,
@@ -464,7 +471,7 @@ function saveAll() {
   showGlobalStatus('Settings saved to localStorage', 'ok');
 }
 function resetDefaults() {
-  var ids = ['s-baseurl','s-webhookurl','s-doclevel','s-nondoclevel','s-kyblevel',
+  var ids = ['s-baseurl','s-webhookurl','s-webhooksecret','s-doclevel','s-nondoclevel','s-kyblevel',
     's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl','s-websdkdomains',
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
     's-notabene-baseurl','s-notabene-apikey',
@@ -658,7 +665,7 @@ if (location.protocol === 'file:') {
 }
 
 var fieldMap = {
-  's-baseurl': saved.baseUrl, 's-webhookurl': saved.webhookUrl,
+  's-baseurl': saved.baseUrl, 's-webhookurl': saved.webhookUrl, 's-webhooksecret': saved.webhookSecret,
   's-doclevel': saved.docLevel,
   's-nondoclevel': saved.nonDocLevel, 's-kyblevel': saved.kybLevel,
   's-apptoken': saved.appToken,
