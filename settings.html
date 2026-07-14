@@ -45,6 +45,13 @@
   .preview-box .v { color: #7ee787; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .tunnel-badge-offline { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #fee2e2; color: #991b1b; cursor: pointer; }
+  .tunnel-badge-online { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #d1fae5; color: #065f46; cursor: pointer; }
+  .tunnel-btn { padding: 4px 12px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 10px; font-weight: 500; cursor: pointer; background: #fff; transition: all 0.15s; margin-left: 8px; }
+  .tunnel-btn:hover { background: #f0f0f0; }
+  .tunnel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .url-display { background: #0d1117; border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: monospace; color: #7ee787; margin-top: 6px; display: none; }
+  .url-display.show { display: block; }
 
   /* Settings sub-tabs */
   .settings-tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 16px; background: #fff; border-radius: 6px 6px 0 0; overflow: hidden; border: 1px solid #e0e0e0; }
@@ -79,7 +86,7 @@
 </div>
 
 <div class="main">
-  <div class="topbar">Settings</div>
+  <div class="topbar">Settings <span id="tunnel-badge" style="float:right"></span></div>
   <div class="content">
 
     <div class="settings-tabs">
@@ -227,17 +234,21 @@
             <input type="text" id="s-webhookurl" placeholder="https://your-server.com/sumsub/webhook">
             <div class="hint">Sumsub sends webhook events here on applicant status changes</div>
           </div>
+          <div class="url-display" id="tunnel-webhook-preview"></div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header">WebSDK</div>
         <div class="card-body">
-          <div class="field">
-            <label>Redirect URL</label>
-            <input type="text" id="s-baseurl" placeholder="https://abc123.trycloudflare.com/callback">
-            <div class="hint">Browser redirect after user completes KYC in WebSDK. A signed JWT is appended if a secret key is set.</div>
+          <div class="field" style="display:flex;align-items:flex-end;gap:8px">
+            <div style="flex:1">
+              <label>Redirect URL</label>
+              <input type="text" id="s-baseurl" placeholder="Start tunnel to auto-fill">
+            </div>
+            <button class="tunnel-btn" id="tunnel-btn" onclick="toggleTunnel()">Start Tunnel</button>
           </div>
+          <div class="hint">Browser redirect after user completes KYC in WebSDK. A signed JWT is appended if a secret key is set.</div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
           <div class="grid-2" style="margin-top:12px">
             <div class="field">
@@ -492,6 +503,78 @@ function switchTab(tab) {
   document.querySelectorAll('.settings-tab')[tabs[tab]].classList.add('active');
 }
 
+// Tunnel management
+var tunnelRunning = false;
+
+function updateTunnelBadge(url, running) {
+  var badge = document.getElementById('tunnel-badge');
+  var btn = document.getElementById('tunnel-btn');
+  if (!badge || !btn) return;
+
+  tunnelRunning = running;
+  if (running && url) {
+    badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + url.replace(/https?:\/\//, '') + '</span>';
+    btn.textContent = 'Stop Tunnel';
+    btn.disabled = false;
+    // Auto-fill WebSDK redirect URL
+    document.getElementById('s-baseurl').value = url;
+    // Auto-fill Webhook URL
+    document.getElementById('s-webhookurl').value = url + '/sumsub/webhook';
+    // Update webhook preview
+    var wp = document.getElementById('tunnel-webhook-preview');
+    wp.style.display = 'block';
+    wp.textContent = url + '/sumsub/webhook';
+    updatePreviews();
+  } else {
+    badge.innerHTML = '<span class="tunnel-badge-offline">No Tunnel</span>';
+    btn.textContent = 'Start Tunnel';
+    btn.disabled = false;
+  }
+}
+
+async function toggleTunnel() {
+  var btn = document.getElementById('tunnel-btn');
+  btn.disabled = true;
+  btn.textContent = 'Starting...';
+
+  if (tunnelRunning) {
+    try {
+      await fetch('/api/tunnel/stop', { method: 'POST' });
+      updateTunnelBadge(null, false);
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Stop Tunnel';
+    }
+  } else {
+    btn.textContent = 'Starting...';
+    try {
+      var res = await fetch('/api/tunnel/start', { method: 'POST' });
+      var data = await res.json();
+      if (data.error) {
+        btn.textContent = 'Start Tunnel';
+        btn.disabled = false;
+        alert('Tunnel error: ' + data.error);
+      } else {
+        updateTunnelBadge(data.url, true);
+      }
+    } catch(e) {
+      btn.textContent = 'Start Tunnel';
+      btn.disabled = false;
+      alert('Failed to start tunnel: ' + e.message);
+    }
+  }
+}
+
+async function checkTunnelStatus() {
+  try {
+    var res = await fetch('/api/tunnel/status');
+    var data = await res.json();
+    if (data.running && data.url) {
+      updateTunnelBadge(data.url, true);
+    }
+  } catch(e) {}
+}
+
 // Connection tests
 async function testSumsubConnection() {
   var el = document.getElementById('s-status-sumsub');
@@ -531,11 +614,11 @@ async function testEllipticConnection() {
 }
 
 function updatePreviews() {
-  var s = loadSettings();
+  var baseUrl = document.getElementById('s-baseurl').value;
   var up = document.getElementById('s-url-preview');
-  if (up) {
+  if (up && baseUrl) {
     up.style.display = 'block';
-    up.innerHTML = '<span class="k">redirectUrl:</span> <span class="v">' + s.baseUrl + '/callback?externalUserId={userId}&amp;jwt={jwt}</span>';
+    up.innerHTML = '<span class="k">redirectUrl:</span> <span class="v">' + baseUrl + '/callback?externalUserId={userId}&amp;jwt={jwt}</span>';
   }
 }
 
@@ -561,6 +644,7 @@ for (var id in fieldMap) {
   if (el) el.value = fieldMap[id];
 }
 updatePreviews();
+checkTunnelStatus();
 </script>
 
 </body>
