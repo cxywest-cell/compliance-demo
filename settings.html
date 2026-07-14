@@ -239,16 +239,23 @@
             <div class="hint">Browser redirect after user completes KYC in WebSDK. A signed JWT is appended if a secret key is set.</div>
           </div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
-          <div class="field" style="margin-top:12px">
-            <label>Allowed Domains</label>
-            <input type="text" id="s-websdkdomains" placeholder="localhost, https://app.example.com">
-            <div class="hint">Comma-separated list of domains allowed to embed the WebSDK iframe</div>
+          <div class="grid-2" style="margin-top:12px">
+            <div class="field">
+              <label>Allowed Domains</label>
+              <input type="text" id="s-websdkdomains" placeholder="localhost, https://app.example.com">
+              <div class="hint">Comma-separated list of domains allowed to embed the WebSDK iframe</div>
+            </div>
+            <div class="field">
+              <label>Secret Key (JWT)</label>
+              <input type="text" id="s-websdksecret" placeholder="dbkXTP...">
+              <div class="hint">If provided, Sumsub uses this key to sign JWTs (e.g. on redirect or auth code generation)</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header">Credentials</div>
+        <div class="card-header">App Token</div>
         <div class="card-body">
           <div class="grid-2">
             <div>
@@ -263,11 +270,6 @@
               </div>
             </div>
             <div>
-              <div class="field">
-                <label>WebSDK Secret (JWT)</label>
-                <input type="text" id="s-websdksecret" placeholder="dbkXTP...">
-                <div class="hint">If provided, Sumsub uses this key to sign JWTs (e.g. on redirect or auth code generation)</div>
-              </div>
               <div class="field">
                 <label>API Base URL</label>
                 <input type="text" id="s-sumsubbaseurl" placeholder="https://api.sumsub.com">
