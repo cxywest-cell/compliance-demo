@@ -201,67 +201,87 @@
     <!-- ═══════════════════════════════════════════════ -->
     <div class="tab-pane" id="tab-individual">
 
-      <div class="info-note"><strong>Sumsub KYC (Doc)</strong> L2 level — document upload + selfie/liveness. Applicant created → WebSDK link generated → user completes on Sumsub → webhook fires back.</div>
+      <div class="info-note"><strong>Sumsub KYC (Doc)</strong> L2 level — document upload + selfie/liveness.</div>
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step" id="s-step-1"><span class="step-num">1</span><span class="step-label">Generate WebSDK Link</span></div>
+        <div class="step" id="s-step-1"><span class="step-num">1</span><span class="step-label">Set User ID</span></div>
         <span class="step-arrow" id="s-arrow-1">→</span>
-        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">User Completes</span></div>
+        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">Create Link</span></div>
         <span class="step-arrow" id="s-arrow-2">→</span>
-        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">AML Screening</span></div>
+        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
         <span class="step-arrow" id="s-arrow-3">→</span>
         <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
       </div>
 
-      <!-- Applicant Profile -->
-      <div class="section-title">Applicant Profile</div>
+      <!-- ═══ Step 1: Set User ID ═══ -->
+      <div class="section-title">Step 1: Set User ID</div>
       <div class="card" id="doc-applicant-card">
         <div class="card-header">
-          <span>Individual Applicant</span>
-          <span class="badge badge-gray" id="doc-applicant-status">Not Started</span>
+          <span>Identity</span>
+          <button class="btn btn-run" id="doc-btn-setid" onclick="docSetUserId()" style="padding:2px 10px;font-size:10px">Generate</button>
         </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="doc-ext-id">—</span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv mono" id="doc-email">—</span></div>
           <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-app-id">—</span></div>
           <div class="result-row"><span class="rk">Level Name</span><span class="rv mono">kyc-test-daniel-260618</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="doc-applicant-status">Not Started</span></span></div>
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="section-title">Actions</div>
-      <div class="card">
-        <div class="card-body">
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()">Generate WebSDK Link</button>
-            <button class="btn btn-run" id="doc-btn-complete" onclick="docSimulateComplete()" disabled>Simulate Completion</button>
-            <button class="btn btn-run" id="doc-btn-aml" onclick="docRunAML()" disabled>Run AML Check</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Webhook Log -->
-      <div class="section-title">Webhook Events</div>
+      <!-- ═══ Step 2: Create Link ═══ -->
+      <div class="section-title">Step 2: Create Link</div>
       <div class="card">
         <div class="card-header">
-          <span>Event Log</span>
-          <button onclick="docClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
+          <span>WebSDK Link</span>
+          <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()" disabled>Generate</button>
         </div>
-        <div class="log-area" id="doc-log" style="background:#0d1117;border:none;border-radius:0;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
-          <div style="color:#6e7681">Waiting for events...</div>
+        <div class="card-body" id="doc-link-area">
+          <div style="color:#888;font-size:12px" id="doc-link-placeholder">Click Generate to create a WebSDK link for this user.</div>
         </div>
       </div>
 
-      <!-- Verification Result -->
-      <div class="section-title">Verification Result</div>
+      <!-- ═══ Step 3: Check Status ═══ -->
+      <div class="section-title">Step 3: Check Status</div>
       <div class="card">
-        <div class="card-body" id="doc-result">
+        <div class="card-header">
+          <span>Status</span>
+          <button class="btn btn-run" id="doc-btn-status" onclick="docCheckStatus()" disabled>Check</button>
+        </div>
+        <div class="card-body" id="doc-status-area">
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-review-status"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-review-answer"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Documents</span><span class="rv" id="doc-docs-status">—</span></div>
           <div class="result-row"><span class="rk">Liveness</span><span class="rv" id="doc-liveness-status">—</span></div>
           <div class="result-row"><span class="rk">AML</span><span class="rv" id="doc-aml-status">—</span></div>
           <div class="result-row"><span class="rk">Custodian Wallet</span><span class="rv" id="doc-wallet-status"><span class="badge badge-gray">Generated on approval</span></span></div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 4: Decision ═══ -->
+      <div class="section-title">Step 4: Decision</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Action</span>
+          <button class="btn btn-run" id="doc-btn-decision" onclick="docDecision()" disabled>Apply</button>
+        </div>
+        <div class="card-body">
+          <div style="color:#888;font-size:12px" id="doc-decision-hint">After checking status, approve or reject the applicant.</div>
+        </div>
+      </div>
+
+      <!-- Event Log (shared) -->
+      <div class="section-title">Event Log</div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Log</span>
+            <button onclick="docClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
+          </div>
+          <div class="log-area" id="doc-log" style="background:#0d1117;border-radius:4px;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
+            <div style="color:#6e7681">Waiting for events...</div>
+          </div>
         </div>
       </div>
 
@@ -272,58 +292,55 @@
     <!-- ═══════════════════════════════════════════════ -->
     <div class="tab-pane" id="tab-nondoc">
 
-      <div class="info-note"><strong>Sumsub KYC (Non-Doc)</strong> L3 level — ID number entry + liveness only. No document upload. Available for ~18 supported countries. ~97% conversion rate, ~4.5s processing.</div>
+      <div class="info-note"><strong>Sumsub KYC (Non-Doc)</strong> L3 level — ID number entry + liveness only. No document upload.</div>
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step" id="n-step-1"><span class="step-num">1</span><span class="step-label">Generate WebSDK Link</span></div>
+        <div class="step" id="n-step-1"><span class="step-num">1</span><span class="step-label">Set User ID</span></div>
         <span class="step-arrow" id="n-arrow-1">→</span>
-        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">User Completes</span></div>
+        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">Create Link</span></div>
         <span class="step-arrow" id="n-arrow-2">→</span>
-        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">Decision</span></div>
+        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
+        <span class="step-arrow" id="n-arrow-3">→</span>
+        <div class="step" id="n-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
       </div>
 
-      <!-- Applicant Profile -->
-      <div class="section-title">Applicant Profile</div>
+      <!-- ═══ Step 1: Set User ID ═══ -->
+      <div class="section-title">Step 1: Set User ID</div>
       <div class="card" id="nondoc-applicant-card">
         <div class="card-header">
-          <span>Individual Applicant (Non-Doc)</span>
-          <span class="badge badge-gray" id="nondoc-applicant-status">Not Started</span>
+          <span>Identity</span>
+          <button class="btn btn-run" id="nondoc-btn-setid" onclick="nondocSetUserId()" style="padding:2px 10px;font-size:10px">Generate</button>
         </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="nondoc-ext-id">—</span></div>
+          <div class="result-row"><span class="rk">Email</span><span class="rv mono" id="nondoc-email">—</span></div>
           <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-app-id">—</span></div>
           <div class="result-row"><span class="rk">Level Name</span><span class="rv mono" id="nondoc-level">non-doc-kyc-level</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="nondoc-applicant-status">Not Started</span></span></div>
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="section-title">Actions</div>
-      <div class="card">
-        <div class="card-body">
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()">Generate WebSDK Link</button>
-            <button class="btn btn-run" id="nondoc-btn-complete" onclick="nondocSimulateComplete()" disabled>Simulate Completion</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Webhook Log -->
-      <div class="section-title">Webhook Events</div>
+      <!-- ═══ Step 2: Create Link ═══ -->
+      <div class="section-title">Step 2: Create Link</div>
       <div class="card">
         <div class="card-header">
-          <span>Event Log</span>
-          <button onclick="nondocClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
+          <span>WebSDK Link</span>
+          <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()" disabled>Generate</button>
         </div>
-        <div class="log-area" id="nondoc-log" style="background:#0d1117;border:none;border-radius:0;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
-          <div style="color:#6e7681">Waiting for events...</div>
+        <div class="card-body" id="nondoc-link-area">
+          <div style="color:#888;font-size:12px" id="nondoc-link-placeholder">Click Generate to create a WebSDK link for this user.</div>
         </div>
       </div>
 
-      <!-- Verification Result -->
-      <div class="section-title">Verification Result</div>
+      <!-- ═══ Step 3: Check Status ═══ -->
+      <div class="section-title">Step 3: Check Status</div>
       <div class="card">
-        <div class="card-body" id="nondoc-result">
+        <div class="card-header">
+          <span>Status</span>
+          <button class="btn btn-run" id="nondoc-btn-status" onclick="nondocCheckStatus()" disabled>Check</button>
+        </div>
+        <div class="card-body" id="nondoc-status-area">
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="nondoc-review-status"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="nondoc-review-answer"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">ID Verification</span><span class="rv" id="nondoc-id-status">—</span></div>
@@ -332,11 +349,41 @@
         </div>
       </div>
 
+      <!-- ═══ Step 4: Decision ═══ -->
+      <div class="section-title">Step 4: Decision</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Action</span>
+          <button class="btn btn-run" id="nondoc-btn-decision" onclick="nondocDecision()" disabled>Apply</button>
+        </div>
+        <div class="card-body">
+          <div style="color:#888;font-size:12px" id="nondoc-decision-hint">After checking status, approve or reject the applicant.</div>
+        </div>
+      </div>
+
+      <!-- Event Log (shared) -->
+      <div class="section-title">Event Log</div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Log</span>
+            <button onclick="nondocClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
+          </div>
+          <div class="log-area" id="nondoc-log" style="background:#0d1117;border-radius:4px;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
+            <div style="color:#6e7681">Waiting for events...</div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
 </div>
 
+
+
+</body>
+</html>
 <script>
 var kycMode = 'real'; // default: real API
 
@@ -402,7 +449,7 @@ function setStep(prefix, n, maxSteps) {
 function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
 // ─── Doc KYC (Tab 2) ───
-var docState = { linked: false, completed: false, amlDone: false, approved: false };
+var docState = { userId: null, email: null, linked: false };
 
 function docLog(cls, text) {
   var el = document.getElementById('doc-log');
@@ -416,30 +463,44 @@ function docLog(cls, text) {
 }
 function docClearLog() { document.getElementById('doc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
 
-async function docGenLink() {
-  // Reset state
-  docState = { linked: false, completed: false, amlDone: false, approved: false };
-  document.getElementById('doc-ext-id').textContent = '—';
-  document.getElementById('doc-app-id').textContent = '—';
+function docSetUserId() {
+  docState = { userId: null, email: null, linked: false };
+  document.getElementById('doc-ext-id').textContent = '\u2014';
+  document.getElementById('doc-email').textContent = '\u2014';
+  document.getElementById('doc-app-id').textContent = '\u2014';
   document.getElementById('doc-applicant-status').textContent = 'Not Started';
   document.getElementById('doc-applicant-status').className = 'badge badge-gray';
   ['doc-review-status','doc-review-answer','doc-docs-status','doc-liveness-status','doc-aml-status'].forEach(function(id) {
-    document.getElementById(id).innerHTML = '<span class="badge badge-gray">—</span>';
+    document.getElementById(id).innerHTML = '<span class="badge badge-gray">\u2014</span>';
   });
   document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
-  document.getElementById('doc-btn-complete').disabled = true;
-  document.getElementById('doc-btn-aml').disabled = true;
+  document.getElementById('doc-btn-link').disabled = true;
+  document.getElementById('doc-btn-status').disabled = true;
   docClearLog();
   setStep('s', 0, 4);
 
+  var ts = Date.now().toString(36).slice(-6);
+  docState.userId = 'user-kyc-' + ts;
+  docState.email = 'kyc-' + ts + '@demo.cregis.io';
+
+  document.getElementById('doc-ext-id').textContent = docState.userId;
+  document.getElementById('doc-email').textContent = docState.email;
+  docLog('#7ee787', 'User context set: ' + docState.userId);
+
+  setStep('s', 1, 4);
+  document.getElementById('doc-btn-link').disabled = false;
+}
+
+async function docGenLink() {
+  if (!docState.userId) return;
   var btn = document.getElementById('doc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  var redirectUrl = getBaseUrl() + '/callback?externalUserId=user-wang-xiaoming';
+  var redirectUrl = getBaseUrl() + '/callback?externalUserId=' + docState.userId;
 
   if (kycMode === 'real') {
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "applicantIdentifiers": { "email": "wang@example.com" }, "ttlInSecs": 3600 }');
+    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "' + docState.userId + '", "applicantIdentifiers": { "email": "' + docState.email + '" }, "ttlInSecs": 3600 }');
 
     try {
       var res = await fetch('/api/websdk-link', {
@@ -447,35 +508,30 @@ async function docGenLink() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           levelName: getDocLevel(),
-          externalUserId: 'user-wang-xiaoming',
-          email: 'wang@example.com',
+          externalUserId: docState.userId,
+          email: docState.email,
           redirectUrl: redirectUrl
         })
       });
       var data = await res.json();
       if (data.url) {
-        document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
-        document.getElementById('doc-app-id').textContent = data.applicantId || '(lazy)';
         document.getElementById('doc-applicant-status').textContent = 'pending';
         document.getElementById('doc-applicant-status').className = 'badge badge-blue';
-        docLog('#79c0ff', '200 OK — WebSDK URL received');
+        docLog('#79c0ff', '200 OK \u2014 WebSDK URL received');
         docLog('#ffa657', 'Applicant created lazily by Sumsub on first link open');
-        await sleep(300);
-        if (data.applicantId) docLog('#d2a8ff', 'applicantId: ' + data.applicantId);
+        if (data.applicantId) {
+          document.getElementById('doc-app-id').textContent = data.applicantId;
+          docLog('#d2a8ff', 'applicantId: ' + data.applicantId);
+        }
 
-        // Show the WebSDK link
-        var linkDiv = document.createElement('div');
-        linkDiv.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;margin-top:8px;font-size:10px;font-family:monospace';
-        linkDiv.innerHTML = '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div><a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a>';
-        var oldLink = document.getElementById('doc-websdk-link');
-        if (oldLink) oldLink.remove();
-        linkDiv.id = 'doc-websdk-link';
-        var logEl = document.getElementById('doc-log');
-        logEl.parentNode.insertBefore(linkDiv, logEl.nextSibling);
+        var linkArea = document.getElementById('doc-link-area');
+        linkArea.innerHTML = '<div style="background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;font-size:10px;font-family:monospace">' +
+          '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div>' +
+          '<a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a></div>';
 
-        setStep('s', 1, 4);
+        setStep('s', 2, 4);
         docState.linked = true;
-        document.getElementById('doc-btn-complete').disabled = false;
+        document.getElementById('doc-btn-status').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
       } else {
         docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
@@ -486,77 +542,166 @@ async function docGenLink() {
       btn.textContent = 'Retry'; btn.disabled = false;
     }
   } else {
-    // Mock mode
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
+    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "' + docState.userId + '", "applicantIdentifiers": { "email": "' + docState.email + '" }, "ttlInSecs": 3600 }');
     await sleep(600);
 
-    var appid = '68a3f2e1b4c9d0000a123456';
+    var appid = '68a3f2e1b4c9d0000a' + Math.floor(Math.random() * 900000 + 100000);
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
-    document.getElementById('doc-ext-id').textContent = 'user-wang-xiaoming';
     document.getElementById('doc-app-id').textContent = appid;
     document.getElementById('doc-applicant-status').textContent = 'pending';
     document.getElementById('doc-applicant-status').className = 'badge badge-blue';
-    docLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+    docLog('#79c0ff', '200 OK \u2014 url: ' + link.substring(0, 50) + '...');
     docLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
 
-    setStep('s', 1, 4);
+    setStep('s', 2, 4);
     docState.linked = true;
-    document.getElementById('doc-btn-complete').disabled = false;
+    document.getElementById('doc-btn-status').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
   }
 }
 
-async function docSimulateComplete() {
-  if (!docState.linked) return;
-  var btn = document.getElementById('doc-btn-complete');
-  btn.disabled = true; btn.textContent = 'Processing...';
+async function docCheckStatus() {
+  if (!docState.userId) return;
+  var btn = document.getElementById('doc-btn-status');
+  btn.disabled = true; btn.textContent = 'Checking...';
 
-  docLog('#ffa657', 'Webhook: applicantReviewed (reviewStatus: onHold)');
-  await sleep(600);
-  document.getElementById('doc-applicant-status').textContent = 'onHold';
-  document.getElementById('doc-applicant-status').className = 'badge badge-yellow';
+  if (kycMode === 'real') {
+    docLog('#79c0ff', 'POST /api/applicant-status');
+    docLog('#d2a8ff', 'Body: { "externalUserId": "' + docState.userId + '" }');
 
-  docLog('#d2a8ff', 'Simulating user submission: ID document + selfie + liveness...');
-  await sleep(800);
+    try {
+      var res = await fetch('/api/applicant-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: docState.userId })
+      });
+      var data = await res.json();
+      if (data.code && data.code !== undefined && !data.id) {
+        docLog('#ff7b72', 'Error: ' + (data.description || JSON.stringify(data)));
+      } else if (data.review || data.id) {
+        var review = data.review || {};
+        var reviewResult = review.reviewResult || {};
+        docLog('#79c0ff', '200 OK');
+        docLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
+        if (reviewResult.reviewAnswer) docLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
 
-  document.getElementById('doc-docs-status').innerHTML = '<span class="badge badge-green">PRC ID Card — OCR verified</span>';
-  document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7% confidence)</span>';
-  docLog('#7ee787', 'ID document: PRC Resident ID Card — OCR match ✓');
-  docLog('#7ee787', 'Liveness: Pass (98.7% face match confidence)');
+        var status = review.reviewStatus || 'unknown';
+        var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
+                          status === 'onHold' || status === 'pending' ? 'badge-yellow' :
+                          status === 'init' ? 'badge-blue' : 'badge-gray';
+        document.getElementById('doc-applicant-status').textContent = status;
+        document.getElementById('doc-applicant-status').className = 'badge ' + statusClass;
 
-  setStep('s', 2, 4);
-  document.getElementById('doc-btn-aml').disabled = false;
-  btn.textContent = 'Simulate Again'; btn.disabled = false;
-  docState.completed = true;
+        document.getElementById('doc-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+        if (reviewResult.reviewAnswer) {
+          var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
+          document.getElementById('doc-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
+        }
+
+        if (status === 'completed' || reviewResult.reviewAnswer === 'GREEN') {
+          document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
+          setStep('s', 4, 4);
+        } else {
+          setStep('s', 3, 4);
+        }
+      } else {
+        docLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
+      }
+      btn.textContent = 'Refresh Status'; btn.disabled = false;
+    } catch(e) {
+      docLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    docLog('#79c0ff', 'POST /api/applicant-status');
+    docLog('#d2a8ff', 'Body: { "externalUserId": "' + docState.userId + '" }');
+    await sleep(600);
+
+    docLog('#79c0ff', '200 OK');
+    docLog('#d2a8ff', 'reviewStatus: completed');
+    docLog('#d2a8ff', 'reviewAnswer: GREEN');
+
+    document.getElementById('doc-applicant-status').textContent = 'completed';
+    document.getElementById('doc-applicant-status').className = 'badge badge-green';
+    document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+    document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('doc-docs-status').innerHTML = '<span class="badge badge-green">ID verified</span>';
+    document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7%)</span>';
+    document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
+
+    setStep('s', 4, 4);
+    btn.textContent = 'Refresh Status'; btn.disabled = false;
+  }
 }
 
-async function docRunAML() {
-  if (!docState.completed) return;
-  var btn = document.getElementById('doc-btn-aml');
-  btn.disabled = true; btn.textContent = 'Running...';
+async function docDecision() {
+  if (!docState.userId) return;
+  var choice = prompt('Decision for ' + docState.userId + '?\\nType APPROVE or REJECT:', 'APPROVE');
+  if (!choice) return;
+  choice = choice.toUpperCase().trim();
+  if (choice !== 'APPROVE' && choice !== 'REJECT') return;
 
-  docLog('#79c0ff', 'POST /resources/applicants/{id}/recheck/aml');
-  await sleep(1000);
+  var btn = document.getElementById('doc-btn-decision');
+  btn.disabled = true; btn.textContent = 'Processing...';
 
-  var riskLevel = 'low';
-  var pepHit = false;
-  docLog('#7ee787', 'AML screening complete — risk level: ' + riskLevel + ', PEP: ' + (pepHit ? 'YES' : 'no'));
+  if (kycMode === 'real') {
+    docLog('#79c0ff', 'POST /api/decision');
+    docLog('#d2a8ff', 'Body: { "externalUserId": "' + docState.userId + '", "action": "' + choice + '" }');
 
-  document.getElementById('doc-aml-status').innerHTML = '<span class="badge badge-green">Clear (low risk)</span>';
-  document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
-  document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-  document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-  document.getElementById('doc-applicant-status').textContent = 'approved';
-  document.getElementById('doc-applicant-status').className = 'badge badge-green';
-
-  setStep('s', 4, 4);
-  docState.approved = true;
-  btn.textContent = 'Recheck AML'; btn.disabled = false;
+    try {
+      var res = await fetch('/api/decision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: docState.userId, action: choice })
+      });
+      var data = await res.json();
+      if (data.ok) {
+        docLog('#7ee787', 'Decision applied: ' + choice);
+        if (choice === 'APPROVE') {
+          document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+          document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+          document.getElementById('doc-applicant-status').textContent = 'approved';
+          document.getElementById('doc-applicant-status').className = 'badge badge-green';
+          document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
+        } else {
+          document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
+          document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
+          document.getElementById('doc-applicant-status').textContent = 'rejected';
+          document.getElementById('doc-applicant-status').className = 'badge badge-red';
+        }
+        setStep('s', 4, 4);
+      } else {
+        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+      }
+      btn.textContent = 'Decision'; btn.disabled = false;
+    } catch(e) {
+      docLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    docLog('#79c0ff', 'Decision: ' + choice);
+    await sleep(400);
+    docLog('#7ee787', 'Decision applied: ' + choice);
+    if (choice === 'APPROVE') {
+      document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+      document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+      document.getElementById('doc-applicant-status').textContent = 'approved';
+      document.getElementById('doc-applicant-status').className = 'badge badge-green';
+      document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
+    } else {
+      document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
+      document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
+      document.getElementById('doc-applicant-status').textContent = 'rejected';
+      document.getElementById('doc-applicant-status').className = 'badge badge-red';
+    }
+    setStep('s', 4, 4);
+    btn.textContent = 'Decision'; btn.disabled = false;
+  }
 }
 
 // ─── Non-Doc KYC (Tab 3) ───
-var ndState = { linked: false, completed: false, approved: false };
+var ndState = { userId: null, email: null, linked: false };
 
 function ndLog(cls, text) {
   var el = document.getElementById('nondoc-log');
@@ -570,29 +715,44 @@ function ndLog(cls, text) {
 }
 function ndClearLog() { document.getElementById('nondoc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
 
-async function nondocGenLink() {
-  // Reset state
-  ndState = { linked: false, completed: false, approved: false };
-  document.getElementById('nondoc-ext-id').textContent = '—';
-  document.getElementById('nondoc-app-id').textContent = '—';
+function nondocSetUserId() {
+  ndState = { userId: null, email: null, linked: false };
+  document.getElementById('nondoc-ext-id').textContent = '\u2014';
+  document.getElementById('nondoc-email').textContent = '\u2014';
+  document.getElementById('nondoc-app-id').textContent = '\u2014';
   document.getElementById('nondoc-applicant-status').textContent = 'Not Started';
   document.getElementById('nondoc-applicant-status').className = 'badge badge-gray';
   ['nondoc-review-status','nondoc-review-answer','nondoc-id-status','nondoc-liveness-status'].forEach(function(id) {
-    document.getElementById(id).innerHTML = '<span class="badge badge-gray">—</span>';
+    document.getElementById(id).innerHTML = '<span class="badge badge-gray">\u2014</span>';
   });
   document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
-  document.getElementById('nondoc-btn-complete').disabled = true;
+  document.getElementById('nondoc-btn-link').disabled = true;
+  document.getElementById('nondoc-btn-status').disabled = true;
   ndClearLog();
-  setStep('n', 0, 3);
+  setStep('n', 0, 4);
 
+  var ts = Date.now().toString(36).slice(-6);
+  ndState.userId = 'user-nondoc-' + ts;
+  ndState.email = 'nondoc-' + ts + '@demo.cregis.io';
+
+  document.getElementById('nondoc-ext-id').textContent = ndState.userId;
+  document.getElementById('nondoc-email').textContent = ndState.email;
+  ndLog('#7ee787', 'User context set: ' + ndState.userId);
+
+  setStep('n', 1, 4);
+  document.getElementById('nondoc-btn-link').disabled = false;
+}
+
+async function nondocGenLink() {
+  if (!ndState.userId) return;
   var btn = document.getElementById('nondoc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  var redirectUrl = getBaseUrl() + '/callback?externalUserId=user-chen-fang';
+  var redirectUrl = getBaseUrl() + '/callback?externalUserId=' + ndState.userId;
 
   if (kycMode === 'real') {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "applicantIdentifiers": { "email": "chenf@example.com" }, "ttlInSecs": 3600 }');
+    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "' + ndState.userId + '", "applicantIdentifiers": { "email": "' + ndState.email + '" }, "ttlInSecs": 3600 }');
 
     try {
       var res = await fetch('/api/websdk-link', {
@@ -600,34 +760,30 @@ async function nondocGenLink() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           levelName: getNonDocLevel(),
-          externalUserId: 'user-chen-fang',
-          email: 'chenf@example.com',
+          externalUserId: ndState.userId,
+          email: ndState.email,
           redirectUrl: redirectUrl
         })
       });
       var data = await res.json();
       if (data.url) {
-        document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
-        document.getElementById('nondoc-app-id').textContent = data.applicantId || '(lazy)';
         document.getElementById('nondoc-applicant-status').textContent = 'pending';
         document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
-        ndLog('#79c0ff', '200 OK — WebSDK URL received');
+        ndLog('#79c0ff', '200 OK \u2014 WebSDK URL received');
         ndLog('#ffa657', 'Applicant created lazily by Sumsub on first link open');
-        await sleep(300);
-        if (data.applicantId) ndLog('#d2a8ff', 'applicantId: ' + data.applicantId);
+        if (data.applicantId) {
+          document.getElementById('nondoc-app-id').textContent = data.applicantId;
+          ndLog('#d2a8ff', 'applicantId: ' + data.applicantId);
+        }
 
-        var linkDiv = document.createElement('div');
-        linkDiv.style.cssText = 'background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;margin-top:8px;font-size:10px;font-family:monospace';
-        linkDiv.innerHTML = '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div><a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a>';
-        var oldLink = document.getElementById('nondoc-websdk-link');
-        if (oldLink) oldLink.remove();
-        linkDiv.id = 'nondoc-websdk-link';
-        var logEl = document.getElementById('nondoc-log');
-        logEl.parentNode.insertBefore(linkDiv, logEl.nextSibling);
+        var linkArea = document.getElementById('nondoc-link-area');
+        linkArea.innerHTML = '<div style="background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;font-size:10px;font-family:monospace">' +
+          '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div>' +
+          '<a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a></div>';
 
-        setStep('n', 1, 3);
+        setStep('n', 2, 4);
         ndState.linked = true;
-        document.getElementById('nondoc-btn-complete').disabled = false;
+        document.getElementById('nondoc-btn-status').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
       } else {
         ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
@@ -639,52 +795,160 @@ async function nondocGenLink() {
     }
   } else {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
+    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "' + ndState.userId + '", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
     await sleep(600);
 
-    var appid = '68a3f2e1b4c9d0000a654321';
+    var appid = '68a3f2e1b4c9d0000b' + Math.floor(Math.random() * 900000 + 100000);
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
-    document.getElementById('nondoc-ext-id').textContent = 'user-chen-fang';
     document.getElementById('nondoc-app-id').textContent = appid;
     document.getElementById('nondoc-applicant-status').textContent = 'pending';
     document.getElementById('nondoc-applicant-status').className = 'badge badge-blue';
-    ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
+    ndLog('#79c0ff', '200 OK \u2014 url: ' + link.substring(0, 50) + '...');
     ndLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
 
-    setStep('n', 1, 3);
+    setStep('n', 2, 4);
     ndState.linked = true;
-    document.getElementById('nondoc-btn-complete').disabled = false;
+    document.getElementById('nondoc-btn-status').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
   }
 }
 
-async function nondocSimulateComplete() {
-  if (!ndState.linked) return;
-  var btn = document.getElementById('nondoc-btn-complete');
+async function nondocCheckStatus() {
+  if (!ndState.userId) return;
+  var btn = document.getElementById('nondoc-btn-status');
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  if (kycMode === 'real') {
+    ndLog('#79c0ff', 'POST /api/applicant-status');
+    ndLog('#d2a8ff', 'Body: { "externalUserId": "' + ndState.userId + '" }');
+
+    try {
+      var res = await fetch('/api/applicant-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: ndState.userId })
+      });
+      var data = await res.json();
+      if (data.code && data.code !== undefined && !data.id) {
+        ndLog('#ff7b72', 'Error: ' + (data.description || JSON.stringify(data)));
+      } else if (data.review || data.id) {
+        var review = data.review || {};
+        var reviewResult = review.reviewResult || {};
+        ndLog('#79c0ff', '200 OK');
+        ndLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
+        if (reviewResult.reviewAnswer) ndLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
+
+        var status = review.reviewStatus || 'unknown';
+        var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
+                          status === 'onHold' || status === 'pending' ? 'badge-yellow' :
+                          status === 'init' ? 'badge-blue' : 'badge-gray';
+        document.getElementById('nondoc-applicant-status').textContent = status;
+        document.getElementById('nondoc-applicant-status').className = 'badge ' + statusClass;
+
+        document.getElementById('nondoc-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+        if (reviewResult.reviewAnswer) {
+          var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
+          document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
+        }
+
+        if (status === 'completed' || reviewResult.reviewAnswer === 'GREEN') {
+          document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
+          setStep('n', 4, 4);
+        } else {
+          setStep('n', 3, 4);
+        }
+      } else {
+        ndLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
+      }
+      btn.textContent = 'Refresh Status'; btn.disabled = false;
+    } catch(e) {
+      ndLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    ndLog('#79c0ff', 'POST /api/applicant-status');
+    ndLog('#d2a8ff', 'Body: { "externalUserId": "' + ndState.userId + '" }');
+    await sleep(600);
+
+    ndLog('#79c0ff', '200 OK');
+    ndLog('#d2a8ff', 'reviewStatus: completed');
+    ndLog('#d2a8ff', 'reviewAnswer: GREEN');
+
+    document.getElementById('nondoc-applicant-status').textContent = 'completed';
+    document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
+    document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+    document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('nondoc-id-status').innerHTML = '<span class="badge badge-green">SG NRIC verified</span>';
+    document.getElementById('nondoc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (99.2%)</span>';
+    document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
+
+    setStep('n', 4, 4);
+    btn.textContent = 'Refresh Status'; btn.disabled = false;
+  }
+}
+
+async function nondocDecision() {
+  if (!ndState.userId) return;
+  var choice = prompt('Decision for ' + ndState.userId + '?\\nType APPROVE or REJECT:', 'APPROVE');
+  if (!choice) return;
+  choice = choice.toUpperCase().trim();
+  if (choice !== 'APPROVE' && choice !== 'REJECT') return;
+
+  var btn = document.getElementById('nondoc-btn-decision');
   btn.disabled = true; btn.textContent = 'Processing...';
 
-  ndLog('#d2a8ff', 'Simulating Non-Doc flow: ID number entry + liveness...');
-  await sleep(500);
-  ndLog('#ffa657', 'Webhook: applicantReviewed (reviewStatus: pending → completed)');
-  await sleep(600);
+  if (kycMode === 'real') {
+    ndLog('#79c0ff', 'POST /api/decision');
+    ndLog('#d2a8ff', 'Body: { "externalUserId": "' + ndState.userId + '", "action": "' + choice + '" }');
 
-  document.getElementById('nondoc-id-status').innerHTML = '<span class="badge badge-green">SG NRIC verified via API</span>';
-  document.getElementById('nondoc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (99.2% confidence)</span>';
-  ndLog('#7ee787', 'ID verified: Singapore NRIC (no document upload required)');
-  ndLog('#7ee787', 'Liveness: Pass (99.2% face match confidence)');
-  ndLog('#7ee787', 'Non-Doc processing time: 4.5s');
-
-  document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
-  document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-  document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
-  document.getElementById('nondoc-applicant-status').textContent = 'approved';
-  document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
-
-  setStep('n', 3, 3);
-  ndState.approved = true;
-  btn.textContent = 'Simulate Again'; btn.disabled = false;
+    try {
+      var res = await fetch('/api/decision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: ndState.userId, action: choice })
+      });
+      var data = await res.json();
+      if (data.ok) {
+        ndLog('#7ee787', 'Decision applied: ' + choice);
+        if (choice === 'APPROVE') {
+          document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+          document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+          document.getElementById('nondoc-applicant-status').textContent = 'approved';
+          document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
+          document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
+        } else {
+          document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
+          document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
+          document.getElementById('nondoc-applicant-status').textContent = 'rejected';
+          document.getElementById('nondoc-applicant-status').className = 'badge badge-red';
+        }
+        setStep('n', 4, 4);
+      } else {
+        ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+      }
+      btn.textContent = 'Decision'; btn.disabled = false;
+    } catch(e) {
+      ndLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    ndLog('#79c0ff', 'Decision: ' + choice);
+    await sleep(400);
+    ndLog('#7ee787', 'Decision applied: ' + choice);
+    if (choice === 'APPROVE') {
+      document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+      document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+      document.getElementById('nondoc-applicant-status').textContent = 'approved';
+      document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
+      document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
+    } else {
+      document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
+      document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
+      document.getElementById('nondoc-applicant-status').textContent = 'rejected';
+      document.getElementById('nondoc-applicant-status').className = 'badge badge-red';
+    }
+    setStep('n', 4, 4);
+    btn.textContent = 'Decision'; btn.disabled = false;
+  }
 }
 </script>
-
-</body>
-</html>
