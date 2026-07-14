@@ -89,14 +89,36 @@
   <div class="topbar"><span>Onboard</span>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:10px;color:#888">Mode:</span>
-      <button class="btn btn-run" id="mode-mock" style="padding:2px 8px;font-size:10px" onclick="setMode('mock')">Mock</button>
+      <button class="btn btn-run" id="mode-mock" style="padding:2px 8px;font-size:10px;background:#475569" onclick="setMode('mock')">Mock</button>
       <button class="btn btn-reset" id="mode-real" style="padding:2px 8px;font-size:10px;background:#2563eb;color:#fff" onclick="setMode('real')">Real</button>
+      <span style="color:#e0e0e0;margin:0 4px">|</span>
+      <button class="btn btn-run" id="btn-settings" style="padding:2px 8px;font-size:10px;background:#475569" onclick="toggleSettings()">⚙ Settings</button>
     </div>
   </div>
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">Corporate Onboarding</div>
     <div class="tab" onclick="switchTab(1)">Individual Onboarding</div>
     <div class="tab" onclick="switchTab(2)">Non-Doc Individual Onboarding</div>
+  </div>
+
+  <!-- Settings Panel (hidden by default) -->
+  <div id="settings-panel" style="display:none;background:#fff;border-bottom:1px solid #e0e0e0;padding:12px 16px">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Base URL (Tunnel)</label>
+        <input type="text" id="setting-baseurl" value="https://localhost:8000" style="width:320px;padding:6px 10px;border:1px solid #d0d0d0;border-radius:4px;font-size:12px;font-family:monospace" placeholder="https://abc123.trycloudflare.com">
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Doc KYC Level</label>
+        <input type="text" id="setting-doclevel" value="kyc-test-daniel-260618" style="width:240px;padding:6px 10px;border:1px solid #d0d0d0;border-radius:4px;font-size:12px;font-family:monospace">
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Non-Doc Level</label>
+        <input type="text" id="setting-nondoclevel" value="non-doc-kyc-level" style="width:200px;padding:6px 10px;border:1px solid #d0d0d0;border-radius:4px;font-size:12px;font-family:monospace">
+      </div>
+      <button class="btn btn-run" style="padding:6px 14px;font-size:11px;background:#059669" onclick="saveSettings()">Save</button>
+    </div>
+    <div id="setting-preview" style="margin-top:8px;font-size:10px;color:#888;font-family:monospace"></div>
   </div>
   <div class="content">
 
@@ -364,6 +386,38 @@
 
 <script>
 var kycMode = 'real'; // default: real API
+var settings = {
+  baseUrl: 'https://localhost:8000',
+  docLevel: 'kyc-test-daniel-260618',
+  nonDocLevel: 'non-doc-kyc-level'
+};
+
+function toggleSettings() {
+  var panel = document.getElementById('settings-panel');
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    document.getElementById('setting-baseurl').value = settings.baseUrl;
+    document.getElementById('setting-doclevel').value = settings.docLevel;
+    document.getElementById('setting-nondoclevel').value = settings.nonDocLevel;
+    updatePreview();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+function saveSettings() {
+  settings.baseUrl = document.getElementById('setting-baseurl').value.replace(/\/$/, '');
+  settings.docLevel = document.getElementById('setting-doclevel').value;
+  settings.nonDocLevel = document.getElementById('setting-nondoclevel').value;
+  updatePreview();
+}
+function updatePreview() {
+  var el = document.getElementById('setting-preview');
+  if (!el) return;
+  el.innerHTML = 'successUrl: <span style="color:#79c0ff">' + settings.baseUrl + '/callback?action=success&externalUserId={userId}</span><br>rejectUrl: <span style="color:#ff7b72">' + settings.baseUrl + '/callback?action=reject&externalUserId={userId}</span>';
+}
+function getBaseUrl() { return settings.baseUrl; }
+function getDocLevel() { return settings.docLevel; }
+function getNonDocLevel() { return settings.nonDocLevel; }
 
 function setMode(m) {
   kycMode = m;
@@ -455,7 +509,7 @@ async function docCreateApplicant() {
   if (kycMode === 'real') {
     // Real mode: generate access token (applicant created lazily on SDK interaction)
     try {
-      docLog('#79c0ff', 'POST /api/token?externalUserId=user-wang-xiaoming');
+      docLog('#79c0ff', 'POST /api/token?externalUserId=user-wang-xiaoming&levelName=' + getDocLevel());
       var res = await fetch('/api/token?externalUserId=user-wang-xiaoming', { method: 'POST' });
       var data = await res.json();
       if (data.token) {
@@ -501,12 +555,12 @@ async function docGenLink() {
   var btn = document.getElementById('doc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  var successUrl = window.location.protocol + '//' + window.location.host + '/callback?action=success&externalUserId=user-wang-xiaoming';
-  var rejectUrl = window.location.protocol + '//' + window.location.host + '/callback?action=reject&externalUserId=user-wang-xiaoming';
+  var successUrl = getBaseUrl() + '/callback?action=success&externalUserId=user-wang-xiaoming';
+  var rejectUrl = getBaseUrl() + '/callback?action=reject&externalUserId=user-wang-xiaoming';
 
   if (kycMode === 'real') {
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
+    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600 }');
     docLog('#d2a8ff', 'redirect: { successUrl: "' + successUrl + '", rejectUrl: "' + rejectUrl + '" }');
 
     try {
@@ -514,7 +568,7 @@ async function docGenLink() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          levelName: 'kyc-test-daniel-260618',
+          levelName: getDocLevel(),
           externalUserId: 'user-wang-xiaoming',
           email: 'wang@example.com',
           successUrl: successUrl,
@@ -556,7 +610,7 @@ async function docGenLink() {
   } else {
     // Mock mode
     docLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    docLog('#d2a8ff', 'Body: { "levelName": "kyc-test-daniel-260618", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirect": { "successUrl": "' + successUrl + '", "rejectUrl": "' + rejectUrl + '" } }');
+    docLog('#d2a8ff', 'Body: { "levelName": "' + getDocLevel() + '", "userId": "user-wang-xiaoming", "ttlInSecs": 3600, "redirect": { "successUrl": "' + successUrl + '", "rejectUrl": "' + rejectUrl + '" } }');
     await sleep(600);
 
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
@@ -703,12 +757,12 @@ async function nondocGenLink() {
   var btn = document.getElementById('nondoc-btn-link');
   btn.disabled = true; btn.textContent = 'Generating...';
 
-  var successUrl = window.location.protocol + '//' + window.location.host + '/callback?action=success&externalUserId=user-chen-fang';
-  var rejectUrl = window.location.protocol + '//' + window.location.host + '/callback?action=reject&externalUserId=user-chen-fang';
+  var successUrl = getBaseUrl() + '/callback?action=success&externalUserId=user-chen-fang';
+  var rejectUrl = getBaseUrl() + '/callback?action=reject&externalUserId=user-chen-fang';
 
   if (kycMode === 'real') {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
+    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
     ndLog('#d2a8ff', 'redirect: { successUrl: "' + successUrl + '", rejectUrl: "' + rejectUrl + '" }');
 
     try {
@@ -716,7 +770,7 @@ async function nondocGenLink() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          levelName: 'non-doc-kyc-level',
+          levelName: getNonDocLevel(),
           externalUserId: 'user-chen-fang',
           email: 'chenf@example.com',
           successUrl: successUrl,
@@ -756,7 +810,7 @@ async function nondocGenLink() {
     }
   } else {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
+    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "user-chen-fang", "ttlInSecs": 3600 }');
     await sleep(600);
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
     ndLog('#79c0ff', '200 OK — url: ' + link.substring(0, 50) + '...');
