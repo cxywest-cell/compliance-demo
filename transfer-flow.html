@@ -33,17 +33,23 @@
   .flow-bar .sep { color: #ccc; }
   .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; }
   .card-body { padding: 10px 12px; }
   .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
   .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
   .k { color: #888; }
   .v { color: #1a1a1a; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; }
   .custodian-bed { background: #fafbfc; border-top: 2px solid #e0e0e0; }
   .placeholder { padding: 40px 16px; text-align: center; color: #888; }
   .placeholder h3 { font-size: 14px; margin-bottom: 8px; color: #1a1a1a; }
   .placeholder p { font-size: 12px; }
   .role-page { display: none; }
   .role-page.active { display: block; }
+  .net-status { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
+  .net-online { background: #d1fae5; color: #065f46; }
+  .net-offline { background: #fee2e2; color: #991b1b; }
+  .hint { font-size: 10px; color: #aaa; }
 </style>
 
 </head>
@@ -56,190 +62,206 @@
   <div class="sidebar-nav">
     <a class="nav-item" href="onboarding.html"><span class="icon">+</span> Onboard</a>
     <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
-    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Address Monitoring</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
     <a class="nav-item active" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
     <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
   </div>
 </div>
 
 <div class="main">
-  <div class="topbar">Travel Rule Transfer</div>
+  <div class="topbar">Travel Rule Transfer <span id="net-badge" style="float:right"></span></div>
   <div class="content">
 
     <div class="role-tabs">
-      <div class="role-tab active" data-tab="originator">Originator</div>
-      <div class="role-tab" data-tab="entity-a">Entity A</div>
+      <div class="role-tab active" data-tab="entity-a">Entity A</div>
       <div class="role-tab" data-tab="custodian-a">Custodian A</div>
-      <div class="role-tab" data-tab="custodian-b">Custodian B</div>
       <div class="role-tab" data-tab="entity-b">Entity B</div>
-      <div class="role-tab" data-tab="beneficiary">Beneficiary</div>
+      <div class="role-tab" data-tab="custodian-b">Custodian B</div>
     </div>
 
-    <!-- Originator -->
-    <div class="role-page active" id="role-originator">
-      <div class="role-header"><span class="dot" style="background:#f59e0b"></span><h2>Originator</h2><span class="tag">Customer of Entity A</span></div>
-      <div class="flow-bar"><span class="hl">Originator</span><span class="sep">→</span>Entity A<span class="sep">→</span>Custodian A<span class="sep">→</span>TR Network<span class="sep">→</span>Custodian B<span class="sep">→</span>Entity B<span class="sep">→</span><span class="dim">Beneficiary</span></div>
-      <div class="section-title">Account</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Name</span><span class="v">Alice Corp</span></div>
-        <div class="cred-row"><span class="k">Account</span><span class="v">0x3f8a...c71d</span></div>
-        <div class="cred-row"><span class="k">Balance</span><span class="v" style="font-weight:600">1,250,000 CLCC</span></div>
-        <div class="cred-row"><span class="k">VASP</span><span class="v">Entity A (VASP-CN-0892)</span></div>
-      </div></div>
-      <div class="section-title">Transfer</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">To</span><span class="v">Beneficiary (via Entity B)</span></div>
-        <div class="cred-row"><span class="k">Amount</span><span class="v" style="font-weight:600">250,000 CLCC</span></div>
-        <div class="cred-row"><span class="k">Status</span><span class="v" style="color:#f59e0b">● Travel Rule Pending</span></div>
-        <div class="cred-row"><span class="k">Destination</span><span class="v">0x9e2b...d48f</span></div>
-      </div></div>
-    </div>
-
-    <!-- Entity A -->
-    <div class="role-page" id="role-entity-a">
+    <!-- ═══ Entity A ═══ -->
+    <div class="role-page active" id="role-entity-a">
       <div class="role-header"><span class="dot" style="background:#5b4cdb"></span><h2>Entity A</h2><span class="tag">Originator VASP</span></div>
-      <div class="flow-bar"><span class="dim">Originator</span><span class="sep">→</span><span class="hl">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>TR Network<span class="sep">→</span>Custodian B<span class="sep">→</span>Entity B<span class="sep">→</span><span class="dim">Beneficiary</span></div>
+      <div class="flow-bar"><span class="hl">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>Notabene Network<span class="sep">→</span>Custodian B<span class="sep">→</span><span class="dim">Entity B</span></div>
+
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v">did:trisa:entity-a-0x3f8a</span></div>
+        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ea-did">—</span></div>
         <div class="cred-row"><span class="k">Type</span><span class="v">VASP</span></div>
         <div class="cred-row"><span class="k">Role</span><span class="v">Originator VASP</span></div>
+        <div class="cred-row"><span class="k">Wallet</span><span class="v mono" id="ea-wallet">—</span></div>
       </div></div>
+
       <div class="section-title">Custodian</div>
       <div class="card custodian-bed"><div class="card-body">
         <div class="cred-row"><span class="k">Name</span><span class="v">Custodian A</span></div>
-        <div class="cred-row"><span class="k">DID</span><span class="v">did:trisa:custodian-a-vasp</span></div>
-        <div class="cred-row"><span class="k">VASP Code</span><span class="v">VASP-CN-0892</span></div>
-        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v">0x7c4e...b93a</span></div>
-        <div class="cred-row"><span class="k">Entity A Custody Wallet</span><span class="v">0x5d3a...f812</span></div>
+        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ca-did-ref">—</span></div>
+        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v mono" id="ca-wallet-ref">—</span></div>
       </div></div>
+
       <div class="section-title">Counterparty</div>
       <div class="card"><div class="card-body">
         <div class="cred-row"><span class="k">Beneficiary VASP</span><span class="v">Entity B</span></div>
-        <div class="cred-row"><span class="k">Beneficiary DID</span><span class="v">did:trisa:entity-b-0x9e2b</span></div>
-        <div class="cred-row"><span class="k">Beneficiary Custodian</span><span class="v">Custodian B (VASP-SG-1247)</span></div>
-        <div class="cred-row"><span class="k">Custodian B Wallet</span><span class="v">0x8f2c...a47e</span></div>
+        <div class="cred-row"><span class="k">Beneficiary DID</span><span class="v mono" id="eb-did-ref">—</span></div>
+        <div class="cred-row"><span class="k">Beneficiary Custodian</span><span class="v">Custodian B</span></div>
+        <div class="cred-row"><span class="k">Custodian B Wallet</span><span class="v mono" id="cb-wallet-ref">—</span></div>
       </div></div>
-      <div class="section-title">TR API Credentials</div>
+
+      <div class="section-title">Notabene Network Credentials</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Client ID</span><span class="v">lC0eHOAkD6sYYYR5hVpMFXCmC9ZaDD1k</span></div>
-        <div class="cred-row"><span class="k">Secret</span><span class="v">TS8cReg-ZE60XXB3U9midw3Hi4jIIl8O2Plo-5cZO9iQN5y2iIesfaqinRlsh7UQ</span></div>
+        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="ea-apikey">—</span></div>
+        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="ea-apisecret">—</span></div>
       </div></div>
     </div>
 
-    <!-- Custodian A -->
+    <!-- ═══ Custodian A ═══ -->
     <div class="role-page" id="role-custodian-a">
       <div class="role-header"><span class="dot" style="background:#8b5cf6"></span><h2>Custodian A</h2><span class="tag">Custody Provider</span></div>
-      <div class="flow-bar"><span class="dim">Originator</span><span class="sep">→</span>Entity A<span class="sep">→</span><span class="hl">Custodian A</span><span class="sep">→</span>TR Network<span class="sep">→</span>Custodian B<span class="sep">→</span>Entity B<span class="sep">→</span><span class="dim">Beneficiary</span></div>
+      <div class="flow-bar"><span class="dim">Entity A</span><span class="sep">→</span><span class="hl">Custodian A</span><span class="sep">→</span>Notabene Network<span class="sep">→</span>Custodian B<span class="sep">→</span><span class="dim">Entity B</span></div>
+
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v">did:trisa:custodian-a-vasp</span></div>
+        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ca-did">—</span></div>
         <div class="cred-row"><span class="k">Type</span><span class="v">Custodian / VASP</span></div>
-        <div class="cred-row"><span class="k">VASP Code</span><span class="v">VASP-CN-0892</span></div>
-        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v">0x7c4e...b93a</span></div>
+        <div class="cred-row"><span class="k">Hot Wallet</span><span class="v mono" id="ca-wallet">—</span></div>
       </div></div>
+
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
         <div class="cred-row"><span class="k">Entity</span><span class="v">Entity A (Originator VASP)</span></div>
-        <div class="cred-row"><span class="k">Entity DID</span><span class="v">did:trisa:entity-a-0x3f8a</span></div>
-        <div class="cred-row"><span class="k">Entity Client ID</span><span class="v">lC0eHOAkD6sYYYR5hVpMFXCmC9ZaDD1k</span></div>
-        <div class="cred-row"><span class="k">Custody Wallet</span><span class="v">0x5d3a...f812</span></div>
+        <div class="cred-row"><span class="k">Entity DID</span><span class="v mono" id="ea-did-ref-ca">—</span></div>
+        <div class="cred-row"><span class="k">Custody Wallet</span><span class="v mono" id="ea-wallet-ref-ca">—</span></div>
       </div></div>
-      <div class="section-title">TR API Credentials</div>
+
+      <div class="section-title">Notabene Network Credentials</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Client ID</span><span class="v">pending</span></div>
-        <div class="cred-row"><span class="k">Secret</span><span class="v">pending</span></div>
+        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="ca-apikey">—</span></div>
+        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="ca-apisecret">—</span></div>
       </div></div>
     </div>
 
-    <!-- Custodian B -->
-    <div class="role-page" id="role-custodian-b">
-      <div class="role-header"><span class="dot" style="background:#14b8a6"></span><h2>Custodian B</h2><span class="tag">Custody Provider</span></div>
-      <div class="flow-bar"><span class="dim">Originator</span><span class="sep">→</span>Entity A<span class="sep">→</span>Custodian A<span class="sep">→</span>TR Network<span class="sep">→</span><span class="hl">Custodian B</span><span class="sep">→</span>Entity B<span class="sep">→</span><span class="dim">Beneficiary</span></div>
-      <div class="section-title">Entity Info</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v">did:trisa:custodian-b-vasp</span></div>
-        <div class="cred-row"><span class="k">Type</span><span class="v">Custodian / VASP</span></div>
-        <div class="cred-row"><span class="k">VASP Code</span><span class="v">VASP-SG-1247</span></div>
-        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v">0x2d5a...e81c</span></div>
-      </div></div>
-      <div class="section-title">Customer</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Entity</span><span class="v">Entity B (Beneficiary VASP)</span></div>
-        <div class="cred-row"><span class="k">Entity DID</span><span class="v">did:trisa:entity-b-0x9e2b</span></div>
-        <div class="cred-row"><span class="k">Custody Wallet</span><span class="v">0x8f2c...a47e</span></div>
-      </div></div>
-      <div class="section-title">TR API Credentials</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Client ID</span><span class="v">pending</span></div>
-        <div class="cred-row"><span class="k">Secret</span><span class="v">pending</span></div>
-      </div></div>
-    </div>
-
-    <!-- Entity B -->
+    <!-- ═══ Entity B ═══ -->
     <div class="role-page" id="role-entity-b">
       <div class="role-header"><span class="dot" style="background:#06b6d4"></span><h2>Entity B</h2><span class="tag">Beneficiary VASP</span></div>
-      <div class="flow-bar"><span class="dim">Originator</span><span class="sep">→</span>Entity A<span class="sep">→</span>Custodian A<span class="sep">→</span>TR Network<span class="sep">→</span>Custodian B<span class="sep">→</span><span class="hl">Entity B</span><span class="sep">→</span><span class="dim">Beneficiary</span></div>
+      <div class="flow-bar"><span class="dim">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>Notabene Network<span class="sep">→</span><span class="hl">Custodian B</span><span class="sep">→</span><span class="dim">Entity B</span></div>
+
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v">did:trisa:entity-b-0x9e2b</span></div>
+        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="eb-did">—</span></div>
         <div class="cred-row"><span class="k">Type</span><span class="v">VASP</span></div>
         <div class="cred-row"><span class="k">Role</span><span class="v">Beneficiary VASP</span></div>
+        <div class="cred-row"><span class="k">Wallet</span><span class="v mono" id="eb-wallet">—</span></div>
       </div></div>
+
       <div class="section-title">Custodian</div>
       <div class="card custodian-bed"><div class="card-body">
         <div class="cred-row"><span class="k">Name</span><span class="v">Custodian B</span></div>
-        <div class="cred-row"><span class="k">DID</span><span class="v">did:trisa:custodian-b-vasp</span></div>
-        <div class="cred-row"><span class="k">VASP Code</span><span class="v">VASP-SG-1247</span></div>
-        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v">0x2d5a...e81c</span></div>
-        <div class="cred-row"><span class="k">Entity B Custody Wallet</span><span class="v">0x8f2c...a47e</span></div>
+        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="cb-did-ref">—</span></div>
+        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v mono" id="cb-wallet-ref">—</span></div>
       </div></div>
+
       <div class="section-title">Counterparty</div>
       <div class="card"><div class="card-body">
         <div class="cred-row"><span class="k">Originator VASP</span><span class="v">Entity A</span></div>
-        <div class="cred-row"><span class="k">Originator DID</span><span class="v">did:trisa:entity-a-0x3f8a</span></div>
-        <div class="cred-row"><span class="k">Originator Custodian</span><span class="v">Custodian A (VASP-CN-0892)</span></div>
-        <div class="cred-row"><span class="k">Custodian A Wallet</span><span class="v">0x5d3a...f812</span></div>
+        <div class="cred-row"><span class="k">Originator DID</span><span class="v mono" id="ea-did-ref-eb">—</span></div>
+        <div class="cred-row"><span class="k">Originator Custodian</span><span class="v">Custodian A</span></div>
+        <div class="cred-row"><span class="k">Custodian A Wallet</span><span class="v mono" id="ca-wallet-ref-eb">—</span></div>
       </div></div>
-      <div class="section-title">TR API Credentials</div>
+
+      <div class="section-title">Notabene Network Credentials</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Client ID</span><span class="v">pending</span></div>
-        <div class="cred-row"><span class="k">Secret</span><span class="v">pending</span></div>
+        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="eb-apikey">—</span></div>
+        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="eb-apisecret">—</span></div>
       </div></div>
     </div>
 
-    <!-- Beneficiary -->
-    <div class="role-page" id="role-beneficiary">
-      <div class="role-header"><span class="dot" style="background:#f59e0b"></span><h2>Beneficiary</h2><span class="tag">Customer of Entity B</span></div>
-      <div class="flow-bar"><span class="dim">Originator</span><span class="sep">→</span>Entity A<span class="sep">→</span>Custodian A<span class="sep">→</span>TR Network<span class="sep">→</span>Custodian B<span class="sep">→</span>Entity B<span class="sep">→</span><span class="hl">Beneficiary</span></div>
-      <div class="section-title">Account</div>
+    <!-- ═══ Custodian B ═══ -->
+    <div class="role-page" id="role-custodian-b">
+      <div class="role-header"><span class="dot" style="background:#14b8a6"></span><h2>Custodian B</h2><span class="tag">Custody Provider</span></div>
+      <div class="flow-bar"><span class="dim">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>Notabene Network<span class="sep">→</span><span class="hl">Custodian B</span><span class="sep">→</span><span class="dim">Entity B</span></div>
+
+      <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Name</span><span class="v">Bob Ltd</span></div>
-        <div class="cred-row"><span class="k">Account</span><span class="v">0x9e2b...d48f</span></div>
-        <div class="cred-row"><span class="k">Balance</span><span class="v" style="font-weight:600">800,000 CLCC</span></div>
-        <div class="cred-row"><span class="k">VASP</span><span class="v">Entity B (VASP-SG-1247)</span></div>
+        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="cb-did">—</span></div>
+        <div class="cred-row"><span class="k">Type</span><span class="v">Custodian / VASP</span></div>
+        <div class="cred-row"><span class="k">Hot Wallet</span><span class="v mono" id="cb-wallet">—</span></div>
       </div></div>
-      <div class="section-title">Incoming Transfer</div>
+
+      <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">From</span><span class="v">Originator (via Entity A)</span></div>
-        <div class="cred-row"><span class="k">Amount</span><span class="v" style="font-weight:600;color:#10b981">+250,000 CLCC</span></div>
-        <div class="cred-row"><span class="k">Status</span><span class="v" style="color:#10b981">● Travel Rule Processing</span></div>
-        <div class="cred-row"><span class="k">Origin Wallet</span><span class="v">0x3f8a...c71d</span></div>
+        <div class="cred-row"><span class="k">Entity</span><span class="v">Entity B (Beneficiary VASP)</span></div>
+        <div class="cred-row"><span class="k">Entity DID</span><span class="v mono" id="eb-did-ref-cb">—</span></div>
+        <div class="cred-row"><span class="k">Custody Wallet</span><span class="v mono" id="eb-wallet-ref-cb">—</span></div>
+      </div></div>
+
+      <div class="section-title">Notabene Network Credentials</div>
+      <div class="card"><div class="card-body">
+        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="cb-apikey">—</span></div>
+        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="cb-apisecret">—</span></div>
       </div></div>
     </div>
 
-    <script>
-document.querySelectorAll('.role-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.role-page').forEach(p => p.classList.remove('active'));
+  </div>
+</div>
+
+<script>
+function loadSettings() {
+  var s = localStorage.getItem('compliance-demo-settings');
+  if (s) { try { return JSON.parse(s); } catch(e) {} }
+  return {};
+}
+
+function fill(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val || '—';
+}
+
+function applyRoleCredentials(s) {
+  // Entity A
+  fill('ea-did', s.eaDid); fill('ea-wallet', s.eaWallet);
+  fill('ea-apikey', s.eaApikey); fill('ea-apisecret', s.eaApisecret);
+  // Custodian A
+  fill('ca-did', s.caDid); fill('ca-wallet', s.caWallet);
+  fill('ca-apikey', s.caApikey); fill('ca-apisecret', s.caApisecret);
+  // Entity B
+  fill('eb-did', s.ebDid); fill('eb-wallet', s.ebWallet);
+  fill('eb-apikey', s.ebApikey); fill('eb-apisecret', s.ebApisecret);
+  // Custodian B
+  fill('cb-did', s.cbDid); fill('cb-wallet', s.cbWallet);
+  fill('cb-apikey', s.cbApikey); fill('cb-apisecret', s.cbApisecret);
+  // Cross-references
+  fill('ca-did-ref', s.caDid); fill('ca-wallet-ref', s.caWallet);
+  fill('eb-did-ref', s.ebDid); fill('cb-wallet-ref', s.cbWallet);
+  fill('ea-did-ref-ca', s.eaDid); fill('ea-wallet-ref-ca', s.eaWallet);
+  fill('cb-did-ref', s.cbDid); fill('cb-wallet-ref', s.cbWallet);
+  fill('ea-did-ref-eb', s.eaDid); fill('ca-wallet-ref-eb', s.caWallet);
+  fill('eb-did-ref-cb', s.ebDid); fill('eb-wallet-ref-cb', s.ebWallet);
+  // Network badge
+  var badge = document.getElementById('net-badge');
+  if (badge) {
+    var url = s.notabeneBaseUrl || '';
+    if (url) {
+      badge.innerHTML = '<span class="net-status net-online">Notabene: ' + url.replace(/https?:\/\//, '') + '</span>';
+    } else {
+      badge.innerHTML = '<span class="net-status net-offline">Notabene: not configured</span>';
+    }
+  }
+}
+
+// Tab switching
+document.querySelectorAll('.role-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.role-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.role-page').forEach(function(p) { p.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('role-' + tab.dataset.tab).classList.add('active');
   });
 });
+
+// Load credentials on start
+var saved = loadSettings();
+applyRoleCredentials(saved);
 </script>
 
-  </div>
-</div>
 </body>
 </html>
