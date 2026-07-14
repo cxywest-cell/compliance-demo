@@ -87,20 +87,6 @@
   <div class="topbar"><span>Tx/Address Screening & Monitoring</span><button class="btn btn-reset" style="float:right;padding:3px 10px;font-size:10px" onclick="resetAll()">Reset All</button></div>
   <div class="content">
 
-    <!-- Screening Provider -->
-    <div class="section-title">Screening Provider</div>
-    <div class="card">
-      <div class="card-body">
-        <div class="result-row"><span class="rk">Provider</span><span class="rv">Elliptic AML API v2</span></div>
-        <div class="result-row"><span class="rk">Endpoint</span><span class="rv mono">aml-api.elliptic.co</span></div>
-        <div class="result-row"><span class="rk">Auth</span><span class="rv">HMAC-SHA256 (x-access-key / x-access-sign)</span></div>
-        <div class="result-row"><span class="rk">API Key</span><span class="rv mono">77f3e28752d79b7f37b1e7f9c4e753bc</span></div>
-        <div class="result-row"><span class="rk">API Secret</span><span class="rv mono">5fc70fdd01205490b1a3d386cbb4fe78</span></div>
-        <div class="result-row"><span class="rk">Sign Method</span><span class="rv mono">base64(HMAC-SHA256(secret, text))</span></div>
-        <div class="result-row"><span class="rk">Risk Scale</span><span class="rv"><span class="risk-dot green"></span> 0-3 Low · <span class="risk-dot orange"></span> 4-7 Medium · <span class="risk-dot red"></span> 8-10 High</span></div>
-      </div>
-    </div>
-
     <!-- ═══ Scenario 1: Pay-in Screening (Batch TX) ═══ -->
     <div class="section-title">1. Pay-in — Batch Transaction Screening</div>
     <div class="card" id="card-scenario1">
@@ -595,6 +581,20 @@ function resetScenario(n) {
 function resetAll() {
   for (var i = 1; i <= 4; i++) resetScenario(i);
 }
+
+function loadEllipticSettings() {
+  try {
+    var s = JSON.parse(localStorage.getItem('compliance-demo-settings') || '{}');
+    var endpoint = s.ellipticEndpoint || defaults.ellipticEndpoint;
+    var key = s.ellipticKey || defaults.ellipticKey;
+    var sign = s.ellipticSign || defaults.ellipticSign;
+    // Log uses these values in scenario runs
+    defaults.ellipticEndpoint = endpoint;
+    defaults.ellipticKey = key;
+    defaults.ellipticSign = sign;
+  } catch(e) {}
+}
+loadEllipticSettings();
 </script>
 
 </body>
