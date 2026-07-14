@@ -250,6 +250,8 @@
           <button class="btn btn-run" id="doc-btn-status" onclick="docCheckStatus()" disabled>Check</button>
         </div>
         <div class="card-body" id="doc-status-area">
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-check-app-id">—</span></div>
+          <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="doc-check-ext-id">—</span></div>
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-review-status"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-review-answer"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Documents</span><span class="rv" id="doc-docs-status">—</span></div>
@@ -341,6 +343,8 @@
           <button class="btn btn-run" id="nondoc-btn-status" onclick="nondocCheckStatus()" disabled>Check</button>
         </div>
         <div class="card-body" id="nondoc-status-area">
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-check-app-id">—</span></div>
+          <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="nondoc-check-ext-id">—</span></div>
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="nondoc-review-status"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="nondoc-review-answer"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">ID Verification</span><span class="rv" id="nondoc-id-status">—</span></div>
@@ -586,6 +590,8 @@ async function docCheckStatus() {
         if (reviewResult.reviewAnswer) docLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
 
         if (data.id) document.getElementById('doc-app-id').textContent = data.id;
+        if (data.id) document.getElementById('doc-check-app-id').textContent = data.id;
+        if (data.externalUserId) document.getElementById('doc-check-ext-id').textContent = data.externalUserId;
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
@@ -627,6 +633,10 @@ async function docCheckStatus() {
     document.getElementById('doc-applicant-status').className = 'badge badge-green';
     document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
     document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    var mockAppId = 'mock-' + Date.now().toString(36);
+    document.getElementById('doc-check-app-id').textContent = mockAppId;
+    document.getElementById('doc-check-ext-id').textContent = docState.userId;
+    document.getElementById('doc-app-id').textContent = mockAppId;
     document.getElementById('doc-docs-status').innerHTML = '<span class="badge badge-green">ID verified</span>';
     document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7%)</span>';
     document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
@@ -839,6 +849,8 @@ async function nondocCheckStatus() {
         if (reviewResult.reviewAnswer) ndLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
 
         if (data.id) document.getElementById('nondoc-app-id').textContent = data.id;
+        if (data.id) document.getElementById('nondoc-check-app-id').textContent = data.id;
+        if (data.externalUserId) document.getElementById('nondoc-check-ext-id').textContent = data.externalUserId;
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
@@ -880,8 +892,12 @@ async function nondocCheckStatus() {
     document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
     document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
     document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-    document.getElementById('nondoc-id-status').innerHTML = '<span class="badge badge-green">SG NRIC verified</span>';
-    document.getElementById('nondoc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (99.2%)</span>';
+    var mockAppId = 'mock-' + Date.now().toString(36);
+    document.getElementById('nondoc-check-app-id').textContent = mockAppId;
+    document.getElementById('nondoc-check-ext-id').textContent = ndState.userId;
+    document.getElementById('nondoc-app-id').textContent = mockAppId;
+    document.getElementById('nondoc-id-status').innerHTML = '<span class="badge badge-green">ID verified</span>';
+    document.getElementById('nondoc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (97.3%)</span>';
     document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
 
     setStep('n', 4, 4);
