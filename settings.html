@@ -47,15 +47,11 @@
   .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
   .tunnel-badge-offline { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #fee2e2; color: #991b1b; cursor: pointer; }
   .tunnel-badge-online { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #d1fae5; color: #065f46; cursor: pointer; }
-  .tunnel-btn { padding: 4px 12px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 10px; font-weight: 500; cursor: pointer; background: #fff; transition: all 0.15s; margin-left: 8px; }
+  .tunnel-btn { padding: 4px 12px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 10px; font-weight: 500; cursor: pointer; background: #fff; transition: all 0.15s; white-space: nowrap; }
   .tunnel-btn:hover { background: #f0f0f0; }
   .tunnel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .url-display { background: #0d1117; border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: monospace; color: #7ee787; margin-top: 6px; display: none; }
   .url-display.show { display: block; }
-  .tunnel-actions { display: flex; gap: 6px; margin-left: 8px; }
-  .tunnel-action-btn { padding: 4px 10px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 10px; font-weight: 500; cursor: pointer; background: #fff; transition: all 0.15s; white-space: nowrap; }
-  .tunnel-action-btn:hover { background: #f0f0f0; }
-  .tunnel-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .test-result { font-size: 10px; margin-top: 4px; }
   .test-result.ok { color: #059669; }
   .test-result.err { color: #dc2626; }
@@ -251,13 +247,10 @@
           <div class="field" style="display:flex;align-items:flex-end;gap:8px">
             <div style="flex:1">
               <label>Redirect URL</label>
-              <input type="text" id="s-baseurl" placeholder="Start tunnel to auto-fill">
+              <input type="text" id="s-baseurl" placeholder="Click Generate URL">
             </div>
-            <div class="tunnel-actions">
-              <button class="tunnel-btn" id="tunnel-btn" onclick="toggleTunnel()">Start Tunnel</button>
-              <button class="tunnel-action-btn" id="tunnel-refresh-btn" onclick="refreshTunnel()" disabled>Refresh</button>
-              <button class="tunnel-action-btn" id="tunnel-test-btn" onclick="testTunnel()" disabled>Test</button>
-            </div>
+            <button class="tunnel-btn" id="tunnel-generate-btn" onclick="generateUrl()">Generate URL</button>
+            <button class="tunnel-btn" id="tunnel-test-btn" onclick="testTunnel()" disabled>Test</button>
           </div>
           <div class="hint">Browser redirect after user completes KYC in WebSDK. A signed JWT is appended if a secret key is set.</div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
@@ -516,131 +509,71 @@ function switchTab(tab) {
 }
 
 // Tunnel management
-var tunnelRunning = false;
-
-function updateTunnelBadge(url, running) {
-  var badge = document.getElementById('tunnel-badge');
-  var btn = document.getElementById('tunnel-btn');
-  var refreshBtn = document.getElementById('tunnel-refresh-btn');
+async function generateUrl() {
+  var genBtn = document.getElementById('tunnel-generate-btn');
   var testBtn = document.getElementById('tunnel-test-btn');
-  if (!badge || !btn) return;
-
-  tunnelRunning = running;
-  if (running && url) {
-    badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + url.replace(/https?:\/\//, '') + '</span>';
-    btn.textContent = 'Stop';
-    btn.disabled = false;
-    refreshBtn.disabled = false;
-    testBtn.disabled = false;
-    // Auto-fill WebSDK redirect URL
-    document.getElementById('s-baseurl').value = url;
-    // Auto-fill Webhook URL
-    document.getElementById('s-webhookurl').value = url + '/sumsub/webhook';
-    // Update webhook preview
-    var wp = document.getElementById('tunnel-webhook-preview');
-    wp.style.display = 'block';
-    wp.textContent = url + '/sumsub/webhook';
-    // Clear test result
-    var tr = document.getElementById('tunnel-test-result');
-    if (tr) tr.style.display = 'none';
-    updatePreviews();
-  } else {
-    badge.innerHTML = '<span class="tunnel-badge-offline">No Tunnel</span>';
-    btn.textContent = 'Start Tunnel';
-    btn.disabled = false;
-    refreshBtn.disabled = true;
-    testBtn.disabled = true;
-  }
-}
-
-async function toggleTunnel() {
-  var btn = document.getElementById('tunnel-btn');
-  btn.disabled = true;
-  btn.textContent = 'Starting...';
-
-  if (tunnelRunning) {
-    try {
-      await fetch('/api/tunnel/stop', { method: 'POST' });
-      updateTunnelBadge(null, false);
-    } catch(e) {
-      btn.disabled = false;
-      btn.textContent = 'Stop';
-    }
-  } else {
-    btn.textContent = 'Starting...';
-    try {
-      var controller = new AbortController();
-      var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
-      var res = await fetch('/api/tunnel/start', { method: 'POST', signal: controller.signal });
-      clearTimeout(timeoutId);
-      var data = await res.json();
-      if (data.error) {
-        btn.textContent = 'Start Tunnel';
-        btn.disabled = false;
-        alert('Tunnel error: ' + data.error);
-      } else {
-        updateTunnelBadge(data.url, true);
-      }
-    } catch(e) {
-      btn.textContent = 'Start Tunnel';
-      btn.disabled = false;
-      // Diagnose the error
-      var detail = e.name === 'AbortError' ? 'Request timed out (30s)' : e.message;
-      alert('Failed to start tunnel: ' + detail + '\n\nCheck: is the server running at ' + location.origin + '?');
-    }
-  }
-}
-
-async function refreshTunnel() {
-  var btn = document.getElementById('tunnel-btn');
-  var refreshBtn = document.getElementById('tunnel-refresh-btn');
-  refreshBtn.disabled = true;
-  refreshBtn.textContent = 'Refreshing...';
-  btn.disabled = true;
+  var tr = document.getElementById('tunnel-test-result');
+  genBtn.disabled = true;
+  genBtn.textContent = 'Generating...';
+  if (tr) tr.style.display = 'none';
 
   try {
-    var res = await fetch('/api/tunnel/refresh', { method: 'POST' });
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
+    // Always use /api/tunnel/refresh to get a fresh URL
+    var res = await fetch('/api/tunnel/refresh', { method: 'POST', signal: controller.signal });
+    clearTimeout(timeoutId);
     var data = await res.json();
     if (data.error) {
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = 'Refresh';
-      btn.disabled = false;
-      alert('Tunnel refresh error: ' + data.error);
+      genBtn.textContent = 'Generate URL';
+      genBtn.disabled = false;
+      alert('Tunnel error: ' + data.error);
     } else {
-      updateTunnelBadge(data.url, true);
-      refreshBtn.textContent = 'Refresh';
-      btn.disabled = false;
+      var url = data.url;
+      // Update topbar badge
+      var badge = document.getElementById('tunnel-badge');
+      if (badge) badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + url.replace(/https?:\/\//, '') + '</span>';
+      // Auto-fill WebSDK redirect URL
+      document.getElementById('s-baseurl').value = url;
+      // Auto-fill Webhook URL
+      document.getElementById('s-webhookurl').value = url + '/sumsub/webhook';
+      // Update webhook preview
+      var wp = document.getElementById('tunnel-webhook-preview');
+      if (wp) { wp.style.display = 'block'; wp.textContent = url + '/sumsub/webhook'; }
+      // Enable test button
+      testBtn.disabled = false;
+      genBtn.textContent = 'Regenerate';
+      genBtn.disabled = false;
+      updatePreviews();
     }
   } catch(e) {
-    refreshBtn.disabled = false;
-    refreshBtn.textContent = 'Refresh';
-    btn.disabled = false;
-    alert('Failed to refresh tunnel: ' + e.message);
+    genBtn.textContent = 'Generate URL';
+    genBtn.disabled = false;
+    var detail = e.name === 'AbortError' ? 'Request timed out (30s)' : e.message;
+    alert('Failed to generate URL: ' + detail);
   }
 }
 
 async function testTunnel() {
   var testBtn = document.getElementById('tunnel-test-btn');
+  var url = document.getElementById('s-baseurl').value;
   var tr = document.getElementById('tunnel-test-result');
+  if (!url) { alert('Generate a URL first'); return; }
+
   testBtn.disabled = true;
   testBtn.textContent = 'Testing...';
-  tr.style.display = 'block';
-  tr.className = 'test-result';
-  tr.textContent = 'Checking tunnel reachability...';
+  if (tr) { tr.style.display = 'block'; tr.className = 'test-result'; tr.textContent = 'Checking connectivity...'; }
 
   try {
     var res = await fetch('/api/tunnel/test', { method: 'POST' });
     var data = await res.json();
     if (data.success) {
-      tr.className = 'test-result ok';
-      tr.textContent = '✓ Tunnel reachable — ' + data.url + ' returned HTTP ' + data.statusCode;
+      if (tr) { tr.className = 'test-result ok'; tr.textContent = 'OK — ' + data.url + ' returned HTTP ' + data.statusCode; }
     } else {
-      tr.className = 'test-result err';
-      tr.textContent = '✗ Test failed: ' + (data.error || 'HTTP ' + data.statusCode);
+      if (tr) { tr.className = 'test-result err'; tr.textContent = 'Failed — ' + (data.error || 'HTTP ' + data.statusCode); }
     }
   } catch(e) {
-    tr.className = 'test-result err';
-    tr.textContent = '✗ Test error: ' + e.message;
+    if (tr) { tr.className = 'test-result err'; tr.textContent = 'Error: ' + e.message; }
   }
   testBtn.disabled = false;
   testBtn.textContent = 'Test';
@@ -651,7 +584,15 @@ async function checkTunnelStatus() {
     var res = await fetch('/api/tunnel/status');
     var data = await res.json();
     if (data.running && data.url) {
-      updateTunnelBadge(data.url, true);
+      var badge = document.getElementById('tunnel-badge');
+      if (badge) badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + data.url.replace(/https?:\/\//, '') + '</span>';
+      document.getElementById('s-baseurl').value = data.url;
+      document.getElementById('s-webhookurl').value = data.url + '/sumsub/webhook';
+      var testBtn = document.getElementById('tunnel-test-btn');
+      if (testBtn) testBtn.disabled = false;
+      var genBtn = document.getElementById('tunnel-generate-btn');
+      if (genBtn) genBtn.textContent = 'Regenerate';
+      updatePreviews();
     }
   } catch(e) {}
 }
@@ -708,10 +649,10 @@ var saved = loadSettings();
 
 // Check if page is served via HTTP (not file://)
 if (location.protocol === 'file:') {
-  document.getElementById('tunnel-btn').disabled = true;
-  document.getElementById('tunnel-btn').textContent = 'Must serve via HTTP';
-  document.getElementById('tunnel-btn').title = 'Open http://localhost:8000/settings instead of opening the file directly';
-  document.querySelectorAll('.tunnel-action-btn').forEach(function(b) { b.disabled = true; });
+  var genBtn = document.getElementById('tunnel-generate-btn');
+  var testBtn = document.getElementById('tunnel-test-btn');
+  if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Must serve via HTTP'; }
+  if (testBtn) testBtn.disabled = true;
 }
 
 var fieldMap = {
