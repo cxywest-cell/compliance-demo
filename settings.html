@@ -52,6 +52,13 @@
   .tunnel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .url-display { background: #0d1117; border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: monospace; color: #7ee787; margin-top: 6px; display: none; }
   .url-display.show { display: block; }
+  .tunnel-actions { display: flex; gap: 6px; margin-left: 8px; }
+  .tunnel-action-btn { padding: 4px 10px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 10px; font-weight: 500; cursor: pointer; background: #fff; transition: all 0.15s; white-space: nowrap; }
+  .tunnel-action-btn:hover { background: #f0f0f0; }
+  .tunnel-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .test-result { font-size: 10px; margin-top: 4px; }
+  .test-result.ok { color: #059669; }
+  .test-result.err { color: #dc2626; }
 
   /* Settings sub-tabs */
   .settings-tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 16px; background: #fff; border-radius: 6px 6px 0 0; overflow: hidden; border: 1px solid #e0e0e0; }
@@ -246,10 +253,15 @@
               <label>Redirect URL</label>
               <input type="text" id="s-baseurl" placeholder="Start tunnel to auto-fill">
             </div>
-            <button class="tunnel-btn" id="tunnel-btn" onclick="toggleTunnel()">Start Tunnel</button>
+            <div class="tunnel-actions">
+              <button class="tunnel-btn" id="tunnel-btn" onclick="toggleTunnel()">Start Tunnel</button>
+              <button class="tunnel-action-btn" id="tunnel-refresh-btn" onclick="refreshTunnel()" disabled>Refresh</button>
+              <button class="tunnel-action-btn" id="tunnel-test-btn" onclick="testTunnel()" disabled>Test</button>
+            </div>
           </div>
           <div class="hint">Browser redirect after user completes KYC in WebSDK. A signed JWT is appended if a secret key is set.</div>
           <div id="s-url-preview" class="preview-box" style="display:none"></div>
+          <div id="tunnel-test-result" class="test-result" style="display:none"></div>
           <div class="grid-2" style="margin-top:12px">
             <div class="field">
               <label>Allowed Domains</label>
@@ -509,13 +521,17 @@ var tunnelRunning = false;
 function updateTunnelBadge(url, running) {
   var badge = document.getElementById('tunnel-badge');
   var btn = document.getElementById('tunnel-btn');
+  var refreshBtn = document.getElementById('tunnel-refresh-btn');
+  var testBtn = document.getElementById('tunnel-test-btn');
   if (!badge || !btn) return;
 
   tunnelRunning = running;
   if (running && url) {
     badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + url.replace(/https?:\/\//, '') + '</span>';
-    btn.textContent = 'Stop Tunnel';
+    btn.textContent = 'Stop';
     btn.disabled = false;
+    refreshBtn.disabled = false;
+    testBtn.disabled = false;
     // Auto-fill WebSDK redirect URL
     document.getElementById('s-baseurl').value = url;
     // Auto-fill Webhook URL
@@ -524,11 +540,16 @@ function updateTunnelBadge(url, running) {
     var wp = document.getElementById('tunnel-webhook-preview');
     wp.style.display = 'block';
     wp.textContent = url + '/sumsub/webhook';
+    // Clear test result
+    var tr = document.getElementById('tunnel-test-result');
+    if (tr) tr.style.display = 'none';
     updatePreviews();
   } else {
     badge.innerHTML = '<span class="tunnel-badge-offline">No Tunnel</span>';
     btn.textContent = 'Start Tunnel';
     btn.disabled = false;
+    refreshBtn.disabled = true;
+    testBtn.disabled = true;
   }
 }
 
@@ -543,7 +564,7 @@ async function toggleTunnel() {
       updateTunnelBadge(null, false);
     } catch(e) {
       btn.disabled = false;
-      btn.textContent = 'Stop Tunnel';
+      btn.textContent = 'Stop';
     }
   } else {
     btn.textContent = 'Starting...';
@@ -563,6 +584,61 @@ async function toggleTunnel() {
       alert('Failed to start tunnel: ' + e.message);
     }
   }
+}
+
+async function refreshTunnel() {
+  var btn = document.getElementById('tunnel-btn');
+  var refreshBtn = document.getElementById('tunnel-refresh-btn');
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = 'Refreshing...';
+  btn.disabled = true;
+
+  try {
+    var res = await fetch('/api/tunnel/refresh', { method: 'POST' });
+    var data = await res.json();
+    if (data.error) {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = 'Refresh';
+      btn.disabled = false;
+      alert('Tunnel refresh error: ' + data.error);
+    } else {
+      updateTunnelBadge(data.url, true);
+      refreshBtn.textContent = 'Refresh';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = 'Refresh';
+    btn.disabled = false;
+    alert('Failed to refresh tunnel: ' + e.message);
+  }
+}
+
+async function testTunnel() {
+  var testBtn = document.getElementById('tunnel-test-btn');
+  var tr = document.getElementById('tunnel-test-result');
+  testBtn.disabled = true;
+  testBtn.textContent = 'Testing...';
+  tr.style.display = 'block';
+  tr.className = 'test-result';
+  tr.textContent = 'Checking tunnel reachability...';
+
+  try {
+    var res = await fetch('/api/tunnel/test', { method: 'POST' });
+    var data = await res.json();
+    if (data.success) {
+      tr.className = 'test-result ok';
+      tr.textContent = '✓ Tunnel reachable — ' + data.url + ' returned HTTP ' + data.statusCode;
+    } else {
+      tr.className = 'test-result err';
+      tr.textContent = '✗ Test failed: ' + (data.error || 'HTTP ' + data.statusCode);
+    }
+  } catch(e) {
+    tr.className = 'test-result err';
+    tr.textContent = '✗ Test error: ' + e.message;
+  }
+  testBtn.disabled = false;
+  testBtn.textContent = 'Test';
 }
 
 async function checkTunnelStatus() {
