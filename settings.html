@@ -234,10 +234,10 @@
         <div class="card-body">
           <div class="field">
             <label>Webhook URL</label>
-            <input type="text" id="s-webhookurl" placeholder="https://your-server.com/sumsub/webhook">
-            <div class="hint">Sumsub sends webhook events here on applicant status changes</div>
+            <input type="text" id="s-webhookurl" placeholder="Start tunnel to auto-fill" readonly style="background:#f8f8f8">
+            <div class="hint">Sumsub sends webhook events here. Set via tunnel (Generate URL above) — cannot be edited manually.</div>
           </div>
-          <div class="url-display" id="tunnel-webhook-preview"></div>
+          <div class="url-display show" id="tunnel-webhook-preview" style="display:none"></div>
         </div>
       </div>
 
@@ -395,7 +395,7 @@
 <script>
 var defaults = {
   baseUrl: 'https://localhost:8000',
-  webhookUrl: 'https://localhost:8000/sumsub/webhook',
+  webhookUrl: '',
   docLevel: 'kyc-test-daniel-260618',
   nonDocLevel: 'non-doc-kyc-level',
   kybLevel: 'kyb-test-daniel-0626',
@@ -588,6 +588,8 @@ async function checkTunnelStatus() {
       if (badge) badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + data.url.replace(/https?:\/\//, '') + '</span>';
       document.getElementById('s-baseurl').value = data.url;
       document.getElementById('s-webhookurl').value = data.url + '/sumsub/webhook';
+      var wp = document.getElementById('tunnel-webhook-preview');
+      if (wp) { wp.style.display = 'block'; wp.textContent = data.url + '/sumsub/webhook'; }
       var testBtn = document.getElementById('tunnel-test-btn');
       if (testBtn) testBtn.disabled = false;
       var genBtn = document.getElementById('tunnel-generate-btn');
