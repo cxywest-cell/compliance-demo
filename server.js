@@ -19,6 +19,10 @@ process.on('uncaughtException', (err) => {
 const https = require('https');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const FormData = require('form-data');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Load .env
 const envPath = path.resolve(__dirname, '.env');
@@ -961,6 +965,79 @@ app.post('/api/applicant-check', async (req, res) => {
 
   console.log(`[Applicant Check] applicantId=${applicantId}`);
   res.json(result);
+});
+
+// Upload verification document to Sumsub
+// POST /resources/applicants/{applicantId}/info/idDoc
+// Multipart form: info (JSON metadata) + content (file)
+app.post('/api/upload-doc', upload.single('content'), async (req, res) => {
+  const { applicantId } = req.body;
+  const infoJson = req.body.info;
+
+  if (!applicantId || !infoJson || !req.file) {
+    return res.status(400).json({ error: 'applicantId, info (JSON), and content (file) required' });
+  }
+
+  let info;
+  try {
+    info = JSON.parse(infoJson);
+  } catch (e) {
+    return res.status(400).json({ error: 'info must be valid JSON' });
+  }
+
+  const apiPath = '/resources/applicants/' + applicantId + '/info/idDoc';
+  const { ts, sig } = signRequest('POST', apiPath, null); // No body for multipart signing
+
+  const form = new FormData();
+  form.append('info', JSON.stringify(info));
+  form.append('content', req.file.buffer, {
+    filename: req.file.originalname,
+    contentType: req.file.mimetype
+  });
+
+  console.log(`[Doc Upload] applicantId=${applicantId} idDocType=${info.idDocType} country=${info.country} file=${req.file.originalname}`);
+
+  const url = 'https://' + BASE_URL + apiPath;
+  form.getLength((err, length) => {
+    if (err) return res.status(500).json({ error: 'Form length error: ' + err.message });
+
+    const options = {
+      hostname: BASE_URL,
+      port: 443,
+      path: apiPath,
+      method: 'POST',
+      headers: {
+        ...form.getHeaders(),
+        'X-App-Token': SUMSUB_APP_TOKEN,
+        'X-App-Access-Ts': String(ts),
+        'X-App-Access-Sig': sig,
+        'X-Return-Doc-Warnings': 'true'
+      }
+    };
+
+    const request = https.request(options, (response) => {
+      let data = '';
+      response.on('data', (chunk) => { data += chunk; });
+      response.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (response.statusCode >= 400) {
+            return res.status(response.statusCode).json(parsed);
+          }
+          res.json(parsed);
+        } catch (e) {
+          res.json({ raw: data, status: response.statusCode });
+        }
+      });
+    });
+
+    request.on('error', (e) => {
+      console.error('[Doc Upload] Request error:', e.message);
+      res.status(500).json({ error: e.message });
+    });
+
+    form.pipe(request);
+  });
 });
 
 // Request action check — triggers Sumsub to process an applicant action

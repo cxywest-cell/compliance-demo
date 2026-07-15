@@ -34,6 +34,13 @@
   .result-row + .result-row { border-top: 1px solid #f0f0f0; }
   .rk { color: #888; }
   .rv { color: #1a1a1a; }
+  /* Document upload */
+  .doc-upload-row { display: flex; gap: 16px; }
+  .doc-upload-item { flex: 1; }
+  .doc-label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+  .doc-upload-item input[type="file"] { width: 100%; font-size: 11px; color: #555; }
+  .doc-upload-item input[type="file"]:disabled { opacity: 0.4; }
+  .doc-status { display: inline-block; font-size: 11px; color: #888; margin-top: 4px; }
   .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
   .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
   .badge-green { background: #d1fae5; color: #065f46; }
@@ -229,7 +236,9 @@
         <span class="step-arrow" id="s-arrow-2">→</span>
         <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
         <span class="step-arrow" id="s-arrow-3">→</span>
-        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Action Check</span></div>
+        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Upload Documents</span></div>
+        <span class="step-arrow" id="s-arrow-4">→</span>
+        <div class="step" id="s-step-5"><span class="step-num">5</span><span class="step-label">Action Check</span></div>
       </div>
 
       <!-- ═══ Step 1: Set User ID ═══ -->
@@ -286,8 +295,32 @@
         </div>
       </div>
 
-      <!-- ═══ Step 4: Request Applicant Check ═══ -->
-      <div class="section-title">Step 4: Request Applicant Check</div>
+      <!-- ═══ Step 4: Upload Documents ═══ -->
+      <div class="section-title">Step 4: Upload Documents</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Verification Documents</span>
+          <button class="btn btn-run" id="doc-btn-upload" onclick="docUploadDocuments()" disabled>Upload All</button>
+        </div>
+        <div class="card-body" id="doc-upload-area">
+          <div class="doc-upload-row">
+            <div class="doc-upload-item">
+              <span class="doc-label">Passport</span>
+              <input type="file" id="doc-passport-file" accept="image/*,.pdf" disabled>
+              <span class="doc-status" id="doc-passport-status">Not uploaded</span>
+            </div>
+            <div class="doc-upload-item">
+              <span class="doc-label">Proof of Address</span>
+              <input type="file" id="doc-poa-file" accept="image/*,.pdf" disabled>
+              <span class="doc-status" id="doc-poa-status">Not uploaded</span>
+            </div>
+          </div>
+          <div id="doc-upload-log" style="margin-top:8px;font-size:11px;font-family:monospace;color:#888"></div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 5: Request Applicant Check ═══ -->
+      <div class="section-title">Step 5: Request Applicant Check</div>
       <div class="card">
         <div class="card-header">
           <span>Applicant Check</span>
@@ -554,7 +587,7 @@ function restoreState() {
 }
 
 // ─── Doc KYC (Tab 2) ───
-var docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null };
+var docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null, passportUploaded: false, poaUploaded: false };
 
 function docLog(cls, text) {}
 function docClearLog() {}
@@ -564,7 +597,7 @@ function docOpenLink() {
 }
 
 function docSetUserId() {
-  docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null };
+  docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null, passportUploaded: false, poaUploaded: false };
   document.getElementById('doc-ext-id').textContent = '\u2014';
   document.getElementById('doc-app-id').textContent = '\u2014';
   document.getElementById('doc-applicant-status').textContent = 'Not Started';
@@ -577,8 +610,16 @@ function docSetUserId() {
   var docOpenBtn = document.getElementById('doc-btn-open');
   docOpenBtn.style.display = 'none'; docOpenBtn.disabled = true;
   document.getElementById('doc-btn-status').disabled = true;
+  document.getElementById('doc-btn-upload').disabled = true;
+  document.getElementById('doc-btn-action').disabled = true;
+  document.getElementById('doc-passport-file').disabled = true;
+  document.getElementById('doc-poa-file').disabled = true;
+  document.getElementById('doc-passport-status').textContent = 'Not uploaded';
+  document.getElementById('doc-poa-status').textContent = 'Not uploaded';
+  var uploadLog = document.getElementById('doc-upload-log');
+  if (uploadLog) uploadLog.innerHTML = '';
   docClearLog();
-  setStep('s', 0, 4);
+  setStep('s', 0, 5);
 
   var ts = Date.now().toString(36).slice(-6);
   docState.userId = 'user-kyc-' + ts;
@@ -634,7 +675,7 @@ async function docGenLink() {
         var openBtn = document.getElementById('doc-btn-open');
         openBtn.style.display = ''; openBtn.disabled = false;
 
-        setStep('s', 2, 4);
+        setStep('s', 2, 5);
         docState.linked = true;
         document.getElementById('doc-btn-status').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
@@ -660,7 +701,7 @@ async function docGenLink() {
     docLog('#79c0ff', '200 OK \u2014 url: ' + link.substring(0, 50) + '...');
     docLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
 
-    setStep('s', 2, 4);
+    setStep('s', 2, 5);
     docState.linked = true;
     document.getElementById('doc-btn-status').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
@@ -724,15 +765,19 @@ async function docCheckStatus() {
 
         if (status === 'completed' || reviewResult.reviewAnswer === 'GREEN') {
           document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-          setStep('s', 4, 4);
+          setStep('s', 3, 5);
         } else {
-          setStep('s', 3, 4);
+          setStep('s', 3, 5);
         }
       } else {
-        docLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
+        docLog('#ff7b72', 'Applicant not found \\u2014 user may not have opened the WebSDK link yet');
       }
       btn.textContent = 'Refresh Status'; btn.disabled = false;
-      document.getElementById('doc-btn-action').disabled = false;
+      if (docState.applicantId) {
+        document.getElementById('doc-btn-upload').disabled = false;
+        document.getElementById('doc-passport-file').disabled = false;
+        document.getElementById('doc-poa-file').disabled = false;
+      }
       saveState();
     } catch(e) {
       docLog('#ff7b72', 'Network error: ' + e.message);
@@ -759,8 +804,104 @@ async function docCheckStatus() {
     document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7%)</span>';
     document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
 
-    setStep('s', 4, 4);
+    setStep('s', 3, 5);
     btn.textContent = 'Refresh Status'; btn.disabled = false;
+    docState.applicantId = mockAppId;
+    document.getElementById('doc-btn-upload').disabled = false;
+    document.getElementById('doc-passport-file').disabled = false;
+    document.getElementById('doc-poa-file').disabled = false;
+  }
+}
+
+async function docUploadDocuments() {
+  if (!docState.applicantId) { alert('Check status first to get applicant ID'); return; }
+
+  var passportFile = document.getElementById('doc-passport-file').files[0];
+  var poaFile = document.getElementById('doc-poa-file').files[0];
+  if (!passportFile && !poaFile) { alert('Select at least one document'); return; }
+
+  var btn = document.getElementById('doc-btn-upload');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+
+  var uploadLog = document.getElementById('doc-upload-log');
+  function upLog(color, text) {
+    uploadLog.innerHTML += '<div style="color:' + color + '">' + text + '</div>';
+    uploadLog.scrollTop = uploadLog.scrollHeight;
+  }
+
+  async function uploadDoc(file, info, label) {
+    upLog('#79c0ff', 'Uploading ' + label + ' (' + file.name + ')...');
+    var formData = new FormData();
+    formData.append('applicantId', docState.applicantId);
+    formData.append('info', JSON.stringify(info));
+    formData.append('content', file);
+
+    try {
+      var res = await fetch('/api/upload-doc', { method: 'POST', body: formData });
+      var data = await res.json();
+      if (data.error) {
+        upLog('#ff7b72', label + ' failed: ' + JSON.stringify(data));
+        return false;
+      }
+      upLog('#79c0ff', label + ' OK — idDocId: ' + (data.idDocId || 'N/A'));
+      if (data.warnings && data.warnings.length) {
+        upLog('#ffa657', 'Warnings: ' + JSON.stringify(data.warnings));
+      }
+      return true;
+    } catch(e) {
+      upLog('#ff7b72', label + ' error: ' + e.message);
+      return false;
+    }
+  }
+
+  var success = true;
+
+  if (passportFile) {
+    var passportMeta = {
+      idDocType: 'PASSPORT',
+      country: 'DEU',
+      firstName: 'FREYA',
+      lastName: 'KRAUSE',
+      dob: '1982-03-24',
+      gender: 'F',
+      docNumber: 'FX01ADA5A',
+      issueDate: '2020-11-10',
+      expiryDate: '2030-11-10',
+      nationality: 'DEU',
+      issuingAuthority: 'STADT KÖLN',
+      placeOfBirth: 'BERLIN'
+    };
+    var ok = await uploadDoc(passportFile, passportMeta, 'Passport');
+    if (ok) {
+      document.getElementById('doc-passport-status').innerHTML = '<span style="color:#7ee787">Uploaded</span>';
+      docState.passportUploaded = true;
+    } else { success = false; }
+  }
+
+  if (poaFile) {
+    var poaMeta = {
+      idDocType: 'PROOF_OF_RESIDENCY',
+      country: 'DEU',
+      idDocSubType: 'UTILITY_BILL',
+      firstName: 'FREYA',
+      lastName: 'KRAUSE',
+      address: 'HEIDESTRASSE 19, 51247 KÖLN',
+      issueDate: '2024-01-26'
+    };
+    var ok2 = await uploadDoc(poaFile, poaMeta, 'POA');
+    if (ok2) {
+      document.getElementById('doc-poa-status').innerHTML = '<span style="color:#7ee787">Uploaded</span>';
+      docState.poaUploaded = true;
+    } else { success = false; }
+  }
+
+  if (success) {
+    setStep('s', 4, 5);
+    document.getElementById('doc-btn-action').disabled = false;
+    btn.textContent = 'Done';
+  } else {
+    btn.textContent = 'Retry';
+    btn.disabled = false;
   }
 }
 
@@ -772,13 +913,13 @@ async function docApplicantCheck() {
 
   if (kycMode === 'real') {
     docLog('#79c0ff', 'POST /api/applicant-check');
-    docLog('#d2a8ff', 'Body: { "applicantId": "' + docState.userId + '" }');
+    docLog('#d2a8ff', 'Body: { "applicantId": "' + docState.applicantId + '" }');
 
     try {
       var res = await fetch('/api/applicant-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ applicantId: docState.userId })
+        body: JSON.stringify({ applicantId: docState.applicantId })
       });
       var data = await res.json();
       if (data.error) {
@@ -808,7 +949,7 @@ async function docApplicantCheck() {
         if (status === 'completed' && reviewResult.reviewAnswer === 'GREEN') {
           document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
         }
-        setStep('s', 4, 4);
+        setStep('s', 5, 5);
       }
       btn.textContent = 'Request Check'; btn.disabled = false;
     } catch(e) {
@@ -816,7 +957,7 @@ async function docApplicantCheck() {
       btn.textContent = 'Retry'; btn.disabled = false;
     }
   } else {
-    docLog('#79c0ff', 'POST /api/applicant-check (applicantId: ' + docState.userId + ')');
+    docLog('#79c0ff', 'POST /api/applicant-check (applicantId: ' + docState.applicantId + ')');
     await sleep(600);
     docLog('#79c0ff', '200 OK');
     docLog('#d2a8ff', 'reviewStatus: completed');
@@ -827,7 +968,7 @@ async function docApplicantCheck() {
     document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
     document.getElementById('doc-action-reject-type').textContent = '\u2014';
     document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-    setStep('s', 4, 4);
+    setStep('s', 5, 5);
     btn.textContent = 'Request Check'; btn.disabled = false;
   }
 }
