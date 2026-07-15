@@ -279,25 +279,18 @@
         </div>
       </div>
 
-      <!-- ═══ Step 4: Request Action Check ═══ -->
-      <div class="section-title">Step 4: Request Action Check</div>
+      <!-- ═══ Step 4: Request Applicant Check ═══ -->
+      <div class="section-title">Step 4: Request Applicant Check</div>
       <div class="card">
         <div class="card-header">
-          <span>Action Check</span>
-          <button class="btn btn-run" id="doc-btn-action" onclick="docActionCheck()" disabled>Request Check</button>
+          <span>Applicant Check</span>
+          <button class="btn btn-run" id="doc-btn-action" onclick="docApplicantCheck()" disabled>Request Check</button>
         </div>
         <div class="card-body" id="doc-action-area">
-          <div class="field" style="margin-bottom:8px">
-            <label style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;display:block;margin-bottom:4px">Action ID</label>
-            <input type="text" id="doc-action-id" placeholder="Enter applicant action ID" style="width:100%;padding:6px 10px;border:1px solid #d0d0d0;border-radius:4px;font-size:12px;font-family:monospace" />
-            <div class="hint" style="font-size:10px;color:#aaa;margin-top:2px">Obtained from action submission or Get applicant actions API</div>
-          </div>
-          <div id="doc-action-result" style="display:none;margin-top:8px">
-            <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-action-review-status"><span class="badge badge-gray">—</span></span></div>
-            <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-action-review-answer"><span class="badge badge-gray">—</span></span></div>
-            <div class="result-row"><span class="rk">Level Name</span><span class="rv mono" id="doc-action-level">—</span></div>
-            <div class="result-row"><span class="rk">Elapsed</span><span class="rv mono" id="doc-action-elapsed">—</span></div>
-          </div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-check-app-id-for-check">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-action-review-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-action-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Reject Type</span><span class="rv mono" id="doc-action-reject-type">—</span></div>
         </div>
       </div>
 
@@ -482,7 +475,7 @@ function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 // ─── State persistence ───
 function saveState() {
   var state = {
-    doc: { userId: docState.userId, linked: docState.linked, email: document.getElementById('doc-email').value,
+    doc: { userId: docState.userId, linked: docState.linked, applicantId: docState.applicantId, email: document.getElementById('doc-email').value,
            extId: document.getElementById('doc-ext-id').textContent,
            appId: document.getElementById('doc-app-id').textContent,
            status: document.getElementById('doc-applicant-status').textContent,
@@ -538,13 +531,13 @@ function restoreState() {
 }
 
 // ─── Doc KYC (Tab 2) ───
-var docState = { userId: null, email: null, linked: false };
+var docState = { userId: null, email: null, linked: false, applicantId: null };
 
 function docLog(cls, text) {}
 function docClearLog() {}
 
 function docSetUserId() {
-  docState = { userId: null, email: null, linked: false };
+  docState = { userId: null, email: null, linked: false, applicantId: null };
   document.getElementById('doc-ext-id').textContent = '\u2014';
   document.getElementById('doc-app-id').textContent = '\u2014';
   document.getElementById('doc-applicant-status').textContent = 'Not Started';
@@ -671,6 +664,7 @@ async function docCheckStatus() {
         if (data.id) document.getElementById('doc-app-id').textContent = data.id;
         if (data.id) document.getElementById('doc-check-app-id').textContent = data.id;
         if (data.externalUserId) document.getElementById('doc-check-ext-id').textContent = data.externalUserId;
+        docState.applicantId = data.id || null;
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
@@ -727,22 +721,21 @@ async function docCheckStatus() {
   }
 }
 
-async function docActionCheck() {
-  var actionId = document.getElementById('doc-action-id').value.trim();
-  if (!actionId) { alert('Enter an Action ID first'); return; }
+async function docApplicantCheck() {
+  if (!docState.applicantId) { alert('Check status first to get applicant ID'); return; }
 
   var btn = document.getElementById('doc-btn-action');
   btn.disabled = true; btn.textContent = 'Checking...';
 
   if (kycMode === 'real') {
-    docLog('#79c0ff', 'POST /api/action-check');
-    docLog('#d2a8ff', 'Body: { "actionId": "' + actionId + '" }');
+    docLog('#79c0ff', 'POST /api/applicant-check');
+    docLog('#d2a8ff', 'Body: { "applicantId": "' + docState.userId + '" }');
 
     try {
-      var res = await fetch('/api/action-check', {
+      var res = await fetch('/api/applicant-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actionId: actionId })
+        body: JSON.stringify({ applicantId: docState.userId })
       });
       var data = await res.json();
       if (data.error) {
@@ -753,6 +746,9 @@ async function docActionCheck() {
         var reviewResult = review.reviewResult || {};
         docLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
         if (reviewResult.reviewAnswer) docLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
+        if (reviewResult.reviewRejectType) docLog('#d2a8ff', 'reviewRejectType: ' + reviewResult.reviewRejectType);
+
+        document.getElementById('doc-check-app-id-for-check').textContent = docState.userId;
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' ? 'badge-green' :
@@ -762,9 +758,9 @@ async function docActionCheck() {
           var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
           document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
         }
-        if (review.levelName) document.getElementById('doc-action-level').textContent = review.levelName;
-        if (review.elapsedSincePendingMs) document.getElementById('doc-action-elapsed').textContent = review.elapsedSincePendingMs + 'ms';
-        document.getElementById('doc-action-result').style.display = 'block';
+        if (reviewResult.reviewRejectType) {
+          document.getElementById('doc-action-reject-type').textContent = reviewResult.reviewRejectType;
+        }
 
         if (status === 'completed' && reviewResult.reviewAnswer === 'GREEN') {
           document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
@@ -777,17 +773,16 @@ async function docActionCheck() {
       btn.textContent = 'Retry'; btn.disabled = false;
     }
   } else {
-    docLog('#79c0ff', 'POST /api/action-check (actionId: ' + actionId + ')');
+    docLog('#79c0ff', 'POST /api/applicant-check (applicantId: ' + docState.userId + ')');
     await sleep(600);
     docLog('#79c0ff', '200 OK');
     docLog('#d2a8ff', 'reviewStatus: completed');
     docLog('#d2a8ff', 'reviewAnswer: GREEN');
 
+    document.getElementById('doc-check-app-id-for-check').textContent = docState.userId;
     document.getElementById('doc-action-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
     document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-    document.getElementById('doc-action-level').textContent = 'kyc-test-daniel-260618';
-    document.getElementById('doc-action-elapsed').textContent = '120ms';
-    document.getElementById('doc-action-result').style.display = 'block';
+    document.getElementById('doc-action-reject-type').textContent = '\u2014';
     document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
     setStep('s', 4, 4);
     btn.textContent = 'Request Check'; btn.disabled = false;
