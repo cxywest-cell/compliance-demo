@@ -529,17 +529,8 @@ function restoreState() {
 // ─── Doc KYC (Tab 2) ───
 var docState = { userId: null, email: null, linked: false };
 
-function docLog(cls, text) {
-  var el = document.getElementById('doc-log');
-  var entry = document.createElement('div');
-  entry.style.padding = '2px 0';
-  entry.style.borderBottom = '1px solid #161b22';
-  entry.innerHTML = '<span style="color:#6e7681">' + now() + '</span> <span style="color:' + cls + '">' + text + '</span>';
-  if (el.children.length > 0 && el.children[0].style.color === 'rgb(110, 118, 129)') el.innerHTML = '';
-  el.appendChild(entry);
-  el.scrollTop = el.scrollHeight;
-}
-function docClearLog() { document.getElementById('doc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
+function docLog(cls, text) {}
+function docClearLog() {}
 
 function docSetUserId() {
   docState = { userId: null, email: null, linked: false };
@@ -792,17 +783,8 @@ async function docDecision() {
 // ─── Non-Doc KYC (Tab 3) ───
 var ndState = { userId: null, email: null, linked: false };
 
-function ndLog(cls, text) {
-  var el = document.getElementById('nondoc-log');
-  var entry = document.createElement('div');
-  entry.style.padding = '2px 0';
-  entry.style.borderBottom = '1px solid #161b22';
-  entry.innerHTML = '<span style="color:#6e7681">' + now() + '</span> <span style="color:' + cls + '">' + text + '</span>';
-  if (el.children.length > 0 && el.children[0].style.color === 'rgb(110, 118, 129)') el.innerHTML = '';
-  el.appendChild(entry);
-  el.scrollTop = el.scrollHeight;
-}
-function ndClearLog() { document.getElementById('nondoc-log').innerHTML = '<div style="color:#6e7681">Waiting for events...</div>'; }
+function ndLog(cls, text) {}
+function ndClearLog() {}
 
 function nondocSetUserId() {
   ndState = { userId: null, email: null, linked: false };
