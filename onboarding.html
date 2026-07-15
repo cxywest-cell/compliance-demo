@@ -1127,16 +1127,13 @@ function whRender(entries) {
   for (var i = entries.length - 1; i >= 0; i--) {
     var e = entries[i];
     var cls = whSelected === i ? 'wh-item selected' : 'wh-item';
-    var badge = e.verified
-      ? '<span class="wh-badge wh-badge-ok">OK</span>'
-      : '<span class="wh-badge wh-badge-fail">BAD SIG</span>';
     var tColor = whColorType(e.type || 'unknown');
     var time = e.timestamp ? e.timestamp.slice(11, 19) : '—';
+    var statusLabel = e.reviewStatus || '—';
     html += '<div class="' + cls + '" onclick="whSelect(' + i + ')">' +
       '<span class="wh-time">' + time + '</span>' +
       '<span class="wh-type" style="color:' + tColor + '">' + (e.type || 'unknown').replace('applicant', '') + '</span>' +
-      badge +
-      '<span class="wh-user">' + (e.externalUserId || '—') + '</span>' +
+      '<span class="wh-badge">' + statusLabel + '</span>' +
       '</div>';
   }
   el.innerHTML = html;
