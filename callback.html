@@ -222,12 +222,14 @@
     var rawParts = rjwt ? rjwt.split('.') : [];
     var rawPayloadB64 = rawParts.length === 3 ? rawParts[1] : '';
 
-    if (rawJwt) {
-      var parts = rawJwt.split('.');
+    // Colorize the raw JWT
+    var rawJwt = rjwt;
+    if (rjwt) {
+      var parts = rjwt.split('.');
       if (parts.length === 3) {
         rawJwt = '<span class="jwt-hdr">' + esc(parts[0]) + '</span><span class="jwt-dot">.</span><span class="jwt-pld">' + esc(parts[1]) + '</span><span class="jwt-dot">.</span><span class="jwt-sig">' + esc(parts[2]) + '</span>';
       } else {
-        rawJwt = esc(rawJwt);
+        rawJwt = esc(rjwt);
       }
     }
 
