@@ -253,7 +253,10 @@
       <div class="card">
         <div class="card-header">
           <span>WebSDK Link</span>
-          <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()" disabled>Generate</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-outline" id="doc-btn-open" onclick="docOpenLink()" disabled style="display:none">Open</button>
+            <button class="btn btn-run" id="doc-btn-link" onclick="docGenLink()" disabled>Generate</button>
+          </div>
         </div>
         <div class="card-body" id="doc-link-area">
           <div style="color:#888;font-size:12px" id="doc-link-placeholder">Click Generate to create a WebSDK link for this user.</div>
@@ -337,7 +340,10 @@
       <div class="card">
         <div class="card-header">
           <span>WebSDK Link</span>
-          <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()" disabled>Generate</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-outline" id="nondoc-btn-open" onclick="nondocOpenLink()" disabled style="display:none">Open</button>
+            <button class="btn btn-run" id="nondoc-btn-link" onclick="nondocGenLink()" disabled>Generate</button>
+          </div>
         </div>
         <div class="card-body" id="nondoc-link-area">
           <div style="color:#888;font-size:12px" id="nondoc-link-placeholder">Click Generate to create a WebSDK link for this user.</div>
@@ -548,13 +554,17 @@ function restoreState() {
 }
 
 // ─── Doc KYC (Tab 2) ───
-var docState = { userId: null, email: null, linked: false, applicantId: null };
+var docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null };
 
 function docLog(cls, text) {}
 function docClearLog() {}
 
+function docOpenLink() {
+  if (docState.webSdkUrl) window.open(docState.webSdkUrl, '_blank');
+}
+
 function docSetUserId() {
-  docState = { userId: null, email: null, linked: false, applicantId: null };
+  docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null };
   document.getElementById('doc-ext-id').textContent = '\u2014';
   document.getElementById('doc-app-id').textContent = '\u2014';
   document.getElementById('doc-applicant-status').textContent = 'Not Started';
@@ -564,6 +574,8 @@ function docSetUserId() {
   });
   document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
   document.getElementById('doc-btn-link').disabled = true;
+  var docOpenBtn = document.getElementById('doc-btn-open');
+  docOpenBtn.style.display = 'none'; docOpenBtn.disabled = true;
   document.getElementById('doc-btn-status').disabled = true;
   docClearLog();
   setStep('s', 0, 4);
@@ -617,6 +629,10 @@ async function docGenLink() {
         linkArea.innerHTML = '<div style="background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;font-size:10px;font-family:monospace">' +
           '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div>' +
           '<a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a></div>';
+
+        docState.webSdkUrl = data.url;
+        var openBtn = document.getElementById('doc-btn-open');
+        openBtn.style.display = ''; openBtn.disabled = false;
 
         setStep('s', 2, 4);
         docState.linked = true;
@@ -817,13 +833,17 @@ async function docApplicantCheck() {
 }
 
 // ─── Non-Doc KYC (Tab 3) ───
-var ndState = { userId: null, email: null, linked: false };
+var ndState = { userId: null, email: null, linked: false, webSdkUrl: null };
 
 function ndLog(cls, text) {}
 function ndClearLog() {}
 
+function nondocOpenLink() {
+  if (ndState.webSdkUrl) window.open(ndState.webSdkUrl, '_blank');
+}
+
 function nondocSetUserId() {
-  ndState = { userId: null, email: null, linked: false };
+  ndState = { userId: null, email: null, linked: false, webSdkUrl: null };
   document.getElementById('nondoc-ext-id').textContent = '\u2014';
   document.getElementById('nondoc-app-id').textContent = '\u2014';
   document.getElementById('nondoc-applicant-status').textContent = 'Not Started';
@@ -833,6 +853,8 @@ function nondocSetUserId() {
   });
   document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
   document.getElementById('nondoc-btn-link').disabled = true;
+  var ndOpenBtn = document.getElementById('nondoc-btn-open');
+  ndOpenBtn.style.display = 'none'; ndOpenBtn.disabled = true;
   document.getElementById('nondoc-btn-status').disabled = true;
   ndClearLog();
   setStep('n', 0, 4);
@@ -886,6 +908,10 @@ async function nondocGenLink() {
         linkArea.innerHTML = '<div style="background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;font-size:10px;font-family:monospace">' +
           '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div>' +
           '<a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a></div>';
+
+        ndState.webSdkUrl = data.url;
+        var openBtn = document.getElementById('nondoc-btn-open');
+        openBtn.style.display = ''; openBtn.disabled = false;
 
         setStep('n', 2, 4);
         ndState.linked = true;
