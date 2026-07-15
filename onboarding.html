@@ -1113,6 +1113,16 @@ function whRender(entries) {
   var total = entries.length;
   var verified = entries.filter(function(e) { return e.verified; }).length;
 
+  // Auto-select latest on first load
+  if (whSelected === -1 && entries.length > 0) {
+    whSelected = entries.length - 1;
+    whPayload = entries[whSelected];
+    var viewer = document.getElementById('wh-json');
+    if (viewer) viewer.innerHTML = whSyntaxHighlight(JSON.stringify(whPayload, null, 2));
+    var titleEl = document.getElementById('wh-detail-title');
+    if (titleEl) titleEl.textContent = whPayload.type || 'Unknown event';
+  }
+
   var html = '';
   for (var i = entries.length - 1; i >= 0; i--) {
     var e = entries[i];
