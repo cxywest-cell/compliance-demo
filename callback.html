@@ -63,6 +63,13 @@
   .sig-result { text-align: center; font-size: 14px; font-weight: 700; margin-top: 10px; padding-top: 8px; border-top: 1px solid #313244; }
   .sig-match .sig-result { color: #22c55e; }
   .sig-mismatch .sig-result { color: #ef4444; }
+  /* Payload pair */
+  .payload-pair { background: #181825; border-radius: 6px; padding: 12px; margin-top: 8px; }
+  .payload-label { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 10px; text-transform: uppercase; color: #888; font-weight: 600; display: block; margin-bottom: 6px; }
+  .payload-b64 { background: #1e1e2e; padding: 10px; border-radius: 4px; font-size: 11px; color: #a6e3a1; word-break: break-all; white-space: normal; margin: 0; }
+  .payload-arrow { text-align: center; padding: 8px 0; font-size: 13px; font-weight: 700; color: #89b4fa; }
+  .payload-decoded pre { background: #1e1e2e; padding: 10px; border-radius: 4px; font-size: 11px; color: #cdd6f4; margin: 0; }
+  .payload-encoded pre { margin: 0; }
 </style></head><body>
 <div class="card" id="card">
   <!-- Loading state -->
@@ -209,17 +216,33 @@
     var headerJson = data.header ? JSON.stringify(data.header, null, 2) : '—';
     var payloadJson = data.payload ? JSON.stringify(data.payload, null, 2) : '—';
 
-    // Colorize the raw JWT
-    var rawJwt = '';
+    // Extract raw base64 parts
     var q = new URLSearchParams(window.location.search);
     var rjwt = q.get('jwt') || '';
-    if (rjwt) {
-      var parts = rjwt.split('.');
+    var rawParts = rjwt ? rjwt.split('.') : [];
+    var rawPayloadB64 = rawParts.length === 3 ? rawParts[1] : '';
+
+    if (rawJwt) {
+      var parts = rawJwt.split('.');
       if (parts.length === 3) {
         rawJwt = '<span class="jwt-hdr">' + esc(parts[0]) + '</span><span class="jwt-dot">.</span><span class="jwt-pld">' + esc(parts[1]) + '</span><span class="jwt-dot">.</span><span class="jwt-sig">' + esc(parts[2]) + '</span>';
       } else {
-        rawJwt = esc(rjwt);
+        rawJwt = esc(rawJwt);
       }
+    }
+
+    // Payload: show raw base64 + decoded side-by-side
+    var payloadSection = '';
+    if (rawPayloadB64 && data.payload) {
+      payloadSection =
+        '<div class="jwt-section"><h5>Payload (Claims)</h5>' +
+        '<div class="payload-pair">' +
+        '<div class="payload-encoded"><span class="payload-label">base64url (JWT part 2)</span><pre class="payload-b64">' + esc(rawPayloadB64) + '</pre></div>' +
+        '<div class="payload-arrow">↓ decodes to</div>' +
+        '<div class="payload-decoded"><span class="payload-label">JSON claims</span><pre>' + esc(payloadJson) + '</pre></div>' +
+        '</div></div>';
+    } else {
+      payloadSection = '<div class="jwt-section"><h5>Payload (Claims)</h5><pre>' + esc(payloadJson) + '</pre></div>';
     }
 
     // Signature comparison section
@@ -240,7 +263,7 @@
       '<div class="jwt-status ' + statusClass + '">' + statusIcon + ' — ' + esc(statusText) + '</div>' +
       '<div class="jwt-section"><h5>Raw JWT</h5><div class="jwt-raw">' + rawJwt + '</div></div>' +
       '<div class="jwt-section"><h5>Header</h5><pre>' + esc(headerJson) + '</pre></div>' +
-      '<div class="jwt-section"><h5>Payload (Claims)</h5><pre>' + esc(payloadJson) + '</pre></div>' +
+      payloadSection +
       sigSection +
       '<div class="jwt-section"><h5>Verification Steps</h5><pre>' +
       '1. Extract jwt= from redirect URL query string\n' +
