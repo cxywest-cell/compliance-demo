@@ -429,38 +429,6 @@ app.post('/api/ubo/:applicantId/simulate', async (req, res) => {
   res.json(apiResult);
 });
 
-// --- JWT Verification (post-KYC redirect) ---
-app.get('/kyc-result', (req, res) => {
-  const rawJwt = req.query.jwt;
-  let decoded = null;
-  let error = null;
-  
-  if (rawJwt) {
-    try {
-      decoded = jwt.verify(rawJwt, SUMSUB_WEBSDK_SECRET, { algorithms: ['HS256'] });
-      console.log('[JWT VERIFY] Success:', JSON.stringify(decoded, null, 2));
-    } catch (e) {
-      error = e.message;
-      console.log('[JWT VERIFY] Failed:', error);
-      // Try to decode without verification to see the payload
-      try {
-        const parts = rawJwt.split('.');
-        if (parts.length === 3) {
-          const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-          decoded = { _HEADER: header, _PAYLOAD: payload, _WARNING: 'SIGNATURE INVALID' };
-        }
-      } catch {}
-    }
-  }
-  
-  res.json({
-    raw_jwt: rawJwt || null,
-    decoded: decoded,
-    error: error
-  });
-});
-
 app.get('/api/recent', async (req, res) => {
   // Return known applicants, refreshing status from Sumsub for each
   const entries = Array.from(knownApplicants.entries());
@@ -785,24 +753,7 @@ app.post('/api/websdk-link', async (req, res) => {
   // Use server's known tunnel URL (not frontend's location.origin)
   const baseUrl = (tunnelUrl || 'http://localhost:8000').replace(/\/+$/, '');
 
-  // Generate signed JWTs for redirect URLs
-  function makeJwt(action) {
-    if (!SUMSUB_WEBSDK_SECRET) return '';
-    return jwt.sign(
-      {
-        externalUserId: externalUserId,
-        action: action,
-        iat: Math.floor(Date.now() / 1000),
-        iss: 'compliance-demo'
-      },
-      SUMSUB_WEBSDK_SECRET,
-      { algorithm: 'HS256' }
-    );
-  }
-
-  const successJwt = makeJwt('success');
-  const rejectJwt = makeJwt('reject');
-
+  // Pass signKey so Sumsub signs the redirect JWT — our server verifies it on callback
   const linkPath = '/resources/sdkIntegrations/levels/-/websdkLink';
   const linkBody = {
     levelName: levelName,
@@ -810,8 +761,9 @@ app.post('/api/websdk-link', async (req, res) => {
     ttlInSecs: 3600,
     applicantIdentifiers: { email: email },
     redirect: {
-      successUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=success&jwt=' + encodeURIComponent(successJwt),
-      rejectUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=reject&jwt=' + encodeURIComponent(rejectJwt)
+      successUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=success',
+      rejectUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=reject',
+      signKey: SUMSUB_WEBSDK_SECRET
     }
   };
 
