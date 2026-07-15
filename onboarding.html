@@ -42,10 +42,6 @@
   .badge-blue { background: #dbeafe; color: #1e40af; }
   .badge-gray { background: #f3f4f6; color: #6b7280; }
   .badge-yellow { background: #fef9c3; color: #854d0e; }
-  .summary-bar { display: flex; gap: 12px; margin-bottom: 12px; }
-  .summary-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 14px; flex: 1; text-align: center; }
-  .summary-val { font-size: 20px; font-weight: 700; color: #1a1a1a; }
-  .summary-label { font-size: 10px; color: #888; text-transform: uppercase; }
   .wh-list { display: flex; flex-direction: column; gap: 4px; }
   .wh-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 11px; }
   .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
@@ -410,11 +406,6 @@
     <div class="tab-pane" id="tab-webhooks">
 
       <div class="section-title">Incoming Webhooks</div>
-      <div class="summary-bar">
-        <div class="summary-card"><div class="summary-val" id="wh-total">0</div><div class="summary-label">Total Events</div></div>
-        <div class="summary-card"><div class="summary-val" id="wh-verified">0</div><div class="summary-label">Verified</div></div>
-        <div class="summary-card"><div class="summary-val" id="wh-unverified">0</div><div class="summary-label">Unverified</div></div>
-      </div>
 
       <div style="display:grid;grid-template-columns:320px 1fr;gap:12px">
         <!-- Left: event list -->
@@ -1121,9 +1112,6 @@ function whRender(entries) {
 
   var total = entries.length;
   var verified = entries.filter(function(e) { return e.verified; }).length;
-  document.getElementById('wh-total').textContent = total;
-  document.getElementById('wh-verified').textContent = verified;
-  document.getElementById('wh-unverified').textContent = total - verified;
 
   var html = '';
   for (var i = entries.length - 1; i >= 0; i--) {
