@@ -291,25 +291,9 @@
         </div>
       </div>
 
-      <!-- Event Log (shared) -->
-      <div class="section-title">Event Log</div>
-      <div class="card">
-        <div class="card-body">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Log</span>
-            <button onclick="docClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
-          </div>
-          <div class="log-area" id="doc-log" style="background:#0d1117;border-radius:4px;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
-            <div style="color:#6e7681">Waiting for events...</div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- TAB 3: Non-Doc Individual Onboarding             -->
-    <!-- ═══════════════════════════════════════════════ -->
+    <!-- ═══ Non-Doc Individual Onboarding ═══ -->
     <div class="tab-pane" id="tab-nondoc">
 
       <div class="info-note"><strong>Sumsub KYC (Non-Doc)</strong> L3 level — ID number entry + liveness only. No document upload.</div>
@@ -383,28 +367,14 @@
         </div>
       </div>
 
-      <!-- Event Log (shared) -->
-      <div class="section-title">Event Log</div>
-      <div class="card">
-        <div class="card-body">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Log</span>
-            <button onclick="nondocClearLog()" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Clear</button>
-          </div>
-          <div class="log-area" id="nondoc-log" style="background:#0d1117;border-radius:4px;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
-            <div style="color:#6e7681">Waiting for events...</div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
   </div>
 
   <!-- ═══ Webhook Console (fixed bottom) ═══ -->
   <div id="wh-console-bar" style="background:#fff;border-top:2px solid #5b4cdb;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#f0efff'" onmouseleave="this.style.background='#fff'" onclick="whToggle()">
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px">
-      <span id="wh-toggle-arrow" style="font-size:14px;color:#5b4cdb;transition:transform 0.2s">▸</span>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px">
+      <span id="wh-toggle-arrow" style="font-size:24px;color:#5b4cdb;transition:transform 0.2s;line-height:1">▶</span>
       <span style="font-size:11px;font-weight:600;color:#5b4cdb">📡 Webhook Console</span>
       <span id="wh-bar-count" style="font-size:10px;font-weight:600;color:#5b4cdb;background:#f0efff;padding:2px 8px;border-radius:10px;border:1px solid #5b4cdb">0 events</span>
       <span id="wh-bar-latest" style="font-size:10px;color:#888;margin-left:auto"></span>
