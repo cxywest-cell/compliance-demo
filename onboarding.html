@@ -53,9 +53,11 @@
   .wh-time { font-size: 10px; color: #888; font-family: monospace; min-width: 55px; }
   .wh-type { font-weight: 600; min-width: 140px; font-size: 11px; }
   .wh-user { font-size: 10px; color: #666; font-family: monospace; margin-left: auto; }
-  .wh-badge { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 600; }
-  .wh-badge-ok { background: #d1fae5; color: #065f46; }
-  .wh-badge-fail { background: #fee2e2; color: #991b1b; }
+  .wh-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; background: #e5e7eb; color: #374151; }
+  .wh-badge.init { background: #dbeafe; color: #1e40af; }
+  .wh-badge.pending { background: #fef3c7; color: #92400e; }
+  .wh-badge.completed { background: #d1fae5; color: #065f46; }
+  .wh-badge.onHold { background: #e9d5ff; color: #6b21a8; }
   .json-viewer { background: #0d1117; border-radius: 4px; padding: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: #c9d1d9; overflow-x: auto; white-space: pre; line-height: 1.7; min-height: 200px; }
   .json-key { color: #79c0ff; }
   .json-str { color: #a5d6ff; }
@@ -1133,7 +1135,7 @@ function whRender(entries) {
     html += '<div class="' + cls + '" onclick="whSelect(' + i + ')">' +
       '<span class="wh-time">' + time + '</span>' +
       '<span class="wh-type" style="color:' + tColor + '">' + (e.type || 'unknown').replace('applicant', '') + '</span>' +
-      '<span class="wh-badge">' + statusLabel + '</span>' +
+      '<span class="wh-badge ' + statusLabel + '">' + statusLabel + '</span>' +
       '</div>';
   }
   el.innerHTML = html;
