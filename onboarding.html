@@ -42,6 +42,26 @@
   .badge-blue { background: #dbeafe; color: #1e40af; }
   .badge-gray { background: #f3f4f6; color: #6b7280; }
   .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .summary-bar { display: flex; gap: 12px; margin-bottom: 12px; }
+  .summary-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px 14px; flex: 1; text-align: center; }
+  .summary-val { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .summary-label { font-size: 10px; color: #888; text-transform: uppercase; }
+  .wh-list { display: flex; flex-direction: column; gap: 4px; }
+  .wh-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 11px; }
+  .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
+  .wh-item.selected { background: #f0efff; border-color: #5b4cdb; }
+  .wh-time { font-size: 10px; color: #888; font-family: monospace; min-width: 55px; }
+  .wh-type { font-weight: 600; min-width: 140px; font-size: 11px; }
+  .wh-user { font-size: 10px; color: #666; font-family: monospace; margin-left: auto; }
+  .wh-badge { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+  .wh-badge-ok { background: #d1fae5; color: #065f46; }
+  .wh-badge-fail { background: #fee2e2; color: #991b1b; }
+  .json-viewer { background: #0d1117; border-radius: 4px; padding: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: #c9d1d9; overflow-x: auto; white-space: pre; line-height: 1.7; min-height: 200px; }
+  .json-key { color: #79c0ff; }
+  .json-str { color: #a5d6ff; }
+  .json-num { color: #79c0ff; }
+  .json-bool { color: #ff7b72; }
+  .json-null { color: #8b949e; }
   .flow-steps { display: flex; align-items: center; gap: 0; margin-bottom: 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; overflow-x: auto; }
   .step { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .step-num { width: 22px; height: 22px; border-radius: 50%; background: #e5e7eb; color: #6b7280; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
@@ -83,7 +103,6 @@
     <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
     <a class="nav-item" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
     <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
-    <a class="nav-item" href="webhooks.html"><span class="icon">📋</span> Webhooks</a>
   </div>
 </div>
 
@@ -99,6 +118,7 @@
     <div class="tab active" onclick="switchTab(0)">Corporate Onboarding</div>
     <div class="tab" onclick="switchTab(1)">Individual Onboarding</div>
     <div class="tab" onclick="switchTab(2)">Non-Doc Individual Onboarding</div>
+    <div class="tab" onclick="switchTab(3)">Webhooks</div>
   </div>
   <div class="content">
 
@@ -376,6 +396,46 @@
           </div>
           <div class="log-area" id="nondoc-log" style="background:#0d1117;border-radius:4px;padding:10px;font-size:10px;font-family:'SF Mono',monospace;max-height:200px;overflow-y:auto;color:#c9d1d9;min-height:60px;display:block">
             <div style="color:#6e7681">Waiting for events...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 4: Webhook Monitor                          -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-webhooks">
+
+      <div class="section-title">Incoming Webhooks</div>
+      <div class="summary-bar">
+        <div class="summary-card"><div class="summary-val" id="wh-total">0</div><div class="summary-label">Total Events</div></div>
+        <div class="summary-card"><div class="summary-val" id="wh-verified">0</div><div class="summary-label">Verified</div></div>
+        <div class="summary-card"><div class="summary-val" id="wh-unverified">0</div><div class="summary-label">Unverified</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:12px">
+        <!-- Left: event list -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <span>Events</span>
+              <button class="btn btn-reset" onclick="whClearLog()" style="padding:2px 8px;font-size:10px">Clear</button>
+            </div>
+            <div id="wh-list" class="wh-list" style="padding:6px;max-height:500px;overflow-y:auto">
+              <div style="color:#888;font-size:12px;padding:8px">Waiting for webhooks...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: JSON detail -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <span id="wh-detail-title">Select an event</span>
+              <button class="btn btn-run" onclick="whCopyJSON()" style="padding:2px 8px;font-size:10px">Copy JSON</button>
+            </div>
+            <div id="wh-json" class="json-viewer" style="max-height:500px;overflow:auto">// Click an event to see full payload</div>
           </div>
         </div>
       </div>
@@ -1037,4 +1097,95 @@ async function nondocDecision() {
 }
 
 restoreState();
+
+// ─── Webhook Monitor (Tab 4) ───
+var whCurrent = [];
+var whSelected = -1;
+var whPayload = null;
+
+function whColorType(t) {
+  if (t === 'applicantReviewed') return '#7ee787';
+  if (t === 'applicantCreated') return '#79c0ff';
+  if (t === 'applicantOnHold') return '#d2a8ff';
+  if (t === 'applicantPending') return '#ffa657';
+  if (t === 'applicantWorkflowCompleted') return '#ff7b72';
+  return '#c9d1d9';
+}
+
+function whRender(entries) {
+  whCurrent = entries;
+  var el = document.getElementById('wh-list');
+  if (!el || !entries || entries.length === 0) return;
+
+  var total = entries.length;
+  var verified = entries.filter(function(e) { return e.verified; }).length;
+  document.getElementById('wh-total').textContent = total;
+  document.getElementById('wh-verified').textContent = verified;
+  document.getElementById('wh-unverified').textContent = total - verified;
+
+  var html = '';
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    var cls = whSelected === i ? 'wh-item selected' : 'wh-item';
+    var badge = e.verified
+      ? '<span class="wh-badge wh-badge-ok">OK</span>'
+      : '<span class="wh-badge wh-badge-fail">BAD SIG</span>';
+    var tColor = whColorType(e.type || 'unknown');
+    var time = e.timestamp ? e.timestamp.slice(11, 19) : '—';
+    html += '<div class="' + cls + '" onclick="whSelect(' + i + ')">' +
+      '<span class="wh-time">' + time + '</span>' +
+      '<span class="wh-type" style="color:' + tColor + '">' + (e.type || 'unknown').replace('applicant', '') + '</span>' +
+      badge +
+      '<span class="wh-user">' + (e.externalUserId || '—') + '</span>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function whSelect(idx) {
+  whSelected = idx;
+  whPayload = whCurrent[idx];
+  whRender(whCurrent);
+
+  var titleEl = document.getElementById('wh-detail-title');
+  titleEl.textContent = whPayload.type || 'Unknown event';
+
+  var viewer = document.getElementById('wh-json');
+  viewer.innerHTML = whSyntaxHighlight(JSON.stringify(whPayload, null, 2));
+}
+
+function whCopyJSON() {
+  if (!whPayload) return;
+  var text = JSON.stringify(whPayload, null, 2);
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+}
+
+function whSyntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) return '<span class="json-key">' + match.replace(/"/g, '').replace(/:$/, '') + '</span>:';
+      return '<span class="json-str">' + match + '</span>';
+    }
+    if (/true|false/.test(match)) return '<span class="json-bool">' + match + '</span>';
+    if (/null/.test(match)) return '<span class="json-null">' + match + '</span>';
+    return '<span class="json-num">' + match + '</span>';
+  });
+}
+
+function whClearLog() {
+  fetch('/api/webhooks/clear', { method: 'POST' }).then(function() {
+    whSelected = -1; whPayload = null;
+    document.getElementById('wh-detail-title').textContent = 'Select an event';
+    document.getElementById('wh-json').innerHTML = '// Click an event to see full payload';
+    whPoll();
+  });
+}
+
+function whPoll() {
+  fetch('/api/webhooks').then(function(r) { return r.json(); }).then(function(data) {
+    whRender(data);
+  }).catch(function() {});
+}
+setInterval(whPoll, 2000);
+whPoll();
 </script>
