@@ -785,6 +785,24 @@ app.post('/api/websdk-link', async (req, res) => {
   // Use server's known tunnel URL (not frontend's location.origin)
   const baseUrl = (tunnelUrl || 'http://localhost:8000').replace(/\/+$/, '');
 
+  // Generate signed JWTs for redirect URLs
+  function makeJwt(action) {
+    if (!SUMSUB_WEBSDK_SECRET) return '';
+    return jwt.sign(
+      {
+        externalUserId: externalUserId,
+        action: action,
+        iat: Math.floor(Date.now() / 1000),
+        iss: 'compliance-demo'
+      },
+      SUMSUB_WEBSDK_SECRET,
+      { algorithm: 'HS256' }
+    );
+  }
+
+  const successJwt = makeJwt('success');
+  const rejectJwt = makeJwt('reject');
+
   const linkPath = '/resources/sdkIntegrations/levels/-/websdkLink';
   const linkBody = {
     levelName: levelName,
@@ -792,8 +810,8 @@ app.post('/api/websdk-link', async (req, res) => {
     ttlInSecs: 3600,
     applicantIdentifiers: { email: email },
     redirect: {
-      successUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=success',
-      rejectUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=reject'
+      successUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=success&jwt=' + encodeURIComponent(successJwt),
+      rejectUrl: baseUrl + '/callback?externalUserId=' + externalUserId + '&action=reject&jwt=' + encodeURIComponent(rejectJwt)
     }
   };
 
@@ -857,8 +875,41 @@ app.post('/api/decision', async (req, res) => {
 
 // Callback page for post-verification redirect
 app.get('/callback', (req, res) => {
-  // Serve static callback.html — query params are read by client-side JS
-  res.sendFile(path.join(__dirname, 'callback.html'));
+  // Verify JWT and embed result into page for developer reference
+  const rawJwt = req.query.jwt || '';
+  let jwtResult = { verified: false, header: null, payload: null, error: 'No JWT provided' };
+
+  if (rawJwt) {
+    try {
+      const decoded = jwt.verify(rawJwt, SUMSUB_WEBSDK_SECRET, { algorithms: ['HS256'] });
+      jwtResult = {
+        verified: true,
+        header: jwt.decode(rawJwt, { complete: true }).header,
+        payload: decoded,
+        error: null
+      };
+      console.log('[Callback JWT] Verified OK:', JSON.stringify(decoded));
+    } catch (e) {
+      // Try to decode without verification for display
+      jwtResult = { verified: false, header: null, payload: null, error: e.message };
+      try {
+        const parts = rawJwt.split('.');
+        if (parts.length === 3) {
+          jwtResult.header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+          jwtResult.payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        }
+      } catch {}
+      console.log('[Callback JWT] Verification failed:', e.message);
+    }
+  }
+
+  const jwtDataScript = '<script>window.__JWT_VERIFY__ = ' + JSON.stringify(jwtResult).replace(/</g, '\\u003c') + ';</script>';
+
+  // Read callback.html and inject the JWT data before </head>
+  const htmlPath = path.join(__dirname, 'callback.html');
+  const html = fs.readFileSync(htmlPath, 'utf-8');
+  const injected = html.replace('</head>', jwtDataScript + '</head>');
+  res.send(injected);
 });
 
 // ─── Sumsub Webhook Receiver ───

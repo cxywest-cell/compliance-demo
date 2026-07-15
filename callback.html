@@ -28,8 +28,27 @@
   .step-success { background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 16px; }
   .step-success p { color: #065f46; font-size: 13px; margin: 0; }
   .btn-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-  /* Hidden template sections */
   .result-content { display: none; }
+
+  /* JWT Developer Panel */
+  .dev-panel { margin-top: 24px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+  .dev-panel-toggle { background: #1e1e2e; color: #cdd6f4; padding: 10px 16px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; border: none; width: 100%; text-align: left; font-family: inherit; }
+  .dev-panel-toggle:hover { background: #2a2a3e; }
+  .dev-panel-toggle .arrow { transition: transform 0.15s; }
+  .dev-panel-toggle.open .arrow { transform: rotate(90deg); }
+  .dev-panel-body { display: none; background: #1e1e2e; color: #cdd6f4; padding: 16px; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.6; }
+  .dev-panel-body.open { display: block; }
+  .jwt-status { padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 12px; font-weight: 600; }
+  .jwt-pass { background: #064e3b; color: #6ee7b7; }
+  .jwt-fail { background: #7f1d1d; color: #fca5a5; }
+  .jwt-section { margin-bottom: 12px; }
+  .jwt-section h5 { color: #89b4fa; font-size: 11px; text-transform: uppercase; margin: 0 0 6px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  .jwt-section pre { background: #181825; padding: 10px; border-radius: 4px; overflow-x: auto; margin: 0; font-size: 11px; }
+  .jwt-raw { word-break: break-all; white-space: normal; color: #f5c2e7; font-size: 11px; }
+  .jwt-dot { color: #6c7086; }
+  .jwt-hdr { color: #89b4fa; }
+  .jwt-pld { color: #a6e3a1; }
+  .jwt-sig { color: #f9e2af; }
 </style></head><body>
 <div class="card" id="card">
   <!-- Loading state -->
@@ -104,6 +123,14 @@
       <a class="btn btn-primary" href="/onboarding">Back to Onboarding</a>
     </div>
   </div>
+
+  <!-- JWT Developer Reference Panel (always shown if JWT present) -->
+  <div id="jwt-dev-panel" class="dev-panel" style="display:none">
+    <button class="dev-panel-toggle" onclick="toggleDevPanel()">
+      <span class="arrow">▸</span> Developer Reference — JWT Verification
+    </button>
+    <div class="dev-panel-body" id="jwt-dev-body"></div>
+  </div>
 </div>
 
 <script>
@@ -149,6 +176,64 @@
   } else {
     showResult('result-unknown', externalUserId, applicantId, timestamp);
   }
+
+  // ─── JWT Developer Panel ───
+  var jwtData = window.__JWT_VERIFY__ || null;
+  if (jwtData) {
+    renderJwtPanel(jwtData);
+  }
+
+  function renderJwtPanel(data) {
+    var panel = document.getElementById('jwt-dev-panel');
+    var body = document.getElementById('jwt-dev-body');
+    panel.style.display = 'block';
+
+    var statusClass = data.verified ? 'jwt-pass' : 'jwt-fail';
+    var statusIcon = data.verified ? '✅ Signature Valid' : '❌ Signature Invalid';
+    var statusText = data.error || 'HS256 signature verified with server secret';
+
+    var headerJson = data.header ? JSON.stringify(data.header, null, 2) : '—';
+    var payloadJson = data.payload ? JSON.stringify(data.payload, null, 2) : '—';
+
+    // Colorize the raw JWT
+    var rawJwt = '';
+    var q = new URLSearchParams(window.location.search);
+    var rjwt = q.get('jwt') || '';
+    if (rjwt) {
+      var parts = rjwt.split('.');
+      if (parts.length === 3) {
+        rawJwt = '<span class="jwt-hdr">' + esc(parts[0]) + '</span><span class="jwt-dot">.</span><span class="jwt-pld">' + esc(parts[1]) + '</span><span class="jwt-dot">.</span><span class="jwt-sig">' + esc(parts[2]) + '</span>';
+      } else {
+        rawJwt = esc(rjwt);
+      }
+    }
+
+    body.innerHTML =
+      '<div class="jwt-status ' + statusClass + '">' + statusIcon + ' — ' + esc(statusText) + '</div>' +
+      '<div class="jwt-section"><h5>Raw JWT</h5><div class="jwt-raw">' + rawJwt + '</div></div>' +
+      '<div class="jwt-section"><h5>Header</h5><pre>' + esc(headerJson) + '</pre></div>' +
+      '<div class="jwt-section"><h5>Payload (Claims)</h5><pre>' + esc(payloadJson) + '</pre></div>' +
+      '<div class="jwt-section"><h5>Verification Steps</h5><pre>' +
+      '1. Extract jwt= from redirect URL query string\n' +
+      '2. Decode header (base64url) → verify alg: ' + (data.header && data.header.alg ? esc(data.header.alg) : 'N/A') + '\n' +
+      '3. Verify signature using HS256 + server secret\n' +
+      '   → ' + (data.verified ? 'Signature matches ✓' : 'Signature mismatch ✗') + '\n' +
+      '4. Validate claims (exp, iss, action)\n' +
+      '5. If verified → trust redirect payload\n' +
+      '   If invalid → reject or flag for review\n' +
+      '</pre></div>';
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 })();
+
+function toggleDevPanel() {
+  var btn = document.querySelector('.dev-panel-toggle');
+  var body = document.getElementById('jwt-dev-body');
+  btn.classList.toggle('open');
+  body.classList.toggle('open');
+}
 </script>
 </body></html>
