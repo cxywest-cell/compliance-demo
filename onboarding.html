@@ -410,7 +410,7 @@
       <span id="wh-bar-latest" style="font-size:10px;color:#5b4cdb;font-weight:500;margin-left:auto"></span>
     </div>
   </div>
-  <div id="wh-console-panel" style="display:none;height:320px;background:#f5f5f5;border-top:1px solid #e0e0e0">
+  <div id="wh-console-panel" style="display:none;flex:1;min-height:0;background:#f5f5f5;border-top:1px solid #e0e0e0">
     <div style="display:flex;height:100%">
       <div style="width:300px;overflow-y:auto;background:#fff;border-right:1px solid #e0e0e0">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #e0e0e0">
@@ -424,7 +424,7 @@
           <span id="wh-detail-title" style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Select an event</span>
           <button class="btn btn-run" onclick="whCopyJSON()" style="padding:1px 8px;font-size:10px">Copy JSON</button>
         </div>
-        <div id="wh-json" class="json-viewer" style="min-height:0;height:calc(100% - 32px)">// Click an event to see full payload</div>
+        <div id="wh-json" class="json-viewer" style="min-height:0;height:100%">// Click an event to see full payload</div>
       </div>
     </div>
   </div>
