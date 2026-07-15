@@ -404,11 +404,10 @@
   <!-- ═══ Webhook Console (fixed bottom) ═══ -->
   <div id="wh-console-bar" style="background:#fff;border-top:2px solid #5b4cdb;cursor:pointer;transition:background 0.15s" onmouseenter="this.style.background='#f0efff'" onmouseleave="this.style.background='#fff'" onclick="whToggle()">
     <div style="display:flex;align-items:center;gap:8px;padding:6px 12px">
-      <span id="wh-toggle-arrow" style="font-size:10px;color:#5b4cdb;transition:transform 0.15s">▸</span>
+      <span id="wh-toggle-arrow" style="font-size:14px;color:#5b4cdb;transition:transform 0.2s">▸</span>
       <span style="font-size:11px;font-weight:600;color:#5b4cdb">📡 Webhook Console</span>
       <span id="wh-bar-count" style="font-size:10px;font-weight:600;color:#5b4cdb;background:#f0efff;padding:2px 8px;border-radius:10px;border:1px solid #5b4cdb">0 events</span>
       <span id="wh-bar-latest" style="font-size:10px;color:#888;margin-left:auto"></span>
-      <span id="wh-toggle-hint" style="font-size:10px;color:#aaa">click to expand</span>
     </div>
   </div>
   <div id="wh-console-panel" style="display:none;flex:1;min-height:0;background:#f5f5f5;border-top:1px solid #e0e0e0">
@@ -1093,15 +1092,12 @@ var whPayload = null;
 function whToggle() {
   var panel = document.getElementById('wh-console-panel');
   var arrow = document.getElementById('wh-toggle-arrow');
-  var hint = document.getElementById('wh-toggle-hint');
   if (panel.style.display === 'none') {
     panel.style.display = 'flex';
     arrow.style.transform = 'rotate(90deg)';
-    if (hint) hint.textContent = 'click to collapse';
   } else {
     panel.style.display = 'none';
     arrow.style.transform = 'rotate(0deg)';
-    if (hint) hint.textContent = 'click to expand';
   }
 }
 
