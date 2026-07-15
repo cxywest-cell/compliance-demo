@@ -49,6 +49,20 @@
   .jwt-hdr { color: #89b4fa; }
   .jwt-pld { color: #a6e3a1; }
   .jwt-sig { color: #f9e2af; }
+  /* Signature comparison */
+  .sig-input { color: #cdd6f4; word-break: break-all; white-space: normal; }
+  .sig-compare { background: #181825; border-radius: 6px; padding: 12px; margin-top: 8px; }
+  .sig-match { border: 1px solid #22c55e; }
+  .sig-mismatch { border: 1px solid #ef4444; }
+  .sig-row { display: flex; flex-direction: column; padding: 8px 0; }
+  .sig-row + .sig-row { border-top: 1px solid #313244; }
+  .sig-label { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 10px; text-transform: uppercase; color: #888; margin-bottom: 4px; font-weight: 600; }
+  .sig-val { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; word-break: break-all; white-space: normal; line-height: 1.5; background: #1e1e2e; padding: 8px; border-radius: 4px; display: block; }
+  .sig-expected { color: #a6e3a1; }
+  .sig-actual { color: #f9e2af; }
+  .sig-result { text-align: center; font-size: 14px; font-weight: 700; margin-top: 10px; padding-top: 8px; border-top: 1px solid #313244; }
+  .sig-match .sig-result { color: #22c55e; }
+  .sig-mismatch .sig-result { color: #ef4444; }
 </style></head><body>
 <div class="card" id="card">
   <!-- Loading state -->
@@ -208,18 +222,33 @@
       }
     }
 
+    // Signature comparison section
+    var sigSection = '';
+    if (data.signingInput) {
+      var sigMatchClass = data.sigMatch ? 'sig-match' : 'sig-mismatch';
+      var sigMatchIcon = data.sigMatch ? '✅ MATCH' : '❌ MISMATCH';
+      sigSection =
+        '<div class="jwt-section"><h5>Signing Input (HMAC Input)</h5><pre class="sig-input">' + esc(data.signingInput) + '</pre></div>' +
+        '<div class="jwt-section"><h5>Signature Comparison</h5><div class="sig-compare ' + sigMatchClass + '">' +
+        '<div class="sig-row"><span class="sig-label">Expected (HMAC-SHA256 with secret)</span><code class="sig-val sig-expected">' + esc(data.expectedSig) + '</code></div>' +
+        '<div class="sig-row"><span class="sig-label">Actual (from JWT token)</span><code class="sig-val sig-actual">' + esc(data.actualSig) + '</code></div>' +
+        '<div class="sig-result">' + sigMatchIcon + '</div>' +
+        '</div></div>';
+    }
+
     body.innerHTML =
       '<div class="jwt-status ' + statusClass + '">' + statusIcon + ' — ' + esc(statusText) + '</div>' +
       '<div class="jwt-section"><h5>Raw JWT</h5><div class="jwt-raw">' + rawJwt + '</div></div>' +
       '<div class="jwt-section"><h5>Header</h5><pre>' + esc(headerJson) + '</pre></div>' +
       '<div class="jwt-section"><h5>Payload (Claims)</h5><pre>' + esc(payloadJson) + '</pre></div>' +
+      sigSection +
       '<div class="jwt-section"><h5>Verification Steps</h5><pre>' +
       '1. Extract jwt= from redirect URL query string\n' +
       '2. Decode header (base64url) → verify alg: ' + (data.header && data.header.alg ? esc(data.header.alg) : 'N/A') + '\n' +
-      '3. Verify signature using HS256 + server secret\n' +
-      '   → ' + (data.verified ? 'Signature matches ✓' : 'Signature mismatch ✗') + '\n' +
-      '4. Validate claims (exp, iss, action)\n' +
-      '5. If verified → trust redirect payload\n' +
+      '3. HMAC-SHA256( signKey, header + "." + payload ) → expected signature\n' +
+      '4. Compare expected vs actual → ' + (data.verified ? 'MATCH ✓' : 'MISMATCH ✗') + '\n' +
+      '5. Validate claims (exp, iss, action)\n' +
+      '6. If verified → trust redirect payload\n' +
       '   If invalid → reject or flag for review\n' +
       '</pre></div>';
   }

@@ -832,25 +832,39 @@ app.get('/callback', (req, res) => {
   let jwtResult = { verified: false, header: null, payload: null, error: 'No JWT provided' };
 
   if (rawJwt) {
+    const parts = rawJwt.split('.');
+    const signingInput = parts.slice(0, 2).join('.');
+    const actualSig = parts[2] || '';
+
+    // Compute expected signature using HS256 + our secret
+    const expectedSig = crypto
+      .createHmac('sha256', SUMSUB_WEBSDK_SECRET)
+      .update(signingInput)
+      .digest('base64url');
+
     try {
       const decoded = jwt.verify(rawJwt, SUMSUB_WEBSDK_SECRET, { algorithms: ['HS256'] });
       jwtResult = {
         verified: true,
         header: jwt.decode(rawJwt, { complete: true }).header,
         payload: decoded,
+        signingInput: signingInput,
+        expectedSig: expectedSig,
+        actualSig: actualSig,
+        sigMatch: expectedSig === actualSig,
         error: null
       };
       console.log('[Callback JWT] Verified OK:', JSON.stringify(decoded));
     } catch (e) {
-      // Try to decode without verification for display
       jwtResult = { verified: false, header: null, payload: null, error: e.message };
-      try {
-        const parts = rawJwt.split('.');
-        if (parts.length === 3) {
-          jwtResult.header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
-          jwtResult.payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-        }
-      } catch {}
+      if (parts.length === 3) {
+        jwtResult.header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+        jwtResult.payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        jwtResult.signingInput = signingInput;
+        jwtResult.expectedSig = expectedSig;
+        jwtResult.actualSig = actualSig;
+        jwtResult.sigMatch = false;
+      }
       console.log('[Callback JWT] Verification failed:', e.message);
     }
   }
