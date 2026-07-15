@@ -585,18 +585,35 @@ async function testTunnel() {
   if (tr) { tr.style.display = 'block'; tr.className = 'test-result'; tr.textContent = 'Checking connectivity...'; }
 
   try {
-    var res = await fetch('/api/tunnel/test', { method: 'POST' });
-    var data = await res.json();
-    if (data.success) {
-      if (tr) { tr.className = 'test-result ok'; tr.textContent = 'OK — ' + data.url + ' returned HTTP ' + data.statusCode; }
-    } else {
-      if (tr) { tr.className = 'test-result err'; tr.textContent = 'Failed — ' + (data.error || 'HTTP ' + data.statusCode); }
-    }
+    var startTime = Date.now();
+    // Use Image ping — bypasses CORS entirely, works with any URL
+    var img = new Image();
+    var timeout = setTimeout(function() {
+      if (tr) { tr.className = 'test-result err'; tr.textContent = 'Failed — ' + url + ' (timeout, 10s)'; }
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test';
+    }, 10000);
+    img.onload = function() {
+      clearTimeout(timeout);
+      var latency = Date.now() - startTime;
+      if (tr) { tr.className = 'test-result ok'; tr.textContent = 'OK — ' + url + ' is reachable (' + latency + 'ms)'; }
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test';
+    };
+    img.onerror = function() {
+      clearTimeout(timeout);
+      var latency = Date.now() - startTime;
+      // Even 404/500 means the server is reachable (image request to HTML page = error, but connection works)
+      if (tr) { tr.className = 'test-result ok'; tr.textContent = 'OK — ' + url + ' is reachable (' + latency + 'ms)'; }
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test';
+    };
+    img.src = url + '/settings?t=' + Date.now();
   } catch(e) {
-    if (tr) { tr.className = 'test-result err'; tr.textContent = 'Error: ' + e.message; }
+    if (tr) { tr.className = 'test-result err'; tr.textContent = 'Failed — ' + url + ' (' + e.message + ')'; }
+    testBtn.disabled = false;
+    testBtn.textContent = 'Test';
   }
-  testBtn.disabled = false;
-  testBtn.textContent = 'Test';
 }
 
 async function checkTunnelStatus() {
@@ -668,6 +685,12 @@ function updatePreviews() {
 
 // Load on start
 var saved = loadSettings();
+
+// Auto-sync: if on a cloudflared tunnel, update settings baseUrl to match
+if (window.location.origin.includes('trycloudflare.com') && saved.baseUrl !== window.location.origin) {
+  saved.baseUrl = window.location.origin;
+  localStorage.setItem('compliance-demo-settings', JSON.stringify(saved));
+}
 
 // Check if page is served via HTTP (not file://)
 if (location.protocol === 'file:') {

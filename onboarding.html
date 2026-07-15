@@ -268,6 +268,10 @@
           <button class="btn btn-run" id="doc-btn-status" onclick="docCheckStatus()" disabled>Check</button>
         </div>
         <div class="card-body" id="doc-status-area">
+          <div class="result-row"><span class="rk">Name</span><span class="rv mono" id="doc-check-name">—</span></div>
+          <div class="result-row"><span class="rk">Gender</span><span class="rv mono" id="doc-check-gender">—</span></div>
+          <div class="result-row"><span class="rk">DOB</span><span class="rv mono" id="doc-check-dob">—</span></div>
+          <div class="result-row"><span class="rk">Nationality</span><span class="rv mono" id="doc-check-nationality">—</span></div>
           <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-check-app-id">—</span></div>
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="doc-check-ext-id">—</span></div>
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-review-status"><span class="badge badge-gray">—</span></span></div>
@@ -348,6 +352,10 @@
           <button class="btn btn-run" id="nondoc-btn-status" onclick="nondocCheckStatus()" disabled>Check</button>
         </div>
         <div class="card-body" id="nondoc-status-area">
+          <div class="result-row"><span class="rk">Name</span><span class="rv mono" id="nondoc-check-name">—</span></div>
+          <div class="result-row"><span class="rk">Gender</span><span class="rv mono" id="nondoc-check-gender">—</span></div>
+          <div class="result-row"><span class="rk">DOB</span><span class="rv mono" id="nondoc-check-dob">—</span></div>
+          <div class="result-row"><span class="rk">Nationality</span><span class="rv mono" id="nondoc-check-nationality">—</span></div>
           <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-check-app-id">—</span></div>
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="nondoc-check-ext-id">—</span></div>
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="nondoc-review-status"><span class="badge badge-gray">—</span></span></div>
@@ -422,7 +430,16 @@ function loadSettings() {
     nonDocLevel: 'non-doc-kyc-level'
   };
 }
-function getBaseUrl() { return loadSettings().baseUrl || 'https://localhost:8000'; }
+function getBaseUrl() {
+  var settings = loadSettings();
+  var origin = window.location.origin;
+  // Auto-sync: if we're on a cloudflared tunnel and settings has a different URL, update it
+  if (origin.includes('trycloudflare.com') && settings.baseUrl !== origin) {
+    settings.baseUrl = origin;
+    localStorage.setItem('compliance-demo-settings', JSON.stringify(settings));
+  }
+  return settings.baseUrl || origin;
+}
 function getDocLevel() { return loadSettings().docLevel || 'kyc-test-daniel-260618'; }
 function getNonDocLevel() { return loadSettings().nonDocLevel || 'non-doc-kyc-level'; }
 
@@ -665,6 +682,16 @@ async function docCheckStatus() {
         if (data.id) document.getElementById('doc-check-app-id').textContent = data.id;
         if (data.externalUserId) document.getElementById('doc-check-ext-id').textContent = data.externalUserId;
         docState.applicantId = data.id || null;
+
+        // Display applicant info (name, gender, DOB, nationality)
+        var info = data.info || data.fixedInfo || {};
+        var fullName = [info.firstNameEn || info.firstName, info.lastNameEn || info.lastName].filter(Boolean).join(' ');
+        document.getElementById('doc-check-name').textContent = fullName || '—';
+        var gender = info.gender || '';
+        var genderMap = { 'M': 'Male', 'F': 'Female', 'X': 'Non-binary' };
+        document.getElementById('doc-check-gender').textContent = genderMap[gender] || gender || '—';
+        document.getElementById('doc-check-dob').textContent = info.dob || '—';
+        document.getElementById('doc-check-nationality').textContent = info.nationality || info.country || '—';
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
@@ -923,6 +950,16 @@ async function nondocCheckStatus() {
         if (data.id) document.getElementById('nondoc-app-id').textContent = data.id;
         if (data.id) document.getElementById('nondoc-check-app-id').textContent = data.id;
         if (data.externalUserId) document.getElementById('nondoc-check-ext-id').textContent = data.externalUserId;
+
+        // Display applicant info (name, gender, DOB, nationality)
+        var ndInfo = data.info || data.fixedInfo || {};
+        var ndFullName = [ndInfo.firstNameEn || ndInfo.firstName, ndInfo.lastNameEn || ndInfo.lastName].filter(Boolean).join(' ');
+        document.getElementById('nondoc-check-name').textContent = ndFullName || '—';
+        var ndGender = ndInfo.gender || '';
+        var ndGenderMap = { 'M': 'Male', 'F': 'Female', 'X': 'Non-binary' };
+        document.getElementById('nondoc-check-gender').textContent = ndGenderMap[ndGender] || ndGender || '—';
+        document.getElementById('nondoc-check-dob').textContent = ndInfo.dob || '—';
+        document.getElementById('nondoc-check-nationality').textContent = ndInfo.nationality || ndInfo.country || '—';
 
         var status = review.reviewStatus || 'unknown';
         var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>KYC Verification Result</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 40px; max-width: 520px; width: 100%; }
+  .icon { font-size: 56px; margin-bottom: 12px; }
+  h2 { margin: 0 0 12px; font-size: 22px; }
+  .status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+  p { color: #666; margin: 4px 0; font-size: 14px; line-height: 1.6; }
+  .meta { background: #f8f8f8; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .meta-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+  .meta-row:last-child { border-bottom: none; }
+  .meta-label { color: #888; }
+  .meta-value { font-family: monospace; color: #333; }
+  .btn { display: inline-block; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; margin-top: 20px; }
+  .btn:hover { opacity: 0.9; }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-outline { background: transparent; color: #2563eb; border: 1px solid #2563eb; margin-left: 8px; }
+  .steps { margin-top: 20px; text-align: left; }
+  .steps h4 { margin: 0 0 12px; color: #333; font-size: 15px; }
+  .step { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; color: #555; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #2563eb; color: #fff; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .step-alert { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; }
+  .step-alert h4 { color: #92400e; margin: 0 0 8px; }
+  .step-alert ul { margin: 8px 0 0 20px; padding: 0; }
+  .step-alert li { margin: 4px 0; font-size: 13px; color: #78350f; }
+  .step-alert p { color: #92400e; font-size: 13px; margin: 8px 0 0; }
+  .step-success { background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 16px; }
+  .step-success p { color: #065f46; font-size: 13px; margin: 0; }
+  .btn-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  /* Hidden template sections */
+  .result-content { display: none; }
+</style></head><body>
+<div class="card" id="card">
+  <!-- Loading state -->
+  <div id="loading" style="text-align:center;padding:40px">
+    <div style="font-size:48px">⏳</div>
+    <p>Processing verification result...</p>
+  </div>
+
+  <!-- Success result -->
+  <div class="result-content" id="result-success">
+    <div class="icon">✅</div>
+    <h2>Verification Completed</h2>
+    <div class="status-badge" style="background:#ecfdf5;color:#059669;border:1px solid #059669">Approved</div>
+    <p id="s-userid">External User ID: <strong>—</strong></p>
+    <p id="s-appid" style="display:none">Applicant ID: <strong>—</strong></p>
+    <div class="meta" id="s-meta"></div>
+    <div class="step-success">
+      <p>Applicant identity has been verified. You may now proceed with AML screening and transfer initiation.</p>
+    </div>
+    <div class="steps">
+      <h4>Next Steps</h4>
+      <div class="step"><span class="step-num">1</span> Identity verified — applicant record created in Sumsub</div>
+      <div class="step"><span class="step-num">2</span> Proceed to screening — AML check via Elliptic</div>
+      <div class="step"><span class="step-num">3</span> Transfer initiation — Travel Rule message to counterparty VASP</div>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-primary" href="/onboarding">Back to Onboarding</a>
+      <a class="btn btn-outline" href="/screening">Go to Screening</a>
+    </div>
+  </div>
+
+  <!-- Reject result -->
+  <div class="result-content" id="result-reject">
+    <div class="icon">❌</div>
+    <h2>Verification Rejected</h2>
+    <div class="status-badge" style="background:#fef2f2;color:#dc2626;border:1px solid #dc2626">Rejected</div>
+    <p id="r-userid">External User ID: <strong>—</strong></p>
+    <p id="r-appid" style="display:none">Applicant ID: <strong>—</strong></p>
+    <div class="meta" id="r-meta"></div>
+    <div class="steps">
+      <div class="step-alert">
+        <h4>⚠ Action Required</h4>
+        <p>The applicant did not pass identity verification. Possible reasons:</p>
+        <ul>
+          <li>Document quality insufficient or expired</li>
+          <li>Face match failed liveness check</li>
+          <li>Information mismatch across documents</li>
+          <li>Sanctions or PEP match detected</li>
+        </ul>
+        <p>Notify the applicant and request resubmission or escalate for manual review.</p>
+      </div>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-primary" href="/onboarding">Back to Onboarding</a>
+    </div>
+  </div>
+
+  <!-- Unknown/fallback result -->
+  <div class="result-content" id="result-unknown">
+    <div class="icon">⏳</div>
+    <h2>Verification Result</h2>
+    <div class="status-badge" style="background:#fffbeb;color:#f59e0b;border:1px solid #f59e0b">Unknown</div>
+    <p id="u-userid">External User ID: <strong>—</strong></p>
+    <p id="u-appid" style="display:none">Applicant ID: <strong>—</strong></p>
+    <div class="meta" id="u-meta"></div>
+    <div class="steps">
+      <div class="step-alert">
+        <p>Verification result could not be determined. Check the applicant status in the onboarding dashboard or review webhook logs.</p>
+      </div>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-primary" href="/onboarding">Back to Onboarding</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var action = params.get('action') || 'unknown';
+  var externalUserId = params.get('externalUserId') || '—';
+  var applicantId = params.get('applicantId') || '';
+  var timestamp = new Date().toISOString();
+
+  // Hide loading
+  document.getElementById('loading').style.display = 'none';
+
+  function showResult(id, userId, appId, ts) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = 'block';
+
+    var uidEl = el.querySelector('[id$="-userid"]');
+    if (uidEl) uidEl.innerHTML = 'External User ID: <strong>' + userId + '</strong>';
+
+    var aidEl = el.querySelector('[id$="-appid"]');
+    if (aidEl && appId) {
+      aidEl.style.display = 'block';
+      aidEl.innerHTML = 'Applicant ID: <strong>' + appId + '</strong>';
+    }
+
+    var metaEl = el.querySelector('[id$="-meta"]');
+    if (metaEl) {
+      var resultLabel = id === 'result-success' ? 'Approved' : id === 'result-reject' ? 'Rejected' : 'Unknown';
+      metaEl.innerHTML =
+        '<div class="meta-row"><span class="meta-label">Result</span><span class="meta-value">' + resultLabel + '</span></div>' +
+        '<div class="meta-row"><span class="meta-label">External User ID</span><span class="meta-value">' + userId + '</span></div>' +
+        '<div class="meta-row"><span class="meta-label">Applicant ID</span><span class="meta-value">' + (appId || '—') + '</span></div>' +
+        '<div class="meta-row"><span class="meta-label">Timestamp</span><span class="meta-value">' + ts + '</span></div>';
+    }
+  }
+
+  if (action === 'success') {
+    showResult('result-success', externalUserId, applicantId, timestamp);
+  } else if (action === 'reject') {
+    showResult('result-reject', externalUserId, applicantId, timestamp);
+  } else {
+    showResult('result-unknown', externalUserId, applicantId, timestamp);
+  }
+})();
+</script>
+</body></html>
