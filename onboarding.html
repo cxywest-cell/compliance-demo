@@ -229,7 +229,7 @@
         <span class="step-arrow" id="s-arrow-2">→</span>
         <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
         <span class="step-arrow" id="s-arrow-3">→</span>
-        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
+        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Action Check</span></div>
       </div>
 
       <!-- ═══ Step 1: Set User ID ═══ -->
@@ -279,15 +279,25 @@
         </div>
       </div>
 
-      <!-- ═══ Step 4: Decision ═══ -->
-      <div class="section-title">Step 4: Decision</div>
+      <!-- ═══ Step 4: Request Action Check ═══ -->
+      <div class="section-title">Step 4: Request Action Check</div>
       <div class="card">
         <div class="card-header">
-          <span>Action</span>
-          <button class="btn btn-run" id="doc-btn-decision" onclick="docDecision()" disabled>Apply</button>
+          <span>Action Check</span>
+          <button class="btn btn-run" id="doc-btn-action" onclick="docActionCheck()" disabled>Request Check</button>
         </div>
-        <div class="card-body">
-          <div style="color:#888;font-size:12px" id="doc-decision-hint">After checking status, approve or reject the applicant.</div>
+        <div class="card-body" id="doc-action-area">
+          <div class="field" style="margin-bottom:8px">
+            <label style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;display:block;margin-bottom:4px">Action ID</label>
+            <input type="text" id="doc-action-id" placeholder="Enter applicant action ID" style="width:100%;padding:6px 10px;border:1px solid #d0d0d0;border-radius:4px;font-size:12px;font-family:monospace" />
+            <div class="hint" style="font-size:10px;color:#aaa;margin-top:2px">Obtained from action submission or Get applicant actions API</div>
+          </div>
+          <div id="doc-action-result" style="display:none;margin-top:8px">
+            <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-action-review-status"><span class="badge badge-gray">—</span></span></div>
+            <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-action-review-answer"><span class="badge badge-gray">—</span></span></div>
+            <div class="result-row"><span class="rk">Level Name</span><span class="rv mono" id="doc-action-level">—</span></div>
+            <div class="result-row"><span class="rk">Elapsed</span><span class="rv mono" id="doc-action-elapsed">—</span></div>
+          </div>
         </div>
       </div>
 
@@ -504,6 +514,7 @@ function restoreState() {
       if (state.doc.userId) {
         document.getElementById('doc-btn-link').disabled = false;
         document.getElementById('doc-btn-status').disabled = false;
+        document.getElementById('doc-btn-action').disabled = false;
         var btn = document.getElementById('doc-btn-link');
         btn.textContent = state.doc.linked ? 'Regenerate Link' : 'Generate';
       }
@@ -684,6 +695,7 @@ async function docCheckStatus() {
         docLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
       }
       btn.textContent = 'Refresh Status'; btn.disabled = false;
+      document.getElementById('doc-btn-action').disabled = false;
       saveState();
     } catch(e) {
       docLog('#ff7b72', 'Network error: ' + e.message);
@@ -715,68 +727,70 @@ async function docCheckStatus() {
   }
 }
 
-async function docDecision() {
-  if (!docState.userId) return;
-  var choice = prompt('Decision for ' + docState.userId + '?\\nType APPROVE or REJECT:', 'APPROVE');
-  if (!choice) return;
-  choice = choice.toUpperCase().trim();
-  if (choice !== 'APPROVE' && choice !== 'REJECT') return;
+async function docActionCheck() {
+  var actionId = document.getElementById('doc-action-id').value.trim();
+  if (!actionId) { alert('Enter an Action ID first'); return; }
 
-  var btn = document.getElementById('doc-btn-decision');
-  btn.disabled = true; btn.textContent = 'Processing...';
+  var btn = document.getElementById('doc-btn-action');
+  btn.disabled = true; btn.textContent = 'Checking...';
 
   if (kycMode === 'real') {
-    docLog('#79c0ff', 'POST /api/decision');
-    docLog('#d2a8ff', 'Body: { "externalUserId": "' + docState.userId + '", "action": "' + choice + '" }');
+    docLog('#79c0ff', 'POST /api/action-check');
+    docLog('#d2a8ff', 'Body: { "actionId": "' + actionId + '" }');
 
     try {
-      var res = await fetch('/api/decision', {
+      var res = await fetch('/api/action-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ externalUserId: docState.userId, action: choice })
+        body: JSON.stringify({ actionId: actionId })
       });
       var data = await res.json();
-      if (data.ok) {
-        docLog('#7ee787', 'Decision applied: ' + choice);
-        if (choice === 'APPROVE') {
-          document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
-          document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-          document.getElementById('doc-applicant-status').textContent = 'approved';
-          document.getElementById('doc-applicant-status').className = 'badge badge-green';
+      if (data.error) {
+        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+      } else {
+        docLog('#79c0ff', '200 OK');
+        var review = data.review || {};
+        var reviewResult = review.reviewResult || {};
+        docLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
+        if (reviewResult.reviewAnswer) docLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
+
+        var status = review.reviewStatus || 'unknown';
+        var statusClass = status === 'completed' ? 'badge-green' :
+                          status === 'onHold' || status === 'pending' ? 'badge-yellow' : 'badge-gray';
+        document.getElementById('doc-action-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+        if (reviewResult.reviewAnswer) {
+          var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
+          document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
+        }
+        if (review.levelName) document.getElementById('doc-action-level').textContent = review.levelName;
+        if (review.elapsedSincePendingMs) document.getElementById('doc-action-elapsed').textContent = review.elapsedSincePendingMs + 'ms';
+        document.getElementById('doc-action-result').style.display = 'block';
+
+        if (status === 'completed' && reviewResult.reviewAnswer === 'GREEN') {
           document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-        } else {
-          document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
-          document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
-          document.getElementById('doc-applicant-status').textContent = 'rejected';
-          document.getElementById('doc-applicant-status').className = 'badge badge-red';
         }
         setStep('s', 4, 4);
-      } else {
-        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
       }
-      btn.textContent = 'Decision'; btn.disabled = false;
+      btn.textContent = 'Request Check'; btn.disabled = false;
     } catch(e) {
       docLog('#ff7b72', 'Network error: ' + e.message);
       btn.textContent = 'Retry'; btn.disabled = false;
     }
   } else {
-    docLog('#79c0ff', 'Decision: ' + choice);
-    await sleep(400);
-    docLog('#7ee787', 'Decision applied: ' + choice);
-    if (choice === 'APPROVE') {
-      document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
-      document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-      document.getElementById('doc-applicant-status').textContent = 'approved';
-      document.getElementById('doc-applicant-status').className = 'badge badge-green';
-      document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-    } else {
-      document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
-      document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
-      document.getElementById('doc-applicant-status').textContent = 'rejected';
-      document.getElementById('doc-applicant-status').className = 'badge badge-red';
-    }
+    docLog('#79c0ff', 'POST /api/action-check (actionId: ' + actionId + ')');
+    await sleep(600);
+    docLog('#79c0ff', '200 OK');
+    docLog('#d2a8ff', 'reviewStatus: completed');
+    docLog('#d2a8ff', 'reviewAnswer: GREEN');
+
+    document.getElementById('doc-action-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+    document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('doc-action-level').textContent = 'kyc-test-daniel-260618';
+    document.getElementById('doc-action-elapsed').textContent = '120ms';
+    document.getElementById('doc-action-result').style.display = 'block';
+    document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
     setStep('s', 4, 4);
-    btn.textContent = 'Decision'; btn.disabled = false;
+    btn.textContent = 'Request Check'; btn.disabled = false;
   }
 }
 
