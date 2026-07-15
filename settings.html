@@ -429,10 +429,10 @@ var defaults = {
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.notabene.io',
   notabeneApiKey: '',
-  eaDid: 'did:ethr:0xEA...', eaApikey: '', eaApisecret: '', eaWallet: '0xEA...',
-  caDid: 'did:ethr:0xCA...', caApikey: '', caApisecret: '', caWallet: '0xCA...',
-  ebDid: 'did:ethr:0xEB...', ebApikey: '', ebApisecret: '', ebWallet: '0xEB...',
-  cbDid: 'did:ethr:0xCB...', cbApikey: '', cbApisecret: '', cbWallet: '0xCB...'
+  eaDid: 'did:trisa:entity-a-0x3f8a', eaApikey: 'lC0eHOAkD6sYYYR5hVpMFXCmC9ZaDD1k', eaApisecret: 'TS8cReg-ZE60XXB3U9midw3Hi4jIIl8O2Plo-5cZO9iQN5y2iIesfaqinRlsh7UQ', eaWallet: '0x3f8a...c71d',
+  caDid: 'did:trisa:custodian-a-vasp', caApikey: 'ca_sbx_8f2e9a1b3c4d5e6f', caApisecret: 'TS8cReg-A1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvWxYz-1234567890abcdef', caWallet: '0x7c4e...b93a',
+  ebDid: 'did:trisa:entity-b-0x9e2b', ebApikey: 'eb_sbx_7d1c2b3a4e5f6g7h', ebApisecret: 'TS8cReg-B2c3D4e5F6g7H8i9J0k1LmNoPqRsTuVwXyZa-0987654321fedcba', ebWallet: '0x9e2b...d48f',
+  cbDid: 'did:trisa:custodian-b-vasp', cbApikey: 'cb_sbx_6e3d4c5b2a1f0g9h', cbApisecret: 'TS8cReg-C3d4E5f6G7h8I9j0K1l2MnOpQrStUvWxYzAb-fedcba0987654321', cbWallet: '0x2d5a...e81c'
 };
 
 function loadSettings() {
@@ -679,7 +679,11 @@ function updatePreviews() {
   var up = document.getElementById('s-url-preview');
   if (up && baseUrl) {
     up.style.display = 'block';
-    up.innerHTML = '<span class="k">redirectUrl:</span> <span class="v">' + baseUrl + '/callback?externalUserId={userId}&amp;jwt={jwt}</span>';
+    up.innerHTML = '<span class="k">redirect:</span> <span class="v">{' +
+      '<br>&nbsp;&nbsp;<span class="k">successUrl:</span> <span class="v">' + baseUrl + '/callback?externalUserId={userId}&amp;action=success</span>' +
+      '<br>&nbsp;&nbsp;<span class="k">rejectUrl:</span> <span class="v">' + baseUrl + '/callback?externalUserId={userId}&amp;action=reject</span>' +
+      '<br>&nbsp;&nbsp;<span class="k">signKey:</span> <span class="v">SUMSUB_WEBSDK_SECRET</span>' +
+      '<br>}</span>';
   }
 }
 
