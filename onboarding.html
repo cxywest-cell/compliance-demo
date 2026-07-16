@@ -131,24 +131,32 @@
     <!-- ═══════════════════════════════════════════════ -->
     <div class="tab-pane active" id="tab-corporate">
 
-      <div class="info-note"><strong>KB</strong> Know Your Business — corporate entity verification with UBO disclosure, document collection, and custodian linkage.</div>
+      <div class="info-note"><strong>Sumsub KYB (Doc)</strong> kyb-test-daniel-0626 level — corporate entity verification with UBO disclosure, document collection, and custodian linkage.</div>
 
       <!-- Flow Steps -->
       <div class="flow-steps">
-        <div class="step"><span class="step-num done">1</span><span class="step-label done">Entity Info</span></div>
-        <span class="step-arrow done">→</span>
-        <div class="step"><span class="step-num done">2</span><span class="step-label done">UBO Disclosure</span></div>
-        <span class="step-arrow done">→</span>
-        <div class="step"><span class="step-num active">3</span><span class="step-label active">Documents</span></div>
-        <span class="step-arrow">→</span>
-        <div class="step"><span class="step-num">4</span><span class="step-label">Compliance Review</span></div>
-        <span class="step-arrow">→</span>
-        <div class="step"><span class="step-num">5</span><span class="step-label">Custodian Link</span></div>
+        <div class="step" id="k-step-1"><span class="step-num">1</span><span class="step-label">Entity Info</span></div>
+        <span class="step-arrow" id="k-arrow-1">→</span>
+        <div class="step" id="k-step-2"><span class="step-num">2</span><span class="step-label">Check Exists</span></div>
+        <span class="step-arrow" id="k-arrow-2">→</span>
+        <div class="step" id="k-step-3"><span class="step-num">3</span><span class="step-label">Create KYB Link</span></div>
+        <span class="step-arrow" id="k-arrow-3">→</span>
+        <div class="step" id="k-step-4"><span class="step-num">4</span><span class="step-label">Check Exists</span></div>
+        <span class="step-arrow" id="k-arrow-4">→</span>
+        <div class="step" id="k-step-5"><span class="step-num">5</span><span class="step-label">Check Status</span></div>
+        <span class="step-arrow" id="k-arrow-5">→</span>
+        <div class="step" id="k-step-6"><span class="step-num">6</span><span class="step-label">Run AML</span></div>
+        <span class="step-arrow" id="k-arrow-6">→</span>
+        <div class="step" id="k-step-7"><span class="step-num">7</span><span class="step-label">AML Case Data</span></div>
       </div>
 
       <!-- Entity Information -->
       <div class="section-title">Entity Information</div>
-      <div class="card">
+      <div class="card" id="kyb-entity-card">
+        <div class="card-header">
+          <span>Corporate Entity</span>
+          <button class="btn btn-run" id="kyb-btn-setid" onclick="kybSetEntityId()" style="padding:2px 10px;font-size:10px">Generate</button>
+        </div>
         <div class="card-body">
           <div class="result-row"><span class="rk">Entity Name</span><span class="rv">Cregis Digital Assets Ltd</span></div>
           <div class="result-row"><span class="rk">Legal Type</span><span class="rv"><span class="badge badge-blue">Limited Company</span></span></div>
@@ -156,66 +164,123 @@
           <div class="result-row"><span class="rk">Registration No</span><span class="rv mono">BVI-20485719</span></div>
           <div class="result-row"><span class="rk">DID</span><span class="rv mono">did:trisa:entity-a-0x3f8a</span></div>
           <div class="result-row"><span class="rk">VASP Code</span><span class="rv">VASP-CN-0892</span></div>
-          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-orange">In Progress</span></span></div>
+          <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="kyb-ext-id">—</span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="kyb-app-id">—</span></div>
+          <div class="result-row"><span class="rk">Level Name</span><span class="rv mono">kyb-test-daniel-0626</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="kyb-applicant-status">Not Started</span></span></div>
         </div>
       </div>
 
-      <!-- UBO Disclosure -->
-      <div class="section-title">UBO Disclosure (Ultimate Beneficial Owners)</div>
+      <!-- Step 2: Check Existence (Pre-Link) -->
+      <div class="section-title">Step 2: Check Existence (Pre-Link)</div>
       <div class="card">
         <div class="card-header">
-          <span>Beneficial Ownership Structure</span>
-          <span class="badge badge-green">3 UBOs Identified</span>
+          <span>GET /resources/applicants/-/byExternalUserId/{externalUserId}</span>
+          <button class="btn btn-run" id="kyb-btn-check-exists-pre" onclick="kybCheckExists('pre')" disabled>Check</button>
         </div>
-        <div class="card-body">
-          <table>
-            <tr><th>Name</th><th>Ownership %</th><th>Nationality</th><th>Role</th><th>Verified</th></tr>
-            <tr>
-              <td>Zhang Wei</td>
-              <td>42%</td>
-              <td>🇨🇳 PRC</td>
-              <td>CEO & Director</td>
-              <td><span class="badge badge-green">Verified</span></td>
-            </tr>
-            <tr>
-              <td>Li Ming</td>
-              <td>33%</td>
-              <td>🇸🇬 Singapore</td>
-              <td>CTO & Director</td>
-              <td><span class="badge badge-green">Verified</span></td>
-            </tr>
-            <tr>
-              <td>Chen Jie</td>
-              <td>25%</td>
-              <td>🇭🇰 Hong Kong</td>
-              <td>CFO</td>
-              <td><span class="badge badge-orange">Pending</span></td>
-            </tr>
-          </table>
+        <div class="card-body" id="kyb-check-exists-pre-area">
+          <div class="result-row"><span class="rk">Exists</span><span class="rv"><span class="badge badge-gray" id="kyb-exists-pre-bool">—</span></span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="kyb-exists-pre-appid">—</span></div>
+          <div class="result-row"><span class="rk">Type</span><span class="rv mono" id="kyb-exists-pre-type">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="kyb-exists-pre-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="kyb-exists-pre-created">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="kyb-exists-pre-hint">Set Entity ID first, then check if this entity already exists in Sumsub.</div>
         </div>
       </div>
 
-      <!-- Document Checklist -->
-      <div class="section-title">Document Checklist</div>
+      <!-- Step 3: Create KYB Link -->
+      <div class="section-title">Step 3: Create KYB Link</div>
       <div class="card">
-        <div class="card-body">
-          <div class="doc-check"><span class="doc-icon">✓</span> Certificate of Incorporation <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
-          <div class="doc-check"><span class="doc-icon">✓</span> Articles of Association <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
-          <div class="doc-check"><span class="doc-icon">✓</span> Register of Directors <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
-          <div class="doc-check"><span class="doc-icon">✓</span> Register of Members / Shareholders <span class="badge badge-green" style="margin-left:auto">Submitted</span></div>
-          <div class="doc-check"><span class="doc-icon">⏳</span> UBO Passport Copies <span class="badge badge-orange" style="margin-left:auto">2/3 Received</span></div>
-          <div class="doc-check"><span class="doc-icon">✗</span> Proof of Business Address <span class="badge badge-gray" style="margin-left:auto">Not Received</span></div>
+        <div class="card-header">
+          <span>WebSDK Link — POST /resources/sdkIntegrations/levels/-/websdkLink</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-outline" id="kyb-btn-open" onclick="kybOpenLink()" disabled style="display:none">Open</button>
+            <button class="btn btn-run" id="kyb-btn-link" onclick="kybGenLink()" disabled>Generate</button>
+          </div>
+        </div>
+        <div class="card-body" id="kyb-link-area">
+          <div style="color:#888;font-size:12px" id="kyb-link-placeholder">Click Generate to create a WebSDK link for this entity.</div>
         </div>
       </div>
 
-      <!-- Custodian Link -->
-      <div class="section-title">Custodian Linkage</div>
+      <!-- Step 4: Check Existence (Post-Link) -->
+      <div class="section-title">Step 4: Check Existence (Post-Link)</div>
       <div class="card">
-        <div class="card-body">
-          <div class="result-row"><span class="rk">Custodian</span><span class="rv"><span class="badge badge-blue">Custodian A</span></span></div>
-          <div class="result-row"><span class="rk">VASP DID</span><span class="rv mono">did:trisa:custodian-a-vasp</span></div>
-          <div class="result-row"><span class="rk">Hot Wallet</span><span class="rv mono">0x7c4e...b93a</span></div>
-          <div class="result-row"><span class="rk">Link Status</span><span class="rv"><span class="badge badge-gray">Pending</span></span></div>
+        <div class="card-header">
+          <span>GET /resources/applicants/-/byExternalUserId/{externalUserId}</span>
+          <button class="btn btn-run" id="kyb-btn-check-exists-post" onclick="kybCheckExists('post')" disabled>Check</button>
+        </div>
+        <div class="card-body" id="kyb-check-exists-post-area">
+          <div class="result-row"><span class="rk">Exists</span><span class="rv"><span class="badge badge-gray" id="kyb-exists-post-bool">—</span></span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="kyb-exists-post-appid">—</span></div>
+          <div class="result-row"><span class="rk">Type</span><span class="rv mono" id="kyb-exists-post-type">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="kyb-exists-post-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="kyb-exists-post-created">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="kyb-exists-post-hint">After creating the link, check again — Sumsub may have created the applicant lazily on link generation.</div>
+        </div>
+      </div>
+
+      <!-- Step 5: Check Status -->
+      <div class="section-title">Step 5: Check Status</div>
+      <div class="card">
+        <div class="card-header">
+          <span>Status</span>
+          <button class="btn btn-run" id="kyb-btn-status" onclick="kybCheckStatus()" disabled>Check</button>
+        </div>
+        <div class="card-body" id="kyb-status-area">
+          <div class="result-row"><span class="rk">Company Name</span><span class="rv mono" id="kyb-check-name">—</span></div>
+          <div class="result-row"><span class="rk">Country</span><span class="rv mono" id="kyb-check-country">—</span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="kyb-check-app-id">—</span></div>
+          <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="kyb-check-ext-id">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="kyb-review-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="kyb-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Client Comment</span><span class="rv mono" id="kyb-client-comment">—</span></div>
+          <div class="result-row"><span class="rk">Moderation Comment</span><span class="rv mono" id="kyb-moderation-comment">—</span></div>
+        </div>
+      </div>
+
+      <!-- Beneficiaries / Associated Parties -->
+      <div class="section-title">Beneficiaries / Associated Parties</div>
+      <div class="card">
+        <div class="card-header">
+          <span>UBOs, Directors & Shareholders</span>
+          <span class="badge badge-gray" id="kyb-beneficiaries-count">—</span>
+        </div>
+        <div class="card-body" id="kyb-beneficiaries-area">
+          <div id="kyb-beneficiaries-list" style="font-size:11px;color:#888;text-align:center;padding:20px 0">No beneficiaries loaded. Check status first.</div>
+        </div>
+      </div>
+
+      <!-- Step 6: Run AML Check -->
+      <div class="section-title">Step 6: Run AML Check</div>
+      <div class="card">
+        <div class="card-header">
+          <span>POST /resources/applicants/{applicantId}/recheck/aml</span>
+          <button class="btn btn-run" id="kyb-btn-run-aml" onclick="kybRunAmlCheck()" disabled>Run AML</button>
+        </div>
+        <div class="card-body" id="kyb-aml-area">
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="kyb-aml-run-status">—</span></span></div>
+          <div class="result-row"><span class="rk">OK</span><span class="rv mono" id="kyb-aml-run-ok">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="kyb-aml-run-hint">Run AML screening on the approved entity. This triggers a sanctions/PEP/adverse media check.</div>
+        </div>
+      </div>
+
+      <!-- Step 7: Get AML Case Data -->
+      <div class="section-title">Step 7: Get AML Case Data</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/api/applicants/{applicantId}/amlCase</span>
+          <button class="btn btn-run" id="kyb-btn-get-aml" onclick="kybGetAmlCase()" disabled>Get AML Case</button>
+        </div>
+        <div class="card-body" id="kyb-aml-case-area">
+          <div class="result-row"><span class="rk">Case ID</span><span class="rv mono" id="kyb-aml-case-id">—</span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="kyb-aml-case-created">—</span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="kyb-aml-case-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Vendor</span><span class="rv mono" id="kyb-aml-case-vendor">—</span></div>
+          <div class="result-row"><span class="rk">Hits Count</span><span class="rv mono" id="kyb-aml-case-hits">—</span></div>
+          <div class="result-row"><span class="rk">Ongoing Monitoring</span><span class="rv mono" id="kyb-aml-case-monitoring">—</span></div>
+          <div class="result-row"><span class="rk">Risk Labels</span><span class="rv mono" id="kyb-aml-case-risklabels">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="kyb-aml-case-hint">Retrieve the most recent AML case for this entity, including hits, risk labels, and screening details.</div>
         </div>
       </div>
 
@@ -232,13 +297,17 @@
       <div class="flow-steps">
         <div class="step" id="s-step-1"><span class="step-num">1</span><span class="step-label">Set User ID</span></div>
         <span class="step-arrow" id="s-arrow-1">→</span>
-        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">Create Link</span></div>
+        <div class="step" id="s-step-2"><span class="step-num">2</span><span class="step-label">Check Exists</span></div>
         <span class="step-arrow" id="s-arrow-2">→</span>
-        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
+        <div class="step" id="s-step-3"><span class="step-num">3</span><span class="step-label">Create Link</span></div>
         <span class="step-arrow" id="s-arrow-3">→</span>
-        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Upload Documents</span></div>
+        <div class="step" id="s-step-4"><span class="step-num">4</span><span class="step-label">Check Exists</span></div>
         <span class="step-arrow" id="s-arrow-4">→</span>
-        <div class="step" id="s-step-5"><span class="step-num">5</span><span class="step-label">Action Check</span></div>
+        <div class="step" id="s-step-5"><span class="step-num">5</span><span class="step-label">Check Status</span></div>
+        <span class="step-arrow" id="s-arrow-5">→</span>
+        <div class="step" id="s-step-6"><span class="step-num">6</span><span class="step-label">Run AML</span></div>
+        <span class="step-arrow" id="s-arrow-6">→</span>
+        <div class="step" id="s-step-7"><span class="step-num">7</span><span class="step-label">AML Case Data</span></div>
       </div>
 
       <!-- ═══ Step 1: Set User ID ═══ -->
@@ -257,8 +326,25 @@
         </div>
       </div>
 
-      <!-- ═══ Step 2: Create Link ═══ -->
-      <div class="section-title">Step 2: Create Link</div>
+      <!-- ═══ Step 2: Check Existence (Pre-Link) ═══ -->
+      <div class="section-title">Step 2: Check Existence (Pre-Link)</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/applicants/-/byExternalUserId/{externalUserId}</span>
+          <button class="btn btn-run" id="doc-btn-check-exists-pre" onclick="docCheckExists('pre')" disabled>Check</button>
+        </div>
+        <div class="card-body" id="doc-check-exists-pre-area">
+          <div class="result-row"><span class="rk">Exists</span><span class="rv"><span class="badge badge-gray" id="doc-exists-pre-bool">—</span></span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-exists-pre-appid">—</span></div>
+          <div class="result-row"><span class="rk">Type</span><span class="rv mono" id="doc-exists-pre-type">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-exists-pre-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="doc-exists-pre-created">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="doc-exists-pre-hint">Set User ID first, then check if this user already exists in Sumsub.</div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 3: Create Link ═══ -->
+      <div class="section-title">Step 3: Create Link</div>
       <div class="card">
         <div class="card-header">
           <span>WebSDK Link</span>
@@ -272,8 +358,25 @@
         </div>
       </div>
 
-      <!-- ═══ Step 3: Check Status ═══ -->
-      <div class="section-title">Step 3: Check Status</div>
+      <!-- ═══ Step 4: Check Existence (Post-Link) ═══ -->
+      <div class="section-title">Step 4: Check Existence (Post-Link)</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/applicants/-/byExternalUserId/{externalUserId}</span>
+          <button class="btn btn-run" id="doc-btn-check-exists-post" onclick="docCheckExists('post')" disabled>Check</button>
+        </div>
+        <div class="card-body" id="doc-check-exists-post-area">
+          <div class="result-row"><span class="rk">Exists</span><span class="rv"><span class="badge badge-gray" id="doc-exists-post-bool">—</span></span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-exists-post-appid">—</span></div>
+          <div class="result-row"><span class="rk">Type</span><span class="rv mono" id="doc-exists-post-type">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-exists-post-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="doc-exists-post-created">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="doc-exists-post-hint">After creating the link, check again — Sumsub may have created the applicant lazily on link generation.</div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 5: Check Status ═══ -->
+      <div class="section-title">Step 5: Check Status</div>
       <div class="card">
         <div class="card-header">
           <span>Status</span>
@@ -288,49 +391,44 @@
           <div class="result-row"><span class="rk">External UserId</span><span class="rv mono" id="doc-check-ext-id">—</span></div>
           <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-review-status"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Client Comment</span><span class="rv mono" id="doc-client-comment">—</span></div>
+          <div class="result-row"><span class="rk">Moderation Comment</span><span class="rv mono" id="doc-moderation-comment">—</span></div>
           <div class="result-row"><span class="rk">Documents</span><span class="rv" id="doc-docs-status">—</span></div>
           <div class="result-row"><span class="rk">Liveness</span><span class="rv" id="doc-liveness-status">—</span></div>
           <div class="result-row"><span class="rk">AML</span><span class="rv" id="doc-aml-status">—</span></div>
-          <div class="result-row"><span class="rk">Custodian Wallet</span><span class="rv" id="doc-wallet-status"><span class="badge badge-gray">Generated on approval</span></span></div>
         </div>
       </div>
 
-      <!-- ═══ Step 4: Upload Documents ═══ -->
-      <div class="section-title">Step 4: Upload Documents</div>
+      <!-- ═══ Step 6: Run AML Check ═══ -->
+      <div class="section-title">Step 6: Run AML Check</div>
       <div class="card">
         <div class="card-header">
-          <span>Verification Documents</span>
-          <button class="btn btn-run" id="doc-btn-upload" onclick="docUploadDocuments()" disabled>Upload All</button>
+          <span>POST /resources/applicants/{applicantId}/recheck/aml</span>
+          <button class="btn btn-run" id="doc-btn-run-aml" onclick="docRunAmlCheck()" disabled>Run AML</button>
         </div>
-        <div class="card-body" id="doc-upload-area">
-          <div class="doc-upload-row">
-            <div class="doc-upload-item">
-              <span class="doc-label">Passport</span>
-              <input type="file" id="doc-passport-file" accept="image/*,.pdf" disabled>
-              <span class="doc-status" id="doc-passport-status">Not uploaded</span>
-            </div>
-            <div class="doc-upload-item">
-              <span class="doc-label">Proof of Address</span>
-              <input type="file" id="doc-poa-file" accept="image/*,.pdf" disabled>
-              <span class="doc-status" id="doc-poa-status">Not uploaded</span>
-            </div>
-          </div>
-          <div id="doc-upload-log" style="margin-top:8px;font-size:11px;font-family:monospace;color:#888"></div>
+        <div class="card-body" id="doc-aml-area">
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="doc-aml-run-status">—</span></span></div>
+          <div class="result-row"><span class="rk">OK</span><span class="rv mono" id="doc-aml-run-ok">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="doc-aml-run-hint">Run AML screening on the approved applicant. This triggers a sanctions/PEP/adverse media check.</div>
         </div>
       </div>
 
-      <!-- ═══ Step 5: Request Applicant Check ═══ -->
-      <div class="section-title">Step 5: Request Applicant Check</div>
+      <!-- ═══ Step 7: Get AML Case Data ═══ -->
+      <div class="section-title">Step 7: Get AML Case Data</div>
       <div class="card">
         <div class="card-header">
-          <span>Applicant Check</span>
-          <button class="btn btn-run" id="doc-btn-action" onclick="docApplicantCheck()" disabled>Request Check</button>
+          <span>GET /resources/api/applicants/{applicantId}/amlCase</span>
+          <button class="btn btn-run" id="doc-btn-get-aml" onclick="docGetAmlCase()" disabled>Get AML Case</button>
         </div>
-        <div class="card-body" id="doc-action-area">
-          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="doc-check-app-id-for-check">—</span></div>
-          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="doc-action-review-status"><span class="badge badge-gray">—</span></span></div>
-          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-action-review-answer"><span class="badge badge-gray">—</span></span></div>
-          <div class="result-row"><span class="rk">Reject Type</span><span class="rv mono" id="doc-action-reject-type">—</span></div>
+        <div class="card-body" id="doc-aml-case-area">
+          <div class="result-row"><span class="rk">Case ID</span><span class="rv mono" id="doc-aml-case-id">—</span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="doc-aml-case-created">—</span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="doc-aml-case-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Vendor</span><span class="rv mono" id="doc-aml-case-vendor">—</span></div>
+          <div class="result-row"><span class="rk">Hits Count</span><span class="rv mono" id="doc-aml-case-hits">—</span></div>
+          <div class="result-row"><span class="rk">Ongoing Monitoring</span><span class="rv mono" id="doc-aml-case-monitoring">—</span></div>
+          <div class="result-row"><span class="rk">Risk Labels</span><span class="rv mono" id="doc-aml-case-risklabels">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="doc-aml-case-hint">Retrieve the most recent AML case for this applicant, including hits, risk labels, and screening details.</div>
         </div>
       </div>
 
@@ -345,11 +443,15 @@
       <div class="flow-steps">
         <div class="step" id="n-step-1"><span class="step-num">1</span><span class="step-label">Set User ID</span></div>
         <span class="step-arrow" id="n-arrow-1">→</span>
-        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">Create Link</span></div>
+        <div class="step" id="n-step-2"><span class="step-num">2</span><span class="step-label">Check Exists</span></div>
         <span class="step-arrow" id="n-arrow-2">→</span>
-        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
+        <div class="step" id="n-step-3"><span class="step-num">3</span><span class="step-label">Create Link</span></div>
         <span class="step-arrow" id="n-arrow-3">→</span>
-        <div class="step" id="n-step-4"><span class="step-num">4</span><span class="step-label">Decision</span></div>
+        <div class="step" id="n-step-4"><span class="step-num">4</span><span class="step-label">Check Exists</span></div>
+        <span class="step-arrow" id="n-arrow-4">→</span>
+        <div class="step" id="n-step-5"><span class="step-num">5</span><span class="step-label">Check Status</span></div>
+        <span class="step-arrow" id="n-arrow-5">→</span>
+        <div class="step" id="n-step-6"><span class="step-num">6</span><span class="step-label">Decision</span></div>
       </div>
 
       <!-- ═══ Step 1: Set User ID ═══ -->
@@ -368,8 +470,25 @@
         </div>
       </div>
 
-      <!-- ═══ Step 2: Create Link ═══ -->
-      <div class="section-title">Step 2: Create Link</div>
+      <!-- ═══ Step 2: Check Existence (Pre-Link) ═══ -->
+      <div class="section-title">Step 2: Check Existence (Pre-Link)</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/applicants/-/byExternalUserId/{externalUserId}</span>
+          <button class="btn btn-run" id="nondoc-btn-check-exists-pre" onclick="nondocCheckExists('pre')" disabled>Check</button>
+        </div>
+        <div class="card-body" id="nondoc-check-exists-pre-area">
+          <div class="result-row"><span class="rk">Exists</span><span class="rv"><span class="badge badge-gray" id="nondoc-exists-pre-bool">—</span></span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-exists-pre-appid">—</span></div>
+          <div class="result-row"><span class="rk">Type</span><span class="rv mono" id="nondoc-exists-pre-type">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="nondoc-exists-pre-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="nondoc-exists-pre-created">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="nondoc-exists-pre-hint">Set User ID first, then check if this user already exists in Sumsub.</div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 3: Create Link ═══ -->
+      <div class="section-title">Step 3: Create Link</div>
       <div class="card">
         <div class="card-header">
           <span>WebSDK Link</span>
@@ -383,8 +502,25 @@
         </div>
       </div>
 
-      <!-- ═══ Step 3: Check Status ═══ -->
-      <div class="section-title">Step 3: Check Status</div>
+      <!-- ═══ Step 4: Check Existence (Post-Link) ═══ -->
+      <div class="section-title">Step 4: Check Existence (Post-Link)</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/applicants/-/byExternalUserId/{externalUserId}</span>
+          <button class="btn btn-run" id="nondoc-btn-check-exists-post" onclick="nondocCheckExists('post')" disabled>Check</button>
+        </div>
+        <div class="card-body" id="nondoc-check-exists-post-area">
+          <div class="result-row"><span class="rk">Exists</span><span class="rv"><span class="badge badge-gray" id="nondoc-exists-post-bool">—</span></span></div>
+          <div class="result-row"><span class="rk">Applicant ID</span><span class="rv mono" id="nondoc-exists-post-appid">—</span></div>
+          <div class="result-row"><span class="rk">Type</span><span class="rv mono" id="nondoc-exists-post-type">—</span></div>
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="nondoc-exists-post-review"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Created At</span><span class="rv mono" id="nondoc-exists-post-created">—</span></div>
+          <div style="color:#888;font-size:12px;margin-top:4px" id="nondoc-exists-post-hint">After creating the link, check again — Sumsub may have created the applicant lazily on link generation.</div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 5: Check Status ═══ -->
+      <div class="section-title">Step 5: Check Status</div>
       <div class="card">
         <div class="card-header">
           <span>Status</span>
@@ -401,12 +537,11 @@
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="nondoc-review-answer"><span class="badge badge-gray">—</span></span></div>
           <div class="result-row"><span class="rk">ID Verification</span><span class="rv" id="nondoc-id-status">—</span></div>
           <div class="result-row"><span class="rk">Liveness</span><span class="rv" id="nondoc-liveness-status">—</span></div>
-          <div class="result-row"><span class="rk">Custodian Wallet</span><span class="rv" id="nondoc-wallet-status"><span class="badge badge-gray">Generated on approval</span></span></div>
         </div>
       </div>
 
-      <!-- ═══ Step 4: Decision ═══ -->
-      <div class="section-title">Step 4: Decision</div>
+      <!-- ═══ Step 6: Decision ═══ -->
+      <div class="section-title">Step 6: Decision</div>
       <div class="card">
         <div class="card-header">
           <span>Action</span>
@@ -563,7 +698,6 @@ function restoreState() {
       if (state.doc.userId) {
         document.getElementById('doc-btn-link').disabled = false;
         document.getElementById('doc-btn-status').disabled = false;
-        document.getElementById('doc-btn-action').disabled = false;
         var btn = document.getElementById('doc-btn-link');
         btn.textContent = state.doc.linked ? 'Regenerate Link' : 'Generate';
       }
@@ -597,7 +731,7 @@ function docOpenLink() {
 }
 
 function docSetUserId() {
-  docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null, passportUploaded: false, poaUploaded: false };
+  docState = { userId: null, email: null, linked: false, applicantId: null, webSdkUrl: null };
   document.getElementById('doc-ext-id').textContent = '\u2014';
   document.getElementById('doc-app-id').textContent = '\u2014';
   document.getElementById('doc-applicant-status').textContent = 'Not Started';
@@ -605,21 +739,18 @@ function docSetUserId() {
   ['doc-review-status','doc-review-answer','doc-docs-status','doc-liveness-status','doc-aml-status'].forEach(function(id) {
     document.getElementById(id).innerHTML = '<span class="badge badge-gray">\u2014</span>';
   });
-  document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
+  document.getElementById('doc-btn-check-exists-pre').disabled = true;
   document.getElementById('doc-btn-link').disabled = true;
   var docOpenBtn = document.getElementById('doc-btn-open');
   docOpenBtn.style.display = 'none'; docOpenBtn.disabled = true;
+  document.getElementById('doc-btn-check-exists-post').disabled = true;
   document.getElementById('doc-btn-status').disabled = true;
-  document.getElementById('doc-btn-upload').disabled = true;
-  document.getElementById('doc-btn-action').disabled = true;
-  document.getElementById('doc-passport-file').disabled = true;
-  document.getElementById('doc-poa-file').disabled = true;
-  document.getElementById('doc-passport-status').textContent = 'Not uploaded';
-  document.getElementById('doc-poa-status').textContent = 'Not uploaded';
-  var uploadLog = document.getElementById('doc-upload-log');
-  if (uploadLog) uploadLog.innerHTML = '';
+  document.getElementById('doc-btn-run-aml').disabled = true;
+  document.getElementById('doc-btn-get-aml').disabled = true;
+  document.getElementById('doc-client-comment').textContent = '—';
+  document.getElementById('doc-moderation-comment').textContent = '—';
   docClearLog();
-  setStep('s', 0, 5);
+  setStep('s', 0, 7);
 
   var ts = Date.now().toString(36).slice(-6);
   docState.userId = 'user-kyc-' + ts;
@@ -628,8 +759,8 @@ function docSetUserId() {
   document.getElementById('doc-ext-id').textContent = docState.userId;
   docLog('#7ee787', 'User context set: ' + docState.userId);
 
-  setStep('s', 1, 4);
-  document.getElementById('doc-btn-link').disabled = false;
+  setStep('s', 1, 7);
+  document.getElementById('doc-btn-check-exists-pre').disabled = false;
   saveState();
 }
 
@@ -675,9 +806,9 @@ async function docGenLink() {
         var openBtn = document.getElementById('doc-btn-open');
         openBtn.style.display = ''; openBtn.disabled = false;
 
-        setStep('s', 2, 5);
+setStep('s', 3, 7);
         docState.linked = true;
-        document.getElementById('doc-btn-status').disabled = false;
+        document.getElementById('doc-btn-check-exists-post').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
         saveState();
       } else {
@@ -701,11 +832,110 @@ async function docGenLink() {
     docLog('#79c0ff', '200 OK \u2014 url: ' + link.substring(0, 50) + '...');
     docLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
 
-    setStep('s', 2, 5);
+    setStep('s', 3, 7);
     docState.linked = true;
-    document.getElementById('doc-btn-status').disabled = false;
+    document.getElementById('doc-btn-check-exists-post').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
     saveState();
+  }
+}
+
+async function docCheckExists(phase) {
+  if (!docState.userId) return;
+  var isPre = (phase === 'pre');
+  var btnId = isPre ? 'doc-btn-check-exists-pre' : 'doc-btn-check-exists-post';
+  var btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  if (kycMode === 'real') {
+    docLog('#79c0ff', 'POST /api/check-applicant-existence (externalUserId: ' + docState.userId + ')');
+    try {
+      var res = await fetch('/api/check-applicant-existence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: docState.userId })
+      });
+      var data = await res.json();
+      if (data.error) {
+        docLog('#ff7b72', 'Error: ' + data.error);
+        var boolEl = document.getElementById(isPre ? 'doc-exists-pre-bool' : 'doc-exists-post-bool');
+        boolEl.textContent = 'Error';
+        boolEl.className = 'badge badge-red';
+      } else {
+        var exists = data.exists;
+        var applicant = data.applicant || {};
+        docLog('#79c0ff', '200 OK — exists: ' + exists);
+        if (exists && applicant.id) docLog('#d2a8ff', 'applicantId: ' + applicant.id);
+
+        var boolEl = document.getElementById(isPre ? 'doc-exists-pre-bool' : 'doc-exists-post-bool');
+        boolEl.textContent = exists ? 'Yes' : 'No';
+        boolEl.className = 'badge ' + (exists ? 'badge-green' : 'badge-gray');
+
+        var appidEl = document.getElementById(isPre ? 'doc-exists-pre-appid' : 'doc-exists-post-appid');
+        appidEl.textContent = applicant.id || '—';
+
+        var typeEl = document.getElementById(isPre ? 'doc-exists-pre-type' : 'doc-exists-post-type');
+        typeEl.textContent = applicant.type || '—';
+
+        var review = applicant.review || {};
+        var reviewEl = document.getElementById(isPre ? 'doc-exists-pre-review' : 'doc-exists-post-review');
+        if (review.reviewStatus) {
+          var sClass = review.reviewStatus === 'completed' ? 'badge-green' : review.reviewStatus === 'pending' ? 'badge-blue' : 'badge-gray';
+          reviewEl.innerHTML = '<span class="badge ' + sClass + '">' + review.reviewStatus + '</span>';
+        } else {
+          reviewEl.innerHTML = '<span class="badge badge-gray">—</span>';
+        }
+
+        var createdEl = document.getElementById(isPre ? 'doc-exists-pre-created' : 'doc-exists-post-created');
+        createdEl.textContent = applicant.createdAt || '—';
+
+        var hintEl = document.getElementById(isPre ? 'doc-exists-pre-hint' : 'doc-exists-post-hint');
+        if (exists) {
+          hintEl.innerHTML = '<span style="color:#7ee787">Applicant already exists</span> — review details above.';
+        } else {
+          hintEl.innerHTML = '<span style="color:#ffa657">No applicant found</span> — this userId is not yet in Sumsub.';
+        }
+
+        // After pre-check, enable the link button
+        if (isPre) {
+          document.getElementById('doc-btn-link').disabled = false;
+          setStep('s', 2, 7);
+        }
+        // After post-check, enable the status check button
+        if (!isPre) {
+          document.getElementById('doc-btn-status').disabled = false;
+          setStep('s', 4, 7);
+        }
+      }
+      btn.textContent = 'Check Again'; btn.disabled = false;
+    } catch(e) {
+      docLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    // Mock mode
+    docLog('#79c0ff', 'POST /api/check-applicant-existence (mock)');
+    await sleep(400);
+
+    var boolEl = document.getElementById(isPre ? 'doc-exists-pre-bool' : 'doc-exists-post-bool');
+    if (isPre) {
+      boolEl.textContent = 'No';
+      boolEl.className = 'badge badge-gray';
+      document.getElementById(isPre ? 'doc-exists-pre-hint' : 'doc-exists-post-hint').innerHTML = '<span style="color:#ffa657">No applicant found</span> — this userId is not yet in Sumsub.';
+      document.getElementById('doc-btn-link').disabled = false;
+      setStep('s', 2, 7);
+    } else {
+      boolEl.textContent = 'Yes';
+      boolEl.className = 'badge badge-green';
+      document.getElementById(isPre ? 'doc-exists-pre-appid' : 'doc-exists-post-appid').textContent = 'mock-' + Date.now().toString(36).slice(-8);
+      document.getElementById(isPre ? 'doc-exists-pre-type' : 'doc-exists-post-type').textContent = 'individual';
+      document.getElementById(isPre ? 'doc-exists-pre-review' : 'doc-exists-post-review').innerHTML = '<span class="badge badge-blue">pending</span>';
+      document.getElementById(isPre ? 'doc-exists-pre-created' : 'doc-exists-post-created').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      document.getElementById(isPre ? 'doc-exists-pre-hint' : 'doc-exists-post-hint').innerHTML = '<span style="color:#7ee787">Applicant created</span> — review details above.';
+      document.getElementById('doc-btn-status').disabled = false;
+      setStep('s', 4, 7);
+    }
+    btn.textContent = 'Check Again'; btn.disabled = false;
   }
 }
 
@@ -762,22 +992,19 @@ async function docCheckStatus() {
           var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
           document.getElementById('doc-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
         }
+        document.getElementById('doc-client-comment').textContent = reviewResult.clientComment || '—';
+        document.getElementById('doc-moderation-comment').textContent = reviewResult.moderationComment || '—';
 
         if (status === 'completed' || reviewResult.reviewAnswer === 'GREEN') {
-          document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-          setStep('s', 3, 5);
+          document.getElementById('doc-btn-run-aml').disabled = false;
+          setStep('s', 5, 7);
         } else {
-          setStep('s', 3, 5);
+          setStep('s', 5, 7);
         }
       } else {
         docLog('#ff7b72', 'Applicant not found \\u2014 user may not have opened the WebSDK link yet');
       }
       btn.textContent = 'Refresh Status'; btn.disabled = false;
-      if (docState.applicantId) {
-        document.getElementById('doc-btn-upload').disabled = false;
-        document.getElementById('doc-passport-file').disabled = false;
-        document.getElementById('doc-poa-file').disabled = false;
-      }
       saveState();
     } catch(e) {
       docLog('#ff7b72', 'Network error: ' + e.message);
@@ -796,180 +1023,142 @@ async function docCheckStatus() {
     document.getElementById('doc-applicant-status').className = 'badge badge-green';
     document.getElementById('doc-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
     document.getElementById('doc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('doc-client-comment').textContent = '—';
+    document.getElementById('doc-moderation-comment').textContent = '—';
     var mockAppId = 'mock-' + Date.now().toString(36);
     document.getElementById('doc-check-app-id').textContent = mockAppId;
     document.getElementById('doc-check-ext-id').textContent = docState.userId;
     document.getElementById('doc-app-id').textContent = mockAppId;
     document.getElementById('doc-docs-status').innerHTML = '<span class="badge badge-green">ID verified</span>';
     document.getElementById('doc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (98.7%)</span>';
-    document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
+          document.getElementById('doc-btn-run-aml').disabled = false;
 
-    setStep('s', 3, 5);
+    setStep('s', 5, 7);
     btn.textContent = 'Refresh Status'; btn.disabled = false;
     docState.applicantId = mockAppId;
-    document.getElementById('doc-btn-upload').disabled = false;
-    document.getElementById('doc-passport-file').disabled = false;
-    document.getElementById('doc-poa-file').disabled = false;
   }
 }
 
-async function docUploadDocuments() {
+// ─── Step 6: Run AML Check ───
+async function docRunAmlCheck() {
   if (!docState.applicantId) { alert('Check status first to get applicant ID'); return; }
-
-  var passportFile = document.getElementById('doc-passport-file').files[0];
-  var poaFile = document.getElementById('doc-poa-file').files[0];
-  if (!passportFile && !poaFile) { alert('Select at least one document'); return; }
-
-  var btn = document.getElementById('doc-btn-upload');
-  btn.disabled = true; btn.textContent = 'Uploading...';
-
-  var uploadLog = document.getElementById('doc-upload-log');
-  function upLog(color, text) {
-    uploadLog.innerHTML += '<div style="color:' + color + '">' + text + '</div>';
-    uploadLog.scrollTop = uploadLog.scrollHeight;
-  }
-
-  async function uploadDoc(file, info, label) {
-    upLog('#79c0ff', 'Uploading ' + label + ' (' + file.name + ')...');
-    var formData = new FormData();
-    formData.append('applicantId', docState.applicantId);
-    formData.append('info', JSON.stringify(info));
-    formData.append('content', file);
-
-    try {
-      var res = await fetch('/api/upload-doc', { method: 'POST', body: formData });
-      var data = await res.json();
-      if (data.error) {
-        upLog('#ff7b72', label + ' failed: ' + JSON.stringify(data));
-        return false;
-      }
-      upLog('#79c0ff', label + ' OK — idDocId: ' + (data.idDocId || 'N/A'));
-      if (data.warnings && data.warnings.length) {
-        upLog('#ffa657', 'Warnings: ' + JSON.stringify(data.warnings));
-      }
-      return true;
-    } catch(e) {
-      upLog('#ff7b72', label + ' error: ' + e.message);
-      return false;
-    }
-  }
-
-  var success = true;
-
-  if (passportFile) {
-    var passportMeta = {
-      idDocType: 'PASSPORT',
-      country: 'DEU',
-      firstName: 'FREYA',
-      lastName: 'KRAUSE',
-      dob: '1982-03-24',
-      gender: 'F',
-      docNumber: 'FX01ADA5A',
-      issueDate: '2020-11-10',
-      expiryDate: '2030-11-10',
-      nationality: 'DEU',
-      issuingAuthority: 'STADT KÖLN',
-      placeOfBirth: 'BERLIN'
-    };
-    var ok = await uploadDoc(passportFile, passportMeta, 'Passport');
-    if (ok) {
-      document.getElementById('doc-passport-status').innerHTML = '<span style="color:#7ee787">Uploaded</span>';
-      docState.passportUploaded = true;
-    } else { success = false; }
-  }
-
-  if (poaFile) {
-    var poaMeta = {
-      idDocType: 'PROOF_OF_RESIDENCY',
-      country: 'DEU',
-      idDocSubType: 'UTILITY_BILL',
-      firstName: 'FREYA',
-      lastName: 'KRAUSE',
-      address: 'HEIDESTRASSE 19, 51247 KÖLN',
-      issueDate: '2024-01-26'
-    };
-    var ok2 = await uploadDoc(poaFile, poaMeta, 'POA');
-    if (ok2) {
-      document.getElementById('doc-poa-status').innerHTML = '<span style="color:#7ee787">Uploaded</span>';
-      docState.poaUploaded = true;
-    } else { success = false; }
-  }
-
-  if (success) {
-    setStep('s', 4, 5);
-    document.getElementById('doc-btn-action').disabled = false;
-    btn.textContent = 'Done';
-  } else {
-    btn.textContent = 'Retry';
-    btn.disabled = false;
-  }
-}
-
-async function docApplicantCheck() {
-  if (!docState.applicantId) { alert('Check status first to get applicant ID'); return; }
-
-  var btn = document.getElementById('doc-btn-action');
-  btn.disabled = true; btn.textContent = 'Checking...';
+  var btn = document.getElementById('doc-btn-run-aml');
+  btn.disabled = true; btn.textContent = 'Running...';
 
   if (kycMode === 'real') {
-    docLog('#79c0ff', 'POST /api/applicant-check');
-    docLog('#d2a8ff', 'Body: { "applicantId": "' + docState.applicantId + '" }');
-
+    docLog('#79c0ff', 'POST /api/run-aml-check (applicantId: ' + docState.applicantId + ')');
     try {
-      var res = await fetch('/api/applicant-check', {
+      var res = await fetch('/api/run-aml-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicantId: docState.applicantId })
       });
       var data = await res.json();
       if (data.error) {
-        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        docLog('#ff7b72', 'Error: ' + data.error);
+        document.getElementById('doc-aml-run-status').textContent = 'Error';
+        document.getElementById('doc-aml-run-status').className = 'badge badge-red';
       } else {
-        docLog('#79c0ff', '200 OK');
-        var review = data.review || {};
-        var reviewResult = review.reviewResult || {};
-        docLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
-        if (reviewResult.reviewAnswer) docLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
-        if (reviewResult.reviewRejectType) docLog('#d2a8ff', 'reviewRejectType: ' + reviewResult.reviewRejectType);
-
-        document.getElementById('doc-check-app-id-for-check').textContent = docState.userId;
-
-        var status = review.reviewStatus || 'unknown';
-        var statusClass = status === 'completed' ? 'badge-green' :
-                          status === 'onHold' || status === 'pending' ? 'badge-yellow' : 'badge-gray';
-        document.getElementById('doc-action-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
-        if (reviewResult.reviewAnswer) {
-          var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
-          document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
-        }
-        if (reviewResult.reviewRejectType) {
-          document.getElementById('doc-action-reject-type').textContent = reviewResult.reviewRejectType;
-        }
-
-        if (status === 'completed' && reviewResult.reviewAnswer === 'GREEN') {
-          document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-        }
-        setStep('s', 5, 5);
+        docLog('#7ee787', 'AML check triggered — ok: ' + (data.ok || 1));
+        document.getElementById('doc-aml-run-status').textContent = 'Triggered';
+        document.getElementById('doc-aml-run-status').className = 'badge badge-blue';
+        document.getElementById('doc-aml-run-ok').textContent = String(data.ok || 1);
+        document.getElementById('doc-aml-run-hint').innerHTML = '<span style="color:#7ee787">AML check submitted</span> — use "Get AML Case" to retrieve results.';
+        document.getElementById('doc-btn-get-aml').disabled = false;
+        setStep('s', 6, 7);
       }
-      btn.textContent = 'Request Check'; btn.disabled = false;
+      btn.textContent = 'Run AML'; btn.disabled = false;
     } catch(e) {
       docLog('#ff7b72', 'Network error: ' + e.message);
       btn.textContent = 'Retry'; btn.disabled = false;
     }
   } else {
-    docLog('#79c0ff', 'POST /api/applicant-check (applicantId: ' + docState.applicantId + ')');
-    await sleep(600);
-    docLog('#79c0ff', '200 OK');
-    docLog('#d2a8ff', 'reviewStatus: completed');
-    docLog('#d2a8ff', 'reviewAnswer: GREEN');
+    docLog('#79c0ff', 'POST /api/run-aml-check (mock)');
+    await sleep(500);
+    docLog('#7ee787', 'AML check triggered');
+    document.getElementById('doc-aml-run-status').textContent = 'Triggered';
+    document.getElementById('doc-aml-run-status').className = 'badge badge-blue';
+    document.getElementById('doc-aml-run-ok').textContent = '1';
+    document.getElementById('doc-aml-run-hint').innerHTML = '<span style="color:#7ee787">AML check submitted</span> — use "Get AML Case" to retrieve results.';
+    document.getElementById('doc-btn-get-aml').disabled = false;
+    setStep('s', 6, 7);
+    btn.textContent = 'Run AML'; btn.disabled = false;
+  }
+}
 
-    document.getElementById('doc-check-app-id-for-check').textContent = docState.userId;
-    document.getElementById('doc-action-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
-    document.getElementById('doc-action-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
-    document.getElementById('doc-action-reject-type').textContent = '\u2014';
-    document.getElementById('doc-wallet-status').innerHTML = '<span class="badge badge-green">0x7e2d...f812 (Custodian A)</span>';
-    setStep('s', 5, 5);
-    btn.textContent = 'Request Check'; btn.disabled = false;
+// ─── Step 7: Get AML Case Data ───
+async function docGetAmlCase() {
+  if (!docState.applicantId) { alert('Check status first to get applicant ID'); return; }
+  var btn = document.getElementById('doc-btn-get-aml');
+  btn.disabled = true; btn.textContent = 'Fetching...';
+
+  if (kycMode === 'real') {
+    docLog('#79c0ff', 'GET /api/aml-case-data/' + docState.applicantId);
+    try {
+      var res = await fetch('/api/aml-case-data/' + docState.applicantId);
+      var data = await res.json();
+      if (data.error) {
+        docLog('#ff7b72', 'Error: ' + data.error);
+        document.getElementById('doc-aml-case-review').innerHTML = '<span class="badge badge-red">Error</span>';
+      } else {
+        docLog('#79c0ff', '200 OK');
+        if (data.id) docLog('#d2a8ff', 'amlCaseId: ' + data.id);
+        if (data.review) docLog('#d2a8ff', 'reviewAnswer: ' + (data.review.reviewAnswer || '—'));
+
+        document.getElementById('doc-aml-case-id').textContent = data.id || '—';
+        document.getElementById('doc-aml-case-created').textContent = data.createdAt || '—';
+
+        if (data.review && data.review.reviewAnswer) {
+          var aClass = data.review.reviewAnswer === 'GREEN' ? 'badge-green' :
+                       data.review.reviewAnswer === 'YELLOW' ? 'badge-yellow' : 'badge-red';
+          document.getElementById('doc-aml-case-review').innerHTML = '<span class="badge ' + aClass + '">' + data.review.reviewAnswer + '</span>';
+        } else {
+          document.getElementById('doc-aml-case-review').innerHTML = '<span class="badge badge-gray">—</span>';
+        }
+
+        document.getElementById('doc-aml-case-vendor').textContent = data.vendorAttribution || '—';
+        var hits = data.hits || [];
+        document.getElementById('doc-aml-case-hits').textContent = hits.length;
+
+        document.getElementById('doc-aml-case-monitoring').textContent =
+          (data.ongoingMonitoring && data.ongoingMonitoring.enabled) ? 'Enabled' : 'Disabled';
+
+        var labels = data.riskLabels || [];
+        document.getElementById('doc-aml-case-risklabels').textContent = labels.length > 0 ? labels.join(', ') : 'None';
+        document.getElementById('doc-aml-case-hint').innerHTML = '<span style="color:#7ee787">AML case retrieved</span> — ' + hits.length + ' hit(s) found.';
+
+        // Update the AML status in Step 5
+        var reviewAnswer = (data.review && data.review.reviewAnswer) || '—';
+        document.getElementById('doc-aml-status').innerHTML = '<span class="badge ' +
+          (reviewAnswer === 'GREEN' ? 'badge-green' : reviewAnswer === 'YELLOW' ? 'badge-yellow' : reviewAnswer === 'RED' ? 'badge-red' : 'badge-gray') +
+          '">' + reviewAnswer + '</span>';
+
+        setStep('s', 7, 7);
+      }
+      btn.textContent = 'Get AML Case'; btn.disabled = false;
+    } catch(e) {
+      docLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    docLog('#79c0ff', 'GET /api/aml-case-data (mock)');
+    await sleep(500);
+    docLog('#79c0ff', '200 OK');
+    docLog('#d2a8ff', 'reviewAnswer: GREEN');
+    docLog('#d2a8ff', 'hits: 0');
+
+    var mockCaseId = 'aml-' + Date.now().toString(36);
+    document.getElementById('doc-aml-case-id').textContent = mockCaseId;
+    document.getElementById('doc-aml-case-created').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    document.getElementById('doc-aml-case-review').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('doc-aml-case-vendor').textContent = 'Powered by ComplyAdvantage CSOM';
+    document.getElementById('doc-aml-case-hits').textContent = '0';
+    document.getElementById('doc-aml-case-monitoring').textContent = 'Disabled';
+    document.getElementById('doc-aml-case-risklabels').textContent = 'None';
+    document.getElementById('doc-aml-case-hint').innerHTML = '<span style="color:#7ee787">AML case retrieved</span> — 0 hit(s) found.';
+    document.getElementById('doc-aml-status').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    setStep('s', 7, 7);
+    btn.textContent = 'Get AML Case'; btn.disabled = false;
   }
 }
 
@@ -992,13 +1181,12 @@ function nondocSetUserId() {
   ['nondoc-review-status','nondoc-review-answer','nondoc-id-status','nondoc-liveness-status'].forEach(function(id) {
     document.getElementById(id).innerHTML = '<span class="badge badge-gray">\u2014</span>';
   });
-  document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-gray">Generated on approval</span>';
   document.getElementById('nondoc-btn-link').disabled = true;
   var ndOpenBtn = document.getElementById('nondoc-btn-open');
   ndOpenBtn.style.display = 'none'; ndOpenBtn.disabled = true;
   document.getElementById('nondoc-btn-status').disabled = true;
   ndClearLog();
-  setStep('n', 0, 4);
+  setStep('n', 0, 6);
 
   var ts = Date.now().toString(36).slice(-6);
   ndState.userId = 'user-nondoc-' + ts;
@@ -1007,8 +1195,8 @@ function nondocSetUserId() {
   document.getElementById('nondoc-ext-id').textContent = ndState.userId;
   ndLog('#7ee787', 'User context set: ' + ndState.userId);
 
-  setStep('n', 1, 4);
-  document.getElementById('nondoc-btn-link').disabled = false;
+  setStep('n', 1, 6);
+  document.getElementById('nondoc-btn-check-exists-pre').disabled = false;
   saveState();
 }
 
@@ -1054,9 +1242,9 @@ async function nondocGenLink() {
         var openBtn = document.getElementById('nondoc-btn-open');
         openBtn.style.display = ''; openBtn.disabled = false;
 
-        setStep('n', 2, 4);
+        setStep('n', 3, 6);
         ndState.linked = true;
-        document.getElementById('nondoc-btn-status').disabled = false;
+        document.getElementById('nondoc-btn-check-exists-post').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
         saveState();
       } else {
@@ -1069,10 +1257,10 @@ async function nondocGenLink() {
     }
   } else {
     ndLog('#79c0ff', 'POST /resources/sdkIntegrations/levels/-/websdkLink');
-    ndLog('#d2a8ff', 'Body: { "levelName": "' + getNonDocLevel() + '", "userId": "' + ndState.userId + '", "ttlInSecs": 3600, "redirectUrl": "' + redirectUrl + '" }');
+    ndLog('#d2a8ff', 'Body: { "levelName": "non-doc-kyc-level", "userId": "' + ndState.userId + '", "applicantIdentifiers": { "email": "' + ndState.email + '" }, "ttlInSecs": 3600 }');
     await sleep(600);
 
-    var appid = '68a3f2e1b4c9d0000b' + Math.floor(Math.random() * 900000 + 100000);
+    var appid = '68a3f2e1b4c9d0000a' + Math.floor(Math.random() * 900000 + 100000);
     var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
     document.getElementById('nondoc-app-id').textContent = appid;
     document.getElementById('nondoc-applicant-status').textContent = 'pending';
@@ -1080,11 +1268,107 @@ async function nondocGenLink() {
     ndLog('#79c0ff', '200 OK \u2014 url: ' + link.substring(0, 50) + '...');
     ndLog('#ffa657', 'Applicant created lazily by Sumsub (mock)');
 
-    setStep('n', 2, 4);
+    setStep('n', 3, 6);
     ndState.linked = true;
-    document.getElementById('nondoc-btn-status').disabled = false;
+    document.getElementById('nondoc-btn-check-exists-post').disabled = false;
     btn.textContent = 'Regenerate Link'; btn.disabled = false;
     saveState();
+  }
+}
+
+async function nondocCheckExists(phase) {
+  if (!ndState.userId) return;
+  var isPre = (phase === 'pre');
+  var btnId = isPre ? 'nondoc-btn-check-exists-pre' : 'nondoc-btn-check-exists-post';
+  var btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  if (kycMode === 'real') {
+    ndLog('#79c0ff', 'POST /api/check-applicant-existence (externalUserId: ' + ndState.userId + ')');
+    try {
+      var res = await fetch('/api/check-applicant-existence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: ndState.userId })
+      });
+      var data = await res.json();
+      if (data.error) {
+        ndLog('#ff7b72', 'Error: ' + data.error);
+        var boolEl = document.getElementById(isPre ? 'nondoc-exists-pre-bool' : 'nondoc-exists-post-bool');
+        boolEl.textContent = 'Error';
+        boolEl.className = 'badge badge-red';
+      } else {
+        var exists = data.exists;
+        var applicant = data.applicant || {};
+        ndLog('#79c0ff', '200 OK — exists: ' + exists);
+        if (exists && applicant.id) ndLog('#d2a8ff', 'applicantId: ' + applicant.id);
+
+        var boolEl = document.getElementById(isPre ? 'nondoc-exists-pre-bool' : 'nondoc-exists-post-bool');
+        boolEl.textContent = exists ? 'Yes' : 'No';
+        boolEl.className = 'badge ' + (exists ? 'badge-green' : 'badge-gray');
+
+        var appidEl = document.getElementById(isPre ? 'nondoc-exists-pre-appid' : 'nondoc-exists-post-appid');
+        appidEl.textContent = applicant.id || '—';
+
+        var typeEl = document.getElementById(isPre ? 'nondoc-exists-pre-type' : 'nondoc-exists-post-type');
+        typeEl.textContent = applicant.type || '—';
+
+        var review = applicant.review || {};
+        var reviewEl = document.getElementById(isPre ? 'nondoc-exists-pre-review' : 'nondoc-exists-post-review');
+        if (review.reviewStatus) {
+          var sClass = review.reviewStatus === 'completed' ? 'badge-green' : review.reviewStatus === 'pending' ? 'badge-blue' : 'badge-gray';
+          reviewEl.innerHTML = '<span class="badge ' + sClass + '">' + review.reviewStatus + '</span>';
+        } else {
+          reviewEl.innerHTML = '<span class="badge badge-gray">—</span>';
+        }
+
+        var createdEl = document.getElementById(isPre ? 'nondoc-exists-pre-created' : 'nondoc-exists-post-created');
+        createdEl.textContent = applicant.createdAt || '—';
+
+        var hintEl = document.getElementById(isPre ? 'nondoc-exists-pre-hint' : 'nondoc-exists-post-hint');
+        if (exists) {
+          hintEl.innerHTML = '<span style="color:#7ee787">Applicant already exists</span> — review details above.';
+        } else {
+          hintEl.innerHTML = '<span style="color:#ffa657">No applicant found</span> — this userId is not yet in Sumsub.';
+        }
+
+        if (isPre) {
+          document.getElementById('nondoc-btn-link').disabled = false;
+          setStep('n', 2, 6);
+        }
+        if (!isPre) {
+          document.getElementById('nondoc-btn-status').disabled = false;
+          setStep('n', 4, 6);
+        }
+      }
+      btn.textContent = 'Check Again'; btn.disabled = false;
+    } catch(e) {
+      ndLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    ndLog('#79c0ff', 'POST /api/check-applicant-existence (mock)');
+    await sleep(400);
+
+    var boolEl = document.getElementById(isPre ? 'nondoc-exists-pre-bool' : 'nondoc-exists-post-bool');
+    if (isPre) {
+      boolEl.textContent = 'No';
+      boolEl.className = 'badge badge-gray';
+      document.getElementById(isPre ? 'nondoc-exists-pre-hint' : 'nondoc-exists-post-hint').innerHTML = '<span style="color:#ffa657">No applicant found</span> — this userId is not yet in Sumsub.';
+      document.getElementById('nondoc-btn-link').disabled = false;
+      setStep('n', 2, 6);
+    } else {
+      boolEl.textContent = 'Yes';
+      boolEl.className = 'badge badge-green';
+      document.getElementById(isPre ? 'nondoc-exists-pre-appid' : 'nondoc-exists-post-appid').textContent = 'mock-' + Date.now().toString(36).slice(-8);
+      document.getElementById(isPre ? 'nondoc-exists-pre-type' : 'nondoc-exists-post-type').textContent = 'individual';
+      document.getElementById(isPre ? 'nondoc-exists-pre-review' : 'nondoc-exists-post-review').innerHTML = '<span class="badge badge-blue">pending</span>';
+      document.getElementById(isPre ? 'nondoc-exists-pre-created' : 'nondoc-exists-post-created').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      document.getElementById(isPre ? 'nondoc-exists-pre-hint' : 'nondoc-exists-post-hint').innerHTML = '<span style="color:#7ee787">Applicant created</span> — review details above.';
+      document.getElementById('nondoc-btn-status').disabled = false;
+      setStep('n', 4, 6);
+    }
+    btn.textContent = 'Check Again'; btn.disabled = false;
   }
 }
 
@@ -1142,10 +1426,9 @@ async function nondocCheckStatus() {
         }
 
         if (status === 'completed' || reviewResult.reviewAnswer === 'GREEN') {
-          document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
-          setStep('n', 4, 4);
+          setStep('n', 5, 6);
         } else {
-          setStep('n', 3, 4);
+          setStep('n', 5, 6);
         }
       } else {
         ndLog('#ff7b72', 'Applicant not found \u2014 user may not have opened the WebSDK link yet');
@@ -1175,9 +1458,8 @@ async function nondocCheckStatus() {
     document.getElementById('nondoc-app-id').textContent = mockAppId;
     document.getElementById('nondoc-id-status').innerHTML = '<span class="badge badge-green">ID verified</span>';
     document.getElementById('nondoc-liveness-status').innerHTML = '<span class="badge badge-green">Pass (97.3%)</span>';
-    document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
 
-    setStep('n', 4, 4);
+    setStep('n', 5, 6);
     btn.textContent = 'Refresh Status'; btn.disabled = false;
   }
 }
@@ -1210,14 +1492,13 @@ async function nondocDecision() {
           document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
           document.getElementById('nondoc-applicant-status').textContent = 'approved';
           document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
-          document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
         } else {
           document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
           document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
           document.getElementById('nondoc-applicant-status').textContent = 'rejected';
           document.getElementById('nondoc-applicant-status').className = 'badge badge-red';
         }
-        setStep('n', 4, 4);
+        setStep('n', 6, 6);
       } else {
         ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
       }
@@ -1235,14 +1516,13 @@ async function nondocDecision() {
       document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
       document.getElementById('nondoc-applicant-status').textContent = 'approved';
       document.getElementById('nondoc-applicant-status').className = 'badge badge-green';
-      document.getElementById('nondoc-wallet-status').innerHTML = '<span class="badge badge-green">0x9a3f...2e71 (Custodian B)</span>';
     } else {
       document.getElementById('nondoc-review-status').innerHTML = '<span class="badge badge-red">completed</span>';
       document.getElementById('nondoc-review-answer').innerHTML = '<span class="badge badge-red">RED</span>';
       document.getElementById('nondoc-applicant-status').textContent = 'rejected';
       document.getElementById('nondoc-applicant-status').className = 'badge badge-red';
     }
-    setStep('n', 4, 4);
+    setStep('n', 6, 6);
     btn.textContent = 'Decision'; btn.disabled = false;
   }
 }
@@ -1367,4 +1647,495 @@ function whPoll() {
 }
 setInterval(whPoll, 2000);
 whPoll();
+
+// ═══════════════════════════════════════════════════════
+// KYB (Corporate Onboarding) — Tab 1
+// ═══════════════════════════════════════════════════════
+var kybState = { userId: null, linked: false, applicantId: null, webSdkUrl: null };
+
+function kybLog(cls, text) {
+  // Use existing docLog if available, or console
+  if (typeof docLog === 'function') docLog(cls, '[KYB] ' + text);
+  else console.log('[KYB]', text);
+}
+
+function kybSetEntityId() {
+  kybState = { userId: null, linked: false, applicantId: null, webSdkUrl: null };
+  document.getElementById('kyb-ext-id').textContent = '\u2014';
+  document.getElementById('kyb-app-id').textContent = '\u2014';
+  document.getElementById('kyb-applicant-status').textContent = 'Not Started';
+  document.getElementById('kyb-applicant-status').className = 'badge badge-gray';
+  ['kyb-review-status','kyb-review-answer'].forEach(function(id) {
+    document.getElementById(id).innerHTML = '<span class="badge badge-gray">\u2014</span>';
+  });
+  document.getElementById('kyb-btn-check-exists-pre').disabled = true;
+  document.getElementById('kyb-btn-link').disabled = true;
+  var kybOpenBtn = document.getElementById('kyb-btn-open');
+  kybOpenBtn.style.display = 'none'; kybOpenBtn.disabled = true;
+  document.getElementById('kyb-btn-check-exists-post').disabled = true;
+  document.getElementById('kyb-btn-status').disabled = true;
+  document.getElementById('kyb-client-comment').textContent = '\u2014';
+  document.getElementById('kyb-moderation-comment').textContent = '\u2014';
+  document.getElementById('kyb-btn-run-aml').disabled = true;
+  document.getElementById('kyb-btn-get-aml').disabled = true;
+  document.getElementById('kyb-aml-run-status').textContent = '\u2014';
+  document.getElementById('kyb-aml-run-status').className = 'badge badge-gray';
+  document.getElementById('kyb-aml-run-ok').textContent = '\u2014';
+  document.getElementById('kyb-aml-case-id').textContent = '\u2014';
+  document.getElementById('kyb-aml-case-created').textContent = '\u2014';
+  document.getElementById('kyb-aml-case-review').innerHTML = '<span class="badge badge-gray">\u2014</span>';
+  document.getElementById('kyb-aml-case-vendor').textContent = '\u2014';
+  document.getElementById('kyb-aml-case-hits').textContent = '\u2014';
+  document.getElementById('kyb-aml-case-monitoring').textContent = '\u2014';
+  document.getElementById('kyb-aml-case-risklabels').textContent = '\u2014';
+  document.getElementById('kyb-beneficiaries-count').textContent = '\u2014';
+  document.getElementById('kyb-beneficiaries-count').className = 'badge badge-gray';
+  document.getElementById('kyb-beneficiaries-list').innerHTML = '<div style="font-size:11px;color:#888;text-align:center;padding:20px 0">No beneficiaries loaded. Check status first.</div>';
+
+  setStep('k', 0, 7);
+
+  var ts = Date.now().toString(36).slice(-6);
+  kybState.userId = 'kyb-entity-' + ts;
+
+  document.getElementById('kyb-ext-id').textContent = kybState.userId;
+  kybLog('#7ee787', 'Entity context set: ' + kybState.userId);
+
+  setStep('k', 1, 7);
+  document.getElementById('kyb-btn-check-exists-pre').disabled = false;
+}
+
+async function kybCheckExists(phase) {
+  if (!kybState.userId) return;
+  var isPre = (phase === 'pre');
+  var btnId = isPre ? 'kyb-btn-check-exists-pre' : 'kyb-btn-check-exists-post';
+  var btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  kybLog('#79c0ff', 'POST /api/check-applicant-existence (externalUserId: ' + kybState.userId + ')');
+  try {
+    var res = await fetch('/api/check-applicant-existence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ externalUserId: kybState.userId })
+    });
+    var data = await res.json();
+    if (data.error) {
+      kybLog('#ff7b72', 'Error: ' + data.error);
+      var boolEl = document.getElementById(isPre ? 'kyb-exists-pre-bool' : 'kyb-exists-post-bool');
+      boolEl.textContent = 'Error';
+      boolEl.className = 'badge badge-red';
+    } else {
+      var exists = data.exists;
+      var applicant = data.applicant || {};
+      kybLog('#79c0ff', '200 OK \u2014 exists: ' + exists);
+      if (exists && applicant.id) kybLog('#d2a8ff', 'applicantId: ' + applicant.id);
+
+      var boolEl = document.getElementById(isPre ? 'kyb-exists-pre-bool' : 'kyb-exists-post-bool');
+      boolEl.textContent = exists ? 'Yes' : 'No';
+      boolEl.className = 'badge ' + (exists ? 'badge-green' : 'badge-gray');
+
+      var appidEl = document.getElementById(isPre ? 'kyb-exists-pre-appid' : 'kyb-exists-post-appid');
+      appidEl.textContent = applicant.id || '\u2014';
+
+      var typeEl = document.getElementById(isPre ? 'kyb-exists-pre-type' : 'kyb-exists-post-type');
+      typeEl.textContent = applicant.type || '\u2014';
+
+      var review = applicant.review || {};
+      var reviewEl = document.getElementById(isPre ? 'kyb-exists-pre-review' : 'kyb-exists-post-review');
+      if (review.reviewStatus) {
+        var sClass = review.reviewStatus === 'completed' ? 'badge-green' : review.reviewStatus === 'pending' ? 'badge-blue' : 'badge-gray';
+        reviewEl.innerHTML = '<span class="badge ' + sClass + '">' + review.reviewStatus + '</span>';
+      } else {
+        reviewEl.innerHTML = '<span class="badge badge-gray">\u2014</span>';
+      }
+
+      var createdEl = document.getElementById(isPre ? 'kyb-exists-pre-created' : 'kyb-exists-post-created');
+      createdEl.textContent = applicant.createdAt || '\u2014';
+
+      var hintEl = document.getElementById(isPre ? 'kyb-exists-pre-hint' : 'kyb-exists-post-hint');
+      if (exists) {
+        hintEl.innerHTML = '<span style="color:#7ee787">Entity already exists</span> \u2014 review details above.';
+      } else {
+        hintEl.innerHTML = '<span style="color:#ffa657">No entity found</span> \u2014 this userId is not yet in Sumsub.';
+      }
+
+      if (isPre) {
+        document.getElementById('kyb-btn-link').disabled = false;
+        setStep('k', 2, 7);
+      }
+      if (!isPre) {
+        document.getElementById('kyb-btn-status').disabled = false;
+        setStep('k', 4, 7);
+      }
+    }
+    btn.textContent = 'Check Again'; btn.disabled = false;
+  } catch(e) {
+    kybLog('#ff7b72', 'Network error: ' + e.message);
+    btn.textContent = 'Retry'; btn.disabled = false;
+  }
+}
+
+async function kybGenLink() {
+  if (!kybState.userId) return;
+  var btn = document.getElementById('kyb-btn-link');
+  btn.disabled = true; btn.textContent = 'Generating...';
+
+  var redirectUrl = getBaseUrl() + '/callback?externalUserId=' + kybState.userId;
+
+  if (kycMode === 'real') {
+    kybLog('#79c0ff', 'POST /api/websdk-link');
+    kybLog('#d2a8ff', 'Body: { "levelName": "kyb-test-daniel-0626", "userId": "' + kybState.userId + '", "ttlInSecs": 3600 }');
+
+    try {
+      var res = await fetch('/api/websdk-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          levelName: 'kyb-test-daniel-0626',
+          externalUserId: kybState.userId,
+          email: 'kyb-' + kybState.userId + '@demo.cregis.io',
+          redirectUrl: redirectUrl
+        })
+      });
+      var data = await res.json();
+      if (data.url) {
+        document.getElementById('kyb-applicant-status').textContent = 'pending';
+        document.getElementById('kyb-applicant-status').className = 'badge badge-blue';
+        kybLog('#79c0ff', '200 OK \u2014 WebSDK URL received');
+        kybLog('#ffa657', 'Entity applicant created lazily by Sumsub on first link open');
+        if (data.applicantId) {
+          document.getElementById('kyb-app-id').textContent = data.applicantId;
+          kybLog('#d2a8ff', 'applicantId: ' + data.applicantId);
+        }
+
+        var linkArea = document.getElementById('kyb-link-area');
+        linkArea.innerHTML = '<div style="background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:8px 10px;font-size:10px;font-family:monospace">' +
+          '<div style="color:#6e7681;margin-bottom:4px">WebSDK Link (click to open):</div>' +
+          '<a href="' + data.url + '" target="_blank" style="color:#79c0ff;word-break:break-all">' + data.url + '</a></div>';
+
+        kybState.webSdkUrl = data.url;
+        var openBtn = document.getElementById('kyb-btn-open');
+        openBtn.style.display = ''; openBtn.disabled = false;
+
+        setStep('k', 3, 7);
+        kybState.linked = true;
+        document.getElementById('kyb-btn-check-exists-post').disabled = false;
+        btn.textContent = 'Regenerate Link'; btn.disabled = false;
+      } else {
+        kybLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        btn.textContent = 'Retry'; btn.disabled = false;
+      }
+    } catch(e) {
+      kybLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    kybLog('#79c0ff', 'POST /api/websdk-link (mock)');
+    await sleep(600);
+
+    var appid = '68a3f2e1b4c9d0000a' + Math.floor(Math.random() * 900000 + 100000);
+    var link = 'https://sumsub.com/websdk/preview?accessToken=eyJhbGci...simulated';
+    document.getElementById('kyb-app-id').textContent = appid;
+    document.getElementById('kyb-applicant-status').textContent = 'pending';
+    document.getElementById('kyb-applicant-status').className = 'badge badge-blue';
+    kybLog('#79c0ff', '200 OK \u2014 url: ' + link.substring(0, 50) + '...');
+    kybLog('#ffa657', 'Entity applicant created lazily by Sumsub (mock)');
+
+    setStep('k', 3, 7);
+    kybState.linked = true;
+    document.getElementById('kyb-btn-check-exists-post').disabled = false;
+    btn.textContent = 'Regenerate Link'; btn.disabled = false;
+  }
+}
+
+function kybOpenLink() {
+  if (kybState.webSdkUrl) window.open(kybState.webSdkUrl, '_blank');
+}
+
+async function kybCheckStatus() {
+  if (!kybState.userId) return;
+  var btn = document.getElementById('kyb-btn-status');
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  if (kycMode === 'real') {
+    kybLog('#79c0ff', 'POST /api/applicant-status');
+    kybLog('#d2a8ff', 'Body: { "externalUserId": "' + kybState.userId + '" }');
+
+    try {
+      var res = await fetch('/api/applicant-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: kybState.userId })
+      });
+      var data = await res.json();
+      if (data.code && data.code !== undefined && !data.id) {
+        kybLog('#ff7b72', 'Error: ' + (data.description || JSON.stringify(data)));
+      } else if (data.review || data.id) {
+        var review = data.review || {};
+        var reviewResult = review.reviewResult || {};
+        kybLog('#79c0ff', '200 OK');
+        kybLog('#d2a8ff', 'applicantId: ' + (data.id || '\u2014'));
+        kybLog('#d2a8ff', 'reviewStatus: ' + (review.reviewStatus || '\u2014'));
+        if (reviewResult.reviewAnswer) kybLog('#d2a8ff', 'reviewAnswer: ' + reviewResult.reviewAnswer);
+
+        if (data.id) document.getElementById('kyb-app-id').textContent = data.id;
+        if (data.id) document.getElementById('kyb-check-app-id').textContent = data.id;
+        if (data.externalUserId) document.getElementById('kyb-check-ext-id').textContent = data.externalUserId;
+        kybState.applicantId = data.id || null;
+
+        // Display company info
+        var companyInfo = data.companyInfo || {};
+        document.getElementById('kyb-check-name').textContent = companyInfo.companyName || '\u2014';
+        document.getElementById('kyb-check-country').textContent = companyInfo.country || '\u2014';
+
+        var status = review.reviewStatus || 'unknown';
+        var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
+                          status === 'onHold' || status === 'pending' ? 'badge-yellow' :
+                          status === 'init' ? 'badge-blue' : 'badge-gray';
+        document.getElementById('kyb-applicant-status').textContent = status;
+        document.getElementById('kyb-applicant-status').className = 'badge ' + statusClass;
+
+        document.getElementById('kyb-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+        if (reviewResult.reviewAnswer) {
+          var ansClass = reviewResult.reviewAnswer === 'GREEN' ? 'badge-green' : 'badge-red';
+          document.getElementById('kyb-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + reviewResult.reviewAnswer + '</span>';
+        }
+        document.getElementById('kyb-client-comment').textContent = reviewResult.clientComment || '\u2014';
+        document.getElementById('kyb-moderation-comment').textContent = reviewResult.moderationComment || '\u2014';
+
+        // Display beneficiaries / associated parties
+        renderKybBeneficiaries(data);
+
+        if (status === 'completed' || reviewResult.reviewAnswer === 'GREEN') {
+          document.getElementById('kyb-btn-run-aml').disabled = false;
+        }
+        setStep('k', 5, 7);
+      } else {
+        kybLog('#ff7b72', 'Entity not found \u2014 user may not have opened the WebSDK link yet');
+      }
+      btn.textContent = 'Refresh Status'; btn.disabled = false;
+    } catch(e) {
+      kybLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    kybLog('#79c0ff', 'POST /api/applicant-status (mock)');
+    await sleep(600);
+
+    kybLog('#79c0ff', '200 OK');
+    kybLog('#d2a8ff', 'reviewStatus: completed');
+    kybLog('#d2a8ff', 'reviewAnswer: GREEN');
+
+    document.getElementById('kyb-applicant-status').textContent = 'completed';
+    document.getElementById('kyb-applicant-status').className = 'badge badge-green';
+    document.getElementById('kyb-review-status').innerHTML = '<span class="badge badge-green">completed</span>';
+    document.getElementById('kyb-review-answer').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('kyb-client-comment').textContent = '\u2014';
+    document.getElementById('kyb-moderation-comment').textContent = '\u2014';
+    var mockAppId = 'mock-kyb-' + Date.now().toString(36);
+    document.getElementById('kyb-check-app-id').textContent = mockAppId;
+    document.getElementById('kyb-check-ext-id').textContent = kybState.userId;
+    document.getElementById('kyb-app-id').textContent = mockAppId;
+    document.getElementById('kyb-check-name').textContent = 'Cregis Digital Assets Ltd';
+    document.getElementById('kyb-check-country').textContent = 'VGB';
+    document.getElementById('kyb-btn-run-aml').disabled = false;
+    renderKybBeneficiariesMock();
+
+    setStep('k', 5, 7);
+    btn.textContent = 'Refresh Status'; btn.disabled = false;
+  }
+}
+
+// ─── KYB Step 6: Run AML Check ───
+async function kybRunAmlCheck() {
+  if (!kybState.applicantId) { alert('Check status first to get applicant ID'); return; }
+  var btn = document.getElementById('kyb-btn-run-aml');
+  btn.disabled = true; btn.textContent = 'Running...';
+
+  if (kycMode === 'real') {
+    kybLog('#79c0ff', 'POST /api/run-aml-check (applicantId: ' + kybState.applicantId + ')');
+    try {
+      var res = await fetch('/api/run-aml-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicantId: kybState.applicantId })
+      });
+      var data = await res.json();
+      if (data.error) {
+        kybLog('#ff7b72', 'Error: ' + data.error);
+        document.getElementById('kyb-aml-run-status').textContent = 'Error';
+        document.getElementById('kyb-aml-run-status').className = 'badge badge-red';
+      } else {
+        kybLog('#7ee787', 'AML check triggered — ok: ' + (data.ok || 1));
+        document.getElementById('kyb-aml-run-status').textContent = 'Triggered';
+        document.getElementById('kyb-aml-run-status').className = 'badge badge-blue';
+        document.getElementById('kyb-aml-run-ok').textContent = String(data.ok || 1);
+        document.getElementById('kyb-aml-run-hint').innerHTML = '<span style="color:#7ee787">AML check submitted</span> — use "Get AML Case" to retrieve results.';
+        document.getElementById('kyb-btn-get-aml').disabled = false;
+        setStep('k', 6, 7);
+      }
+      btn.textContent = 'Run AML'; btn.disabled = false;
+    } catch(e) {
+      kybLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    kybLog('#79c0ff', 'POST /api/run-aml-check (mock)');
+    await sleep(500);
+    kybLog('#7ee787', 'AML check triggered');
+    document.getElementById('kyb-aml-run-status').textContent = 'Triggered';
+    document.getElementById('kyb-aml-run-status').className = 'badge badge-blue';
+    document.getElementById('kyb-aml-run-ok').textContent = '1';
+    document.getElementById('kyb-aml-run-hint').innerHTML = '<span style="color:#7ee787">AML check submitted</span> — use "Get AML Case" to retrieve results.';
+    document.getElementById('kyb-btn-get-aml').disabled = false;
+    setStep('k', 6, 7);
+    btn.textContent = 'Run AML'; btn.disabled = false;
+  }
+}
+
+// ─── KYB Step 7: Get AML Case Data ───
+async function kybGetAmlCase() {
+  if (!kybState.applicantId) { alert('Check status first to get applicant ID'); return; }
+  var btn = document.getElementById('kyb-btn-get-aml');
+  btn.disabled = true; btn.textContent = 'Fetching...';
+
+  if (kycMode === 'real') {
+    kybLog('#79c0ff', 'GET /api/aml-case-data/' + kybState.applicantId);
+    try {
+      var res = await fetch('/api/aml-case-data/' + kybState.applicantId);
+      var data = await res.json();
+      if (data.error) {
+        kybLog('#ff7b72', 'Error: ' + data.error);
+        document.getElementById('kyb-aml-case-review').innerHTML = '<span class="badge badge-red">Error</span>';
+      } else {
+        kybLog('#79c0ff', '200 OK');
+        if (data.id) kybLog('#d2a8ff', 'amlCaseId: ' + data.id);
+        if (data.review) kybLog('#d2a8ff', 'reviewAnswer: ' + (data.review.reviewAnswer || '\u2014'));
+
+        document.getElementById('kyb-aml-case-id').textContent = data.id || '\u2014';
+        document.getElementById('kyb-aml-case-created').textContent = data.createdAt || '\u2014';
+
+        if (data.review && data.review.reviewAnswer) {
+          var aClass = data.review.reviewAnswer === 'GREEN' ? 'badge-green' :
+                       data.review.reviewAnswer === 'YELLOW' ? 'badge-yellow' : 'badge-red';
+          document.getElementById('kyb-aml-case-review').innerHTML = '<span class="badge ' + aClass + '">' + data.review.reviewAnswer + '</span>';
+        } else {
+          document.getElementById('kyb-aml-case-review').innerHTML = '<span class="badge badge-gray">\u2014</span>';
+        }
+
+        document.getElementById('kyb-aml-case-vendor').textContent = data.vendorAttribution || '\u2014';
+        var hits = data.hits || [];
+        document.getElementById('kyb-aml-case-hits').textContent = hits.length;
+
+        document.getElementById('kyb-aml-case-monitoring').textContent =
+          (data.ongoingMonitoring && data.ongoingMonitoring.enabled) ? 'Enabled' : 'Disabled';
+
+        var labels = data.riskLabels || [];
+        document.getElementById('kyb-aml-case-risklabels').textContent = labels.length > 0 ? labels.join(', ') : 'None';
+        document.getElementById('kyb-aml-case-hint').innerHTML = '<span style="color:#7ee787">AML case retrieved</span> — ' + hits.length + ' hit(s) found.';
+
+        setStep('k', 7, 7);
+      }
+      btn.textContent = 'Get AML Case'; btn.disabled = false;
+    } catch(e) {
+      kybLog('#ff7b72', 'Network error: ' + e.message);
+      btn.textContent = 'Retry'; btn.disabled = false;
+    }
+  } else {
+    kybLog('#79c0ff', 'GET /api/aml-case-data (mock)');
+    await sleep(500);
+    kybLog('#79c0ff', '200 OK');
+    kybLog('#d2a8ff', 'reviewAnswer: GREEN');
+    kybLog('#d2a8ff', 'hits: 0');
+
+    var mockCaseId = 'aml-' + Date.now().toString(36);
+    document.getElementById('kyb-aml-case-id').textContent = mockCaseId;
+    document.getElementById('kyb-aml-case-created').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    document.getElementById('kyb-aml-case-review').innerHTML = '<span class="badge badge-green">GREEN</span>';
+    document.getElementById('kyb-aml-case-vendor').textContent = 'Powered by ComplyAdvantage CSOM';
+    document.getElementById('kyb-aml-case-hits').textContent = '0';
+    document.getElementById('kyb-aml-case-monitoring').textContent = 'Disabled';
+    document.getElementById('kyb-aml-case-risklabels').textContent = 'None';
+    document.getElementById('kyb-aml-case-hint').innerHTML = '<span style="color:#7ee787">AML case retrieved</span> — 0 hit(s) found.';
+    setStep('k', 7, 7);
+    btn.textContent = 'Get AML Case'; btn.disabled = false;
+  }
+}
+
+// ─── KYB Beneficiaries Rendering ───
+function renderKybBeneficiaries(data) {
+  var companyInfo = data.companyInfo || {};
+  var members = companyInfo.beneficiaries || [];
+  var countEl = document.getElementById('kyb-beneficiaries-count');
+  var listEl = document.getElementById('kyb-beneficiaries-list');
+
+  if (members.length === 0) {
+    countEl.textContent = '0';
+    countEl.className = 'badge badge-gray';
+    listEl.innerHTML = '<div style="font-size:11px;color:#888;text-align:center;padding:20px 0">No beneficiaries loaded. Check status first.</div>';
+    return;
+  }
+
+  countEl.textContent = members.length + ' party(ies)';
+  countEl.className = 'badge badge-green';
+
+  var html = '<div style="display:grid;gap:8px">';
+  members.forEach(function(b) {
+    var name = (b.firstName ? b.firstName + ' ' : '') + (b.lastName || '—');
+    var share = b.sharePercentage ? b.sharePercentage + '%' : '';
+    var country = b.country || '';
+    var dob = b.dateOfBirth || '';
+    html += '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px;padding:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<span style="font-weight:600;font-size:12px">' + name + '</span>' +
+        (share ? '<span class="badge badge-blue" style="font-size:9px">' + share + '</span>' : '') +
+      '</div>' +
+      '<div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">' +
+        '<div><span style="color:#888">Country:</span> ' + (country || '—') + '</div>' +
+        '<div><span style="color:#888">DOB:</span> ' + (dob || '—') + '</div>' +
+        (share ? '<div><span style="color:#888">Share:</span> ' + share + '</div>' : '') +
+        '<div><span style="color:#888">Beneficiary ID:</span> <span style="font-family:monospace">' + (b.id || '—') + '</span></div>' +
+        '<div style="grid-column:span 2"><span style="color:#888">applicantId:</span> <span style="font-family:monospace">' + (b.applicantId || '—') + '</span></div>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  listEl.innerHTML = html;
+}
+
+function renderKybBeneficiariesMock() {
+  var countEl = document.getElementById('kyb-beneficiaries-count');
+  var listEl = document.getElementById('kyb-beneficiaries-list');
+
+  var mockBeneficiaries = [
+    { fullName: 'Zhang Wei', beneficiaryId: 'BEN-001a2b3c', applicantId: '5f8a1b2c3d4e5f0001a00001', role: 'UBO / CEO & Director', ownership: '42%', nationality: '🇨🇳 PRC', verified: true },
+    { fullName: 'Li Ming', beneficiaryId: 'BEN-002d4e5f', applicantId: '5f8a1b2c3d4e5f0001a00002', role: 'UBO / CTO & Director', ownership: '33%', nationality: '🇸🇬 Singapore', verified: true },
+    { fullName: 'Chen Jie', beneficiaryId: 'BEN-003g6h7i', applicantId: '5f8a1b2c3d4e5f0001a00003', role: 'UBO / CFO', ownership: '25%', nationality: '🇭🇰 Hong Kong', verified: false }
+  ];
+
+  countEl.textContent = mockBeneficiaries.length + ' party(ies)';
+  countEl.className = 'badge badge-green';
+
+  var html = '<div style="display:grid;gap:8px">';
+  mockBeneficiaries.forEach(function(b) {
+    var verifiedBadge = b.verified ?
+      '<span class="badge badge-green" style="font-size:9px">Verified</span>' :
+      '<span class="badge badge-orange" style="font-size:9px">Pending</span>';
+    html += '<div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px;padding:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<span style="font-weight:600;font-size:12px">' + b.fullName + '</span>' +
+        verifiedBadge +
+      '</div>' +
+      '<div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">' +
+        '<div><span style="color:#888">Role:</span> ' + b.role + '</div>' +
+        '<div><span style="color:#888">Ownership:</span> ' + b.ownership + '</div>' +
+        '<div><span style="color:#888">Nationality:</span> ' + b.nationality + '</div>' +
+        '<div><span style="color:#888">Beneficiary ID:</span> <span style="font-family:monospace">' + b.beneficiaryId + '</span></div>' +
+        '<div><span style="color:#888">applicantId:</span> <span style="font-family:monospace">' + b.applicantId + '</span></div>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  listEl.innerHTML = html;
+}
 </script>
