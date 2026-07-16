@@ -549,10 +549,9 @@ app.post('/api/applicants/create', async (req, res) => {
   const body = { externalUserId, type: type || 'individual' };
   
   if (type === 'company') {
-    body.fixedInfo = {};
-    if (companyName) body.fixedInfo.companyName = companyName;
-    if (country) body.fixedInfo.country = country;
-    if (regNo) body.fixedInfo.regNo = regNo;
+    // Sumsub: country goes to fixedInfo when sent at top level
+    // companyName and registrationNumber handled through requiredIdDocs prefill
+    if (country) body.country = country;
   } else {
     body.fixedInfo = {};
     if (firstName) body.fixedInfo.firstName = firstName;
