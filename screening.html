@@ -102,8 +102,8 @@
   <div class="topbar"><span>Entity Screening</span>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:10px;color:#888">Mode:</span>
-      <button class="btn btn-run" id="mode-mock" style="padding:2px 8px;font-size:10px;background:#2563eb;color:#fff" onclick="setMode('mock')">Mock</button>
-      <button class="btn btn-run" id="mode-real" style="padding:2px 8px;font-size:10px;background:#475569;color:#fff" onclick="setMode('real')">Real</button>
+      <button class="btn btn-run" id="mode-mock" style="padding:2px 8px;font-size:10px;background:#475569;color:#fff" onclick="setMode('mock')">Mock</button>
+      <button class="btn btn-run" id="mode-real" style="padding:2px 8px;font-size:10px;background:#2563eb;color:#fff" onclick="setMode('real')">Real</button>
     </div>
   </div>
   <div class="tabs">
@@ -449,7 +449,7 @@ var CORP_CASES = [
   { companyName: 'Clean Corp Inc', country: 'USA', regNo: 'US-2024-999', hit: 'No', exactMatch: 'No', hitType: '—', hitClass: 'badge-gray' }
 ];
 
-var screeningMode = 'mock';
+var screeningMode = 'real';
 var indSelected = -1, corpSelected = -1;
 var indState = { applicantId: null, extUserId: null };
 var corpState = { applicantId: null, extUserId: null };
@@ -685,9 +685,8 @@ async function indCheckStatus() {
         document.getElementById('ind-risk-labels').textContent = riskLabels.length > 0 ? riskLabels.join(', ') : '—';
         indLog('#d2a8ff', 'reviewStatus: ' + status + ', reviewAnswer: ' + ans);
 
-        if (status === 'completed' || ans === 'GREEN' || ans === 'RED') {
-          document.getElementById('ind-btn-aml').disabled = false;
-        }
+        // Always enable AML for screening test flow (test-aml-kyc/kyb levels don't require full ID verification)
+        document.getElementById('ind-btn-aml').disabled = false;
         setIndStep(3, 4);
       }
     } catch(e) {
@@ -874,9 +873,8 @@ async function corpCheckStatus() {
         document.getElementById('corp-risk-labels').textContent = riskLabels.length > 0 ? riskLabels.join(', ') : '—';
         corpLog('#d2a8ff', 'reviewStatus: ' + status + ', reviewAnswer: ' + ans);
 
-        if (status === 'completed' || ans === 'GREEN' || ans === 'RED') {
-          document.getElementById('corp-btn-aml').disabled = false;
-        }
+        // Always enable AML for screening test flow
+        document.getElementById('corp-btn-aml').disabled = false;
         setCorpStep(3, 4);
       }
     } catch(e) {
