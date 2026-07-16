@@ -617,7 +617,7 @@ async function indCreateApplicant() {
           lastName: c.lastName,
           dateOfBirth: c.dob || null,
           type: 'individual',
-          levelName: 'default'
+          levelName: 'test-aml-kyc'
         })
       });
       var data = await res.json();
@@ -806,7 +806,7 @@ async function corpCreateApplicant() {
           companyName: c.companyName,
           type: 'company',
           country: c.country,
-          levelName: 'default'
+          levelName: 'test-aml-kyb'
         })
       });
       var data = await res.json();

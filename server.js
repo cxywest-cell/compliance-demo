@@ -541,19 +541,27 @@ app.post('/api/compliance/update-aml', async (req, res) => {
 
 // Create applicant (person or company) - creates in Sumsub + stores
 app.post('/api/applicants/create', async (req, res) => {
-  const { externalUserId, levelName, type, firstName, lastName, dateOfBirth, fixedInfo } = req.body;
+  const { externalUserId, levelName, type, firstName, lastName, dateOfBirth, companyName, country, regNo } = req.body;
   
   // Level must be in query string, not body
-  const apiPath = `/resources/applicants?levelName=${encodeURIComponent(levelName)}`;
+  const apiPath = `/resources/applicants?levelName=${encodeURIComponent(levelName || 'default')}`;
   
-  const body = { externalUserId };
-  if (type) body.type = type;
-  if (firstName) body.firstName = firstName;
-  if (lastName) body.lastName = lastName;
-  if (dateOfBirth) body.dateOfBirth = dateOfBirth;
-  if (fixedInfo) body.fixedInfo = fixedInfo;
+  const body = { externalUserId, type: type || 'individual' };
+  
+  if (type === 'company') {
+    body.fixedInfo = {};
+    if (companyName) body.fixedInfo.companyName = companyName;
+    if (country) body.fixedInfo.country = country;
+    if (regNo) body.fixedInfo.regNo = regNo;
+  } else {
+    body.fixedInfo = {};
+    if (firstName) body.fixedInfo.firstName = firstName;
+    if (lastName) body.fixedInfo.lastName = lastName;
+    if (dateOfBirth) body.fixedInfo.dateOfBirth = dateOfBirth;
+  }
   
   console.log(`[COMPLIANCE CREATE] type=${type} levelName=${levelName} extId=${externalUserId}`);
+  console.log(`[COMPLIANCE CREATE BODY]`, JSON.stringify(body));
   const result = await sumsubApi('POST', apiPath, body);
   console.log(`[COMPLIANCE CREATE RESULT]`, JSON.stringify(result).substring(0, 500));
   res.json(result);
@@ -782,6 +790,45 @@ app.post('/api/websdk-link', async (req, res) => {
 
   console.log(`[WebSDK Link] Generated link for ${externalUserId}`);
   res.json({ url: linkResult.url, externalUserId: externalUserId });
+});
+
+// Run AML check for applicant (POST /resources/applicants/{applicantId}/recheck/aml)
+app.post('/api/run-aml-check', async (req, res) => {
+  const { applicantId } = req.body;
+  const amlPath = '/resources/applicants/' + applicantId + '/recheck/aml';
+  const result = await sumsubApi('POST', amlPath);
+  if (result.error) {
+    return res.status(500).json({ error: 'Failed to run AML check', detail: result.error });
+  }
+  res.json({ ok: result.ok || 1 });
+});
+
+// Get AML case data (GET /resources/api/applicants/{applicantId}/amlCase)
+app.get('/api/aml-case-data/:applicantId', async (req, res) => {
+  const { applicantId } = req.params;
+  const amlPath = '/resources/api/applicants/' + applicantId + '/amlCase';
+  const result = await sumsubApi('GET', amlPath);
+  if (result.error) {
+    return res.status(500).json({ error: 'Failed to get AML case data', detail: result.error });
+  }
+  res.json(result);
+});
+
+// Check applicant existence by externalUserId (GET /resources/applicants/-/byExternalUserId/{externalUserId})
+app.post('/api/check-applicant-existence', async (req, res) => {
+  const { externalUserId } = req.body;
+
+  const checkPath = '/resources/applicants/-/byExternalUserId/' + externalUserId;
+  const result = await sumsubApi('GET', checkPath);
+
+  if (result.error) {
+    return res.status(500).json({ error: 'Failed to check applicant existence', detail: result.error });
+  }
+
+  res.json({
+    exists: result.exists || false,
+    applicant: result.applicant || null
+  });
 });
 
 // Check applicant status by externalUserId
