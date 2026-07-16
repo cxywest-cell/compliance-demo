@@ -566,6 +566,15 @@ app.post('/api/applicants/create', async (req, res) => {
   res.json(result);
 });
 
+// Request applicant check (POST /resources/applicants/{applicantId}/checks)
+app.post('/api/request-check/:applicantId', async (req, res) => {
+  const { applicantId } = req.params;
+  console.log(`[REQUEST CHECK] ${applicantId}`);
+  const result = await sumsubApi('POST', `/resources/applicants/${applicantId}/checks`, {});
+  console.log(`[REQUEST CHECK RESULT]`, JSON.stringify(result).substring(0, 500));
+  res.json(result);
+});
+
 // AML Rescreening (POST /resources/applicants/{id}/recheck/aml)
 // Only works for approved applicants with completed verification steps
 app.post('/api/aml/rescreen/:applicantId', async (req, res) => {
