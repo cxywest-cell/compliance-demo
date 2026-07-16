@@ -232,13 +232,12 @@
       <div class="section-title">Step 2: Request Applicant Check</div>
       <div class="card">
         <div class="card-header">
-          <span>POST /resources/applicants/{applicantId}/checks</span>
+          <span>POST /resources/applicants/{id}/status/pending</span>
           <button class="btn btn-run" id="ind-btn-check" onclick="indRequestCheck()" disabled>Request Check</button>
         </div>
         <div class="card-body" id="ind-check-area">
-          <div style="color:#888;font-size:12px" id="ind-check-hint">After creating the applicant, request an ID/document check to trigger verification.</div>
-          <div class="result-row"><span class="rk">Check ID</span><span class="rv mono" id="ind-check-id">—</span></div>
-          <div class="result-row"><span class="rk">Status</span><span class="rv" id="ind-check-status"><span class="badge badge-gray">—</span></span></div>
+          <div style="color:#888;font-size:12px" id="ind-check-hint">After creating the applicant, request a check to trigger verification.</div>
+          <div class="result-row"><span class="rk">Result</span><span class="rv mono" id="ind-check-id">—</span></div>
         </div>
       </div>
 
@@ -398,13 +397,12 @@
       <div class="section-title">Step 2: Request Applicant Check</div>
       <div class="card">
         <div class="card-header">
-          <span>POST /resources/applicants/{applicantId}/checks</span>
+          <span>POST /resources/applicants/{id}/status/pending</span>
           <button class="btn btn-run" id="corp-btn-check" onclick="corpRequestCheck()" disabled>Request Check</button>
         </div>
         <div class="card-body" id="corp-check-area">
-          <div style="color:#888;font-size:12px" id="corp-check-hint">After creating the applicant, request an ID/document check to trigger verification.</div>
-          <div class="result-row"><span class="rk">Check ID</span><span class="rv mono" id="corp-check-id">—</span></div>
-          <div class="result-row"><span class="rk">Status</span><span class="rv" id="corp-check-status"><span class="badge badge-gray">—</span></span></div>
+          <div style="color:#888;font-size:12px" id="corp-check-hint">After creating the applicant, request a check to trigger verification.</div>
+          <div class="result-row"><span class="rk">Result</span><span class="rv mono" id="corp-check-id">—</span></div>
         </div>
       </div>
 
@@ -569,7 +567,6 @@ function resetIndSteps() {
   ['ind-check-id'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
-  var cs = document.getElementById('ind-check-status'); if (cs) cs.innerHTML = '<span class="badge badge-gray">—</span>';
   document.getElementById('ind-btn-check').disabled = true;
   document.getElementById('ind-btn-status').disabled = true;
   document.getElementById('ind-btn-aml').disabled = true;
@@ -608,7 +605,6 @@ function resetCorpSteps() {
   ['corp-check-id'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
-  var cs = document.getElementById('corp-check-status'); if (cs) cs.innerHTML = '<span class="badge badge-gray">—</span>';
   document.getElementById('corp-btn-check').disabled = true;
   document.getElementById('corp-btn-status').disabled = true;
   document.getElementById('corp-btn-aml').disabled = true;
@@ -701,20 +697,19 @@ async function indRequestCheck() {
   btn.disabled = true; btn.textContent = 'Requesting...';
 
   if (screeningMode === 'real') {
-    indLog('#79c0ff', 'POST /resources/applicants/' + indState.applicantId + '/checks');
+    indLog('#79c0ff', 'POST /resources/applicants/' + indState.applicantId + '/status/pending');
     try {
-      var res = await fetch('/api/request-check/' + indState.applicantId, { method: 'POST' });
+      var res = await fetch('/api/request-check/' + indState.applicantId, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({reason: 'demo'}) });
       var data = await res.json();
-      if (data.code === 404) {
-        indLog('#d2a8ff', '404 — Sandbox does not support /checks for test levels. Proceeding.');
-        document.getElementById('ind-check-id').textContent = 'N/A (sandbox)';
-        document.getElementById('ind-check-status').innerHTML = '<span class="badge badge-yellow">skipped</span>';
+      if (data.ok) {
+        indLog('#7ee787', '200 OK — check requested, status set to pending');
+        document.getElementById('ind-check-id').textContent = '{"ok":1}';
+      } else if (data.code === 404) {
+        indLog('#d2a8ff', '404 — ' + (data.description || 'Not found'));
+        document.getElementById('ind-check-id').textContent = '404: ' + (data.description || 'Not found');
       } else {
-        indLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
-        document.getElementById('ind-check-id').textContent = data.id || data.checkId || '—';
-        var st = data.status || 'pending';
-        var stClass = st === 'completed' ? 'badge-green' : st === 'rejected' ? 'badge-red' : 'badge-yellow';
-        document.getElementById('ind-check-status').innerHTML = '<span class="badge ' + stClass + '">' + st + '</span>';
+        indLog('#ff7b72', JSON.stringify(data).substring(0, 200));
+        document.getElementById('ind-check-id').textContent = JSON.stringify(data).substring(0, 80);
       }
       document.getElementById('ind-btn-status').disabled = false;
       setIndStep(3, 5);
@@ -722,10 +717,9 @@ async function indRequestCheck() {
       indLog('#ff7b72', 'Failed: ' + e.message);
     }
   } else {
-    indLog('#79c0ff', 'POST /resources/applicants/' + indState.applicantId + '/checks (MOCK)');
-    indLog('#7ee787', 'Check requested — ID verification triggered');
-    document.getElementById('ind-check-id').textContent = 'check-mock-' + indSelected;
-    document.getElementById('ind-check-status').innerHTML = '<span class="badge badge-yellow">pending</span>';
+    indLog('#79c0ff', 'POST /resources/applicants/' + indState.applicantId + '/status/pending (MOCK)');
+    indLog('#7ee787', 'Check requested — status set to pending');
+    document.getElementById('ind-check-id').textContent = '{"ok":1}';
     document.getElementById('ind-btn-status').disabled = false;
     setIndStep(3, 5);
   }
@@ -926,20 +920,22 @@ async function corpRequestCheck() {
   btn.disabled = true; btn.textContent = 'Requesting...';
 
   if (screeningMode === 'real') {
-    corpLog('#79c0ff', 'POST /resources/applicants/' + corpState.applicantId + '/checks');
+    corpLog('#79c0ff', 'POST /resources/applicants/' + corpState.applicantId + '/status/pending');
     try {
-      var res = await fetch('/api/request-check/' + corpState.applicantId, { method: 'POST' });
+      var res = await fetch('/api/request-check/' + corpState.applicantId, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({reason: 'demo'}) });
       var data = await res.json();
-      if (data.code === 404) {
-        corpLog('#d2a8ff', '404 — Sandbox does not support /checks for test levels. Proceeding.');
-        document.getElementById('corp-check-id').textContent = 'N/A (sandbox)';
-        document.getElementById('corp-check-status').innerHTML = '<span class="badge badge-yellow">skipped</span>';
+      if (data.ok) {
+        corpLog('#7ee787', '200 OK — check requested, status set to pending');
+        document.getElementById('corp-check-id').textContent = '{"ok":1}';
+      } else if (data.code === 409) {
+        corpLog('#d2a8ff', '409 — ' + (data.description || 'Missing required data'));
+        document.getElementById('corp-check-id').textContent = '409: missing verification steps';
+      } else if (data.code === 404) {
+        corpLog('#d2a8ff', '404 — ' + (data.description || 'Not found'));
+        document.getElementById('corp-check-id').textContent = '404: ' + (data.description || 'Not found');
       } else {
-        corpLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
-        document.getElementById('corp-check-id').textContent = data.id || data.checkId || '—';
-        var st = data.status || 'pending';
-        var stClass = st === 'completed' ? 'badge-green' : st === 'rejected' ? 'badge-red' : 'badge-yellow';
-        document.getElementById('corp-check-status').innerHTML = '<span class="badge ' + stClass + '">' + st + '</span>';
+        corpLog('#ff7b72', JSON.stringify(data).substring(0, 200));
+        document.getElementById('corp-check-id').textContent = JSON.stringify(data).substring(0, 80);
       }
       document.getElementById('corp-btn-status').disabled = false;
       setCorpStep(3, 5);
@@ -947,10 +943,9 @@ async function corpRequestCheck() {
       corpLog('#ff7b72', 'Failed: ' + e.message);
     }
   } else {
-    corpLog('#79c0ff', 'POST /resources/applicants/' + corpState.applicantId + '/checks (MOCK)');
-    corpLog('#7ee787', 'Check requested — ID verification triggered');
-    document.getElementById('corp-check-id').textContent = 'check-mock-' + corpSelected;
-    document.getElementById('corp-check-status').innerHTML = '<span class="badge badge-yellow">pending</span>';
+    corpLog('#79c0ff', 'POST /resources/applicants/' + corpState.applicantId + '/status/pending (MOCK)');
+    corpLog('#7ee787', 'Check requested — status set to pending');
+    document.getElementById('corp-check-id').textContent = '{"ok":1}';
     document.getElementById('corp-btn-status').disabled = false;
     setCorpStep(3, 5);
   }

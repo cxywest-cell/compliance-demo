@@ -566,11 +566,12 @@ app.post('/api/applicants/create', async (req, res) => {
   res.json(result);
 });
 
-// Request applicant check (POST /resources/applicants/{applicantId}/checks)
+// Request applicant check (POST /resources/applicants/{applicantId}/status/pending)
 app.post('/api/request-check/:applicantId', async (req, res) => {
   const { applicantId } = req.params;
   console.log(`[REQUEST CHECK] ${applicantId}`);
-  const result = await sumsubApi('POST', `/resources/applicants/${applicantId}/checks`, {});
+  const path = `/resources/applicants/${applicantId}/status/pending?reason=demo`;
+  const result = await sumsubApi('POST', path, null);
   console.log(`[REQUEST CHECK RESULT]`, JSON.stringify(result).substring(0, 500));
   res.json(result);
 });
