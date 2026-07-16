@@ -18,34 +18,70 @@
   .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
   .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
   .content { flex: 1; overflow-y: auto; padding: 16px; }
-  .role-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; }
-  .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
-  .role-tab:hover { color: #1a1a1a; }
-  .role-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
-  .role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
-  .role-header .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .role-header h2 { font-size: 14px; font-weight: 600; }
-  .role-header .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f0f0f0; color: #666; margin-left: auto; }
-  .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-  .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
-  .flow-bar .sep { color: #ccc; }
+  .tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; }
+  .tab { padding: 10px 14px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+  .tab:hover { color: #1a1a1a; }
+  .tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
   .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
   .card-body { padding: 10px 12px; }
-  .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
-  .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
-  .k { color: #888; }
-  .v { color: #1a1a1a; }
-  .custodian-bed { background: #fafbfc; border-top: 2px solid #e0e0e0; }
-  .placeholder { padding: 40px 16px; text-align: center; color: #888; }
-  .placeholder h3 { font-size: 14px; margin-bottom: 8px; color: #1a1a1a; }
-  .placeholder p { font-size: 12px; }
-  .role-page { display: none; }
-  .role-page.active { display: block; }
+  .result-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+  .result-row + .result-row { border-top: 1px solid #f0f0f0; }
+  .rk { color: #888; }
+  .rv { color: #1a1a1a; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-orange { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-purple { background: #e9d5ff; color: #6b21a8; }
+  .btn { padding: 6px 14px; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-run { background: #2563eb; color: #fff; }
+  .btn-run:hover:not(:disabled) { background: #1d4ed8; }
+  .btn-sm { padding: 3px 8px; font-size: 10px; }
+  .btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+  .btn-outline:hover:not(:disabled) { background: #f3f4f6; }
+  .info-note { background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 12px; font-size: 11px; color: #1e40af; margin-bottom: 12px; }
+  .info-note strong { font-weight: 600; }
+  .test-case-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .test-case-table th { background: #fafafa; padding: 6px 10px; text-align: left; font-weight: 600; color: #555; border-bottom: 1px solid #e0e0e0; }
+  .test-case-table td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+  .test-case-table tr { cursor: pointer; transition: background 0.1s; }
+  .test-case-table tbody tr:hover { background: #f0efff; }
+  .test-case-table tbody tr.selected { background: #e8e5ff; }
+  .test-case-table .hit-yes { color: #065f46; font-weight: 600; }
+  .test-case-table .hit-no { color: #991b1b; font-weight: 600; }
+  .flow-steps { display: flex; align-items: center; gap: 0; margin-bottom: 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; overflow-x: auto; }
+  .step { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: #e5e7eb; color: #6b7280; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .step-num.done { background: #5b4cdb; color: #fff; }
+  .step-num.active { background: #5b4cdb; color: #fff; }
+  .step-label { font-size: 11px; font-weight: 500; color: #888; }
+  .step-label.done { color: #1a1a1a; }
+  .step-label.active { color: #5b4cdb; }
+  .step-arrow { color: #e0e0e0; font-size: 14px; margin: 0 6px; flex-shrink: 0; }
+  .step-arrow.done { color: #5b4cdb; }
+  .log-area { background: #0d1117; border-radius: 4px; padding: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: #c9d1d9; max-height: 200px; overflow-y: auto; margin-top: 8px; }
+  .log-line { margin: 1px 0; }
+  .log-line .ts { color: #8b949e; }
+  .log-line .method { color: #79c0ff; }
+  .log-line .ok { color: #7ee787; }
+  .log-line .err { color: #ff7b72; }
+  .json-viewer { background: #0d1117; border-radius: 4px; padding: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: #c9d1d9; overflow-x: auto; white-space: pre; line-height: 1.7; max-height: 300px; overflow-y: auto; }
+  .selected-case-banner { background: #f0efff; border: 1px solid #c4b5fd; border-radius: 6px; padding: 10px 12px; font-size: 12px; margin-bottom: 12px; display: none; }
+  .selected-case-banner.visible { display: flex; align-items: center; gap: 12px; }
+  .selected-case-banner .case-name { font-weight: 600; color: #5b4cdb; }
+  .selected-case-banner .case-hit { font-size: 10px; }
 </style>
-
 </head>
 <body>
 
@@ -64,13 +100,874 @@
 
 <div class="main">
   <div class="topbar"><span>Entity Screening</span>
-  <div class="content">
-
-    <div class="placeholder">
-      <h3>Entity Screening</h3>
-      <p>Sanctions, PEP, and adverse media screening.<br>Connect to screening providers for risk assessment.</p>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;color:#888">Mode:</span>
+      <button class="btn btn-run" id="mode-mock" style="padding:2px 8px;font-size:10px;background:#2563eb;color:#fff" onclick="setMode('mock')">Mock</button>
+      <button class="btn btn-run" id="mode-real" style="padding:2px 8px;font-size:10px;background:#475569;color:#fff" onclick="setMode('real')">Real</button>
     </div>
   </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">Individual KYC Screening</div>
+    <div class="tab" onclick="switchTab(1)">Corporate KYB Screening</div>
+  </div>
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 1: Individual KYC Screening                -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-pane active" id="tab-individual">
+
+      <div class="info-note"><strong>Sumsub AML Screening</strong> Test cases from <a href="https://docs.sumsub.com/docs/test-aml-screening" target="_blank" style="color:#1e40af">docs.sumsub.com</a> — create applicants with specific names to trigger sanctions, PEP, crime, and adverse media hits.</div>
+
+      <!-- Test Cases Table -->
+      <div class="section-title">Test AML Cases — Individual (Person)</div>
+      <div class="card" style="overflow-x:auto">
+        <div class="card-body" style="padding:0">
+          <table class="test-case-table">
+            <thead>
+              <tr>
+                <th style="width:30px">#</th>
+                <th>Full name</th>
+                <th>Produce hit</th>
+                <th>Exact_match (RED)</th>
+                <th>Hit type</th>
+                <th style="width:60px">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="selectCase('individual', 0)" id="ind-case-0">
+                <td>1</td>
+                <td><strong>Joelamltest Red</strong><br><span style="color:#888;font-size:10px">DOB: 1999-01-24</span></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-yes">Yes</td>
+                <td><span class="badge badge-gray">Any</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('individual',0)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('individual', 1)" id="ind-case-1">
+                <td>2</td>
+                <td><strong>Joelamltest Red</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-yes">Yes</td>
+                <td><span class="badge badge-gray">Any</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('individual',1)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('individual', 2)" id="ind-case-2">
+                <td>3</td>
+                <td><strong>Joelamltest Yellow</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-no">No</td>
+                <td><span class="badge badge-gray">Any</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('individual',2)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('individual', 3)" id="ind-case-3">
+                <td>4</td>
+                <td><strong>Joelamltest Testpep</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-yes">Yes</td>
+                <td><span class="badge badge-purple">PEP</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('individual',3)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('individual', 4)" id="ind-case-4">
+                <td>5</td>
+                <td><strong>Joelamltest Testsanc</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-yes">Yes</td>
+                <td><span class="badge badge-red">Sanctions</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('individual',4)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('individual', 5)" id="ind-case-5">
+                <td>6</td>
+                <td><span style="color:#888">N/A (any name)</span></td>
+                <td class="hit-no">No</td>
+                <td class="hit-no">No</td>
+                <td><span class="badge badge-gray">—</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('individual',5)">Screen</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Selected Case Banner -->
+      <div class="selected-case-banner" id="ind-banner">
+        <span>Selected:</span>
+        <span class="case-name" id="ind-banner-name">—</span>
+        <span class="case-hit" id="ind-banner-hit"></span>
+      </div>
+
+      <!-- Flow Steps -->
+      <div class="flow-steps" id="ind-flow">
+        <div class="step" id="ind-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
+        <span class="step-arrow" id="ind-arrow-1">→</span>
+        <div class="step" id="ind-step-2"><span class="step-num">2</span><span class="step-label">Check Status</span></div>
+        <span class="step-arrow" id="ind-arrow-2">→</span>
+        <div class="step" id="ind-step-3"><span class="step-num">3</span><span class="step-label">Run AML</span></div>
+        <span class="step-arrow" id="ind-arrow-3">→</span>
+        <div class="step" id="ind-step-4"><span class="step-num">4</span><span class="step-label">AML Case Data</span></div>
+      </div>
+
+      <!-- Step 1: Create Applicant -->
+      <div class="section-title">Step 1: Create Applicant</div>
+      <div class="card">
+        <div class="card-header">
+          <span>POST /resources/applicants</span>
+          <button class="btn btn-run" id="ind-btn-create" onclick="indCreateApplicant()" disabled>Create</button>
+        </div>
+        <div class="card-body" id="ind-create-area">
+          <div style="color:#888;font-size:12px" id="ind-create-hint">Select a test case above, then click Create to register the applicant.</div>
+          <div class="result-row" style="display:none" id="ind-create-result-row">
+            <span class="rk">applicantId</span>
+            <span class="rv mono" id="ind-create-app-id">—</span>
+          </div>
+          <div class="result-row" style="display:none" id="ind-create-ext-row">
+            <span class="rk">externalUserId</span>
+            <span class="rv mono" id="ind-create-ext-id">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Check Status -->
+      <div class="section-title">Step 2: Check Status</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/applicants/-;externalUserId={extId}/one</span>
+          <button class="btn btn-run" id="ind-btn-status" onclick="indCheckStatus()" disabled>Check</button>
+        </div>
+        <div class="card-body" id="ind-status-area">
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="ind-review-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="ind-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">AML Status</span><span class="rv" id="ind-aml-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Risk Labels</span><span class="rv mono" id="ind-risk-labels">—</span></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Run AML Check -->
+      <div class="section-title">Step 3: Run AML Check</div>
+      <div class="card">
+        <div class="card-header">
+          <span>POST /resources/applicants/{applicantId}/recheck/aml</span>
+          <button class="btn btn-run" id="ind-btn-aml" onclick="indRunAml()" disabled>Run AML</button>
+        </div>
+        <div class="card-body" id="ind-aml-area">
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="ind-aml-run-status">—</span></span></div>
+          <div class="result-row"><span class="rk">OK</span><span class="rv mono" id="ind-aml-run-ok">—</span></div>
+        </div>
+      </div>
+
+      <!-- Step 4: AML Case Data -->
+      <div class="section-title">Step 4: AML Case Data</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/api/applicants/{applicantId}/amlCase</span>
+          <button class="btn btn-run" id="ind-btn-case" onclick="indGetAmlCase()" disabled>Get Case</button>
+        </div>
+        <div class="card-body" id="ind-case-area">
+          <div class="result-row"><span class="rk">Case ID</span><span class="rv mono" id="ind-case-id">—</span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="ind-case-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Hits Count</span><span class="rv mono" id="ind-case-hits">—</span></div>
+          <div class="result-row"><span class="rk">Vendor</span><span class="rv mono" id="ind-case-vendor">—</span></div>
+        </div>
+      </div>
+
+      <!-- API Log -->
+      <div class="section-title">API Log</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="log-area" id="ind-log"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 2: Corporate KYB Screening                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-corporate">
+
+      <div class="info-note"><strong>Sumsub AML Screening</strong> Corporate test cases — create company applicants to trigger sanctions, crime, and adverse media hits.</div>
+
+      <!-- Test Cases Table -->
+      <div class="section-title">Test AML Cases — Corporate (Company)</div>
+      <div class="card" style="overflow-x:auto">
+        <div class="card-body" style="padding:0">
+          <table class="test-case-table">
+            <thead>
+              <tr>
+                <th style="width:30px">#</th>
+                <th>Company name</th>
+                <th>Produce hit</th>
+                <th>Exact_match (RED)</th>
+                <th>Hit type</th>
+                <th style="width:60px">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="selectCase('corporate', 0)" id="corp-case-0">
+                <td>1</td>
+                <td><strong>Lorem Mocksanc LLC</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-no">No</td>
+                <td><span class="badge badge-red">Sanctions</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('corporate',0)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('corporate', 1)" id="corp-case-1">
+                <td>2</td>
+                <td><strong>Lorem Mockrime LLC</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-no">No</td>
+                <td><span class="badge badge-orange">Crime</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('corporate',1)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('corporate', 2)" id="corp-case-2">
+                <td>3</td>
+                <td><strong>Lorem Mockmedi LLC</strong></td>
+                <td class="hit-yes">Yes</td>
+                <td class="hit-no">No</td>
+                <td><span class="badge badge-yellow">Adverse media</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('corporate',2)">Screen</button></td>
+              </tr>
+              <tr onclick="selectCase('corporate', 3)" id="corp-case-3">
+                <td>4</td>
+                <td><span style="color:#888">N/A (any company)</span></td>
+                <td class="hit-no">No</td>
+                <td class="hit-no">No</td>
+                <td><span class="badge badge-gray">—</span></td>
+                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('corporate',3)">Screen</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Selected Case Banner -->
+      <div class="selected-case-banner" id="corp-banner">
+        <span>Selected:</span>
+        <span class="case-name" id="corp-banner-name">—</span>
+        <span class="case-hit" id="corp-banner-hit"></span>
+      </div>
+
+      <!-- Flow Steps -->
+      <div class="flow-steps" id="corp-flow">
+        <div class="step" id="corp-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
+        <span class="step-arrow" id="corp-arrow-1">→</span>
+        <div class="step" id="corp-step-2"><span class="step-num">2</span><span class="step-label">Check Status</span></div>
+        <span class="step-arrow" id="corp-arrow-2">→</span>
+        <div class="step" id="corp-step-3"><span class="step-num">3</span><span class="step-label">Run AML</span></div>
+        <span class="step-arrow" id="corp-arrow-3">→</span>
+        <div class="step" id="corp-step-4"><span class="step-num">4</span><span class="step-label">AML Case Data</span></div>
+      </div>
+
+      <!-- Step 1: Create Applicant -->
+      <div class="section-title">Step 1: Create Applicant</div>
+      <div class="card">
+        <div class="card-header">
+          <span>POST /resources/applicants</span>
+          <button class="btn btn-run" id="corp-btn-create" onclick="corpCreateApplicant()" disabled>Create</button>
+        </div>
+        <div class="card-body" id="corp-create-area">
+          <div style="color:#888;font-size:12px" id="corp-create-hint">Select a test case above, then click Create to register the applicant.</div>
+          <div class="result-row" style="display:none" id="corp-create-result-row">
+            <span class="rk">applicantId</span>
+            <span class="rv mono" id="corp-create-app-id">—</span>
+          </div>
+          <div class="result-row" style="display:none" id="corp-create-ext-row">
+            <span class="rk">externalUserId</span>
+            <span class="rv mono" id="corp-create-ext-id">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Check Status -->
+      <div class="section-title">Step 2: Check Status</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/applicants/-;externalUserId={extId}/one</span>
+          <button class="btn btn-run" id="corp-btn-status" onclick="corpCheckStatus()" disabled>Check</button>
+        </div>
+        <div class="card-body" id="corp-status-area">
+          <div class="result-row"><span class="rk">Review Status</span><span class="rv" id="corp-review-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="corp-review-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">AML Status</span><span class="rv" id="corp-aml-status"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Risk Labels</span><span class="rv mono" id="corp-risk-labels">—</span></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Run AML Check -->
+      <div class="section-title">Step 3: Run AML Check</div>
+      <div class="card">
+        <div class="card-header">
+          <span>POST /resources/applicants/{applicantId}/recheck/aml</span>
+          <button class="btn btn-run" id="corp-btn-aml" onclick="corpRunAml()" disabled>Run AML</button>
+        </div>
+        <div class="card-body" id="corp-aml-area">
+          <div class="result-row"><span class="rk">Status</span><span class="rv"><span class="badge badge-gray" id="corp-aml-run-status">—</span></span></div>
+          <div class="result-row"><span class="rk">OK</span><span class="rv mono" id="corp-aml-run-ok">—</span></div>
+        </div>
+      </div>
+
+      <!-- Step 4: AML Case Data -->
+      <div class="section-title">Step 4: AML Case Data</div>
+      <div class="card">
+        <div class="card-header">
+          <span>GET /resources/api/applicants/{applicantId}/amlCase</span>
+          <button class="btn btn-run" id="corp-btn-case" onclick="corpGetAmlCase()" disabled>Get Case</button>
+        </div>
+        <div class="card-body" id="corp-case-area">
+          <div class="result-row"><span class="rk">Case ID</span><span class="rv mono" id="corp-case-id">—</span></div>
+          <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="corp-case-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Hits Count</span><span class="rv mono" id="corp-case-hits">—</span></div>
+          <div class="result-row"><span class="rk">Vendor</span><span class="rv mono" id="corp-case-vendor">—</span></div>
+        </div>
+      </div>
+
+      <!-- API Log -->
+      <div class="section-title">API Log</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="log-area" id="corp-log"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<script>
+// ─── Test Case Data ───
+var IND_CASES = [
+  { firstName: 'Joelamltest', lastName: 'Red', dob: '1999-01-24', hit: 'Yes', exactMatch: 'Yes', hitType: 'Any', hitClass: 'badge-gray' },
+  { firstName: 'Joelamltest', lastName: 'Red', dob: null, hit: 'Yes', exactMatch: 'Yes', hitType: 'Any', hitClass: 'badge-gray' },
+  { firstName: 'Joelamltest', lastName: 'Yellow', dob: null, hit: 'Yes', exactMatch: 'No', hitType: 'Any', hitClass: 'badge-gray' },
+  { firstName: 'Joelamltest', lastName: 'Testpep', dob: null, hit: 'Yes', exactMatch: 'Yes', hitType: 'PEP', hitClass: 'badge-purple' },
+  { firstName: 'Joelamltest', lastName: 'Testsanc', dob: null, hit: 'Yes', exactMatch: 'Yes', hitType: 'Sanctions', hitClass: 'badge-red' },
+  { firstName: 'John', lastName: 'Doe', dob: '1990-01-01', hit: 'No', exactMatch: 'No', hitType: '—', hitClass: 'badge-gray' }
+];
+
+var CORP_CASES = [
+  { companyName: 'Lorem Mocksanc LLC', country: 'US', regNo: 'US-2024-001', hit: 'Yes', exactMatch: 'No', hitType: 'Sanctions', hitClass: 'badge-red' },
+  { companyName: 'Lorem Mockrime LLC', country: 'US', regNo: 'US-2024-002', hit: 'Yes', exactMatch: 'No', hitType: 'Crime', hitClass: 'badge-orange' },
+  { companyName: 'Lorem Mockmedi LLC', country: 'US', regNo: 'US-2024-003', hit: 'Yes', exactMatch: 'No', hitType: 'Adverse media', hitClass: 'badge-yellow' },
+  { companyName: 'Clean Corp Inc', country: 'US', regNo: 'US-2024-999', hit: 'No', exactMatch: 'No', hitType: '—', hitClass: 'badge-gray' }
+];
+
+var screeningMode = 'mock';
+var indSelected = -1, corpSelected = -1;
+var indState = { applicantId: null, extUserId: null };
+var corpState = { applicantId: null, extUserId: null };
+
+// ─── Tab Switching ───
+function switchTab(idx) {
+  var tabs = document.querySelectorAll('.tabs .tab');
+  var panes = document.querySelectorAll('.tab-pane');
+  tabs.forEach(function(t, i) { t.classList.toggle('active', i === idx); });
+  panes.forEach(function(p, i) { p.classList.toggle('active', i === idx); });
+}
+
+// ─── Mode Switching ───
+function setMode(mode) {
+  screeningMode = mode;
+  document.getElementById('mode-mock').style.background = mode === 'mock' ? '#2563eb' : '#475569';
+  document.getElementById('mode-real').style.background = mode === 'real' ? '#2563eb' : '#475569';
+}
+
+// ─── Case Selection ───
+function selectCase(type, idx) {
+  if (type === 'individual') {
+    indSelected = idx;
+    document.querySelectorAll('#tab-individual .test-case-table tbody tr').forEach(function(r, i) {
+      r.classList.toggle('selected', i === idx);
+    });
+    var c = IND_CASES[idx];
+    document.getElementById('ind-banner').classList.add('visible');
+    document.getElementById('ind-banner-name').textContent = c.firstName + ' ' + c.lastName + (c.dob ? ' (DOB: ' + c.dob + ')' : '');
+    document.getElementById('ind-banner-hit').innerHTML = '<span class="badge ' + c.hitClass + '">' + c.hitType + '</span>';
+    document.getElementById('ind-btn-create').disabled = false;
+    resetIndSteps();
+  } else {
+    corpSelected = idx;
+    document.querySelectorAll('#tab-corporate .test-case-table tbody tr').forEach(function(r, i) {
+      r.classList.toggle('selected', i === idx);
+    });
+    var c = CORP_CASES[idx];
+    document.getElementById('corp-banner').classList.add('visible');
+    document.getElementById('corp-banner-name').textContent = c.companyName;
+    document.getElementById('corp-banner-hit').innerHTML = '<span class="badge ' + c.hitClass + '">' + c.hitType + '</span>';
+    document.getElementById('corp-btn-create').disabled = false;
+    resetCorpSteps();
+  }
+}
+
+// ─── One-click Screen ───
+async function createAndScreen(type, idx) {
+  selectCase(type, idx);
+  if (type === 'individual') {
+    await indCreateApplicant();
+    if (indState.applicantId) { await indCheckStatus(); await indRunAml(); await indGetAmlCase(); }
+  } else {
+    await corpCreateApplicant();
+    if (corpState.applicantId) { await corpCheckStatus(); await corpRunAml(); await corpGetAmlCase(); }
+  }
+}
+
+// ─── Step Progression (Individual) ───
+function setIndStep(step, total) {
+  for (var i = 1; i <= total; i++) {
+    var s = document.getElementById('ind-step-' + i);
+    var a = document.getElementById('ind-arrow-' + i);
+    if (!s) continue;
+    var num = s.querySelector('.step-num');
+    var lbl = s.querySelector('.step-label');
+    num.className = 'step-num' + (i < step ? ' done' : i === step ? ' active' : '');
+    lbl.className = 'step-label' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (a) a.className = 'step-arrow' + (i < step ? ' done' : '');
+  }
+}
+function resetIndSteps() {
+  setIndStep(1, 4);
+  indState = { applicantId: null, extUserId: null };
+  ['ind-review-status','ind-review-answer','ind-aml-status'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.innerHTML = '<span class="badge badge-gray">—</span>';
+  });
+  ['ind-risk-labels','ind-case-id','ind-case-hits','ind-case-vendor'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.textContent = '—';
+  });
+  var ca = document.getElementById('ind-case-answer'); if (ca) ca.innerHTML = '<span class="badge badge-gray">—</span>';
+  ['ind-aml-run-status','ind-aml-run-ok'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.textContent = '—';
+  });
+  document.getElementById('ind-btn-status').disabled = true;
+  document.getElementById('ind-btn-aml').disabled = true;
+  document.getElementById('ind-btn-case').disabled = true;
+  document.getElementById('ind-create-result-row').style.display = 'none';
+  document.getElementById('ind-create-ext-row').style.display = 'none';
+  document.getElementById('ind-create-hint').style.display = '';
+}
+
+// ─── Step Progression (Corporate) ───
+function setCorpStep(step, total) {
+  for (var i = 1; i <= total; i++) {
+    var s = document.getElementById('corp-step-' + i);
+    var a = document.getElementById('corp-arrow-' + i);
+    if (!s) continue;
+    var num = s.querySelector('.step-num');
+    var lbl = s.querySelector('.step-label');
+    num.className = 'step-num' + (i < step ? ' done' : i === step ? ' active' : '');
+    lbl.className = 'step-label' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (a) a.className = 'step-arrow' + (i < step ? ' done' : '');
+  }
+}
+function resetCorpSteps() {
+  setCorpStep(1, 4);
+  corpState = { applicantId: null, extUserId: null };
+  ['corp-review-status','corp-review-answer','corp-aml-status'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.innerHTML = '<span class="badge badge-gray">—</span>';
+  });
+  ['corp-risk-labels','corp-case-id','corp-case-hits','corp-case-vendor'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.textContent = '—';
+  });
+  var ca = document.getElementById('corp-case-answer'); if (ca) ca.innerHTML = '<span class="badge badge-gray">—</span>';
+  ['corp-aml-run-status','corp-aml-run-ok'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.textContent = '—';
+  });
+  document.getElementById('corp-btn-status').disabled = true;
+  document.getElementById('corp-btn-aml').disabled = true;
+  document.getElementById('corp-btn-case').disabled = true;
+  document.getElementById('corp-create-result-row').style.display = 'none';
+  document.getElementById('corp-create-ext-row').style.display = 'none';
+  document.getElementById('corp-create-hint').style.display = '';
+}
+
+// ─── Logging ───
+function indLog(color, msg) {
+  var area = document.getElementById('ind-log');
+  var ts = new Date().toLocaleTimeString();
+  area.innerHTML += '<div class="log-line"><span class="ts">[' + ts + ']</span> <span style="color:' + color + '">' + msg + '</span></div>';
+  area.scrollTop = area.scrollHeight;
+}
+function corpLog(color, msg) {
+  var area = document.getElementById('corp-log');
+  var ts = new Date().toLocaleTimeString();
+  area.innerHTML += '<div class="log-line"><span class="ts">[' + ts + ']</span> <span style="color:' + color + '">' + msg + '</span></div>';
+  area.scrollTop = area.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════
+// INDIVIDUAL KYC SCREENING
+// ═══════════════════════════════════════════════════════
+
+async function indCreateApplicant() {
+  if (indSelected < 0) return;
+  var c = IND_CASES[indSelected];
+  var btn = document.getElementById('ind-btn-create');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  var extUserId = 'aml-ind-' + Date.now().toString(36) + '-' + indSelected;
+  indState.extUserId = extUserId;
+
+  if (screeningMode === 'real') {
+    indLog('#79c0ff', 'POST /api/applicants/create');
+    indLog('#d2a8ff', 'Body: { externalUserId: "' + extUserId + '", firstName: "' + c.firstName + '", lastName: "' + c.lastName + '"' + (c.dob ? ', dateOfBirth: "' + c.dob + '"' : '') + ', type: "individual" }');
+
+    try {
+      var res = await fetch('/api/applicants/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          externalUserId: extUserId,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          dateOfBirth: c.dob || null,
+          type: 'individual',
+          levelName: 'default'
+        })
+      });
+      var data = await res.json();
+      if (data.id) {
+        indLog('#7ee787', '200 OK — applicantId: ' + data.id);
+        indState.applicantId = data.id;
+        document.getElementById('ind-create-app-id').textContent = data.id;
+        document.getElementById('ind-create-ext-id').textContent = extUserId;
+        document.getElementById('ind-create-result-row').style.display = 'flex';
+        document.getElementById('ind-create-ext-row').style.display = 'flex';
+        document.getElementById('ind-create-hint').style.display = 'none';
+        document.getElementById('ind-btn-status').disabled = false;
+        setIndStep(2, 4);
+      } else {
+        indLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+      }
+    } catch(e) {
+      indLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var mockId = 'mock-ind-' + indSelected + '-' + Math.random().toString(36).substr(2, 8);
+    indState.applicantId = mockId;
+    indLog('#79c0ff', 'POST /resources/applicants (MOCK)');
+    indLog('#7ee787', 'Created: applicantId=' + mockId + ', extUserId=' + extUserId);
+    document.getElementById('ind-create-app-id').textContent = mockId;
+    document.getElementById('ind-create-ext-id').textContent = extUserId;
+    document.getElementById('ind-create-result-row').style.display = 'flex';
+    document.getElementById('ind-create-ext-row').style.display = 'flex';
+    document.getElementById('ind-create-hint').style.display = 'none';
+    document.getElementById('ind-btn-status').disabled = false;
+    setIndStep(2, 4);
+  }
+  btn.textContent = 'Create';
+}
+
+async function indCheckStatus() {
+  if (!indState.applicantId) return;
+  var btn = document.getElementById('ind-btn-status');
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  if (screeningMode === 'real') {
+    indLog('#79c0ff', 'GET /resources/applicants/-;externalUserId=' + indState.extUserId + '/one');
+    try {
+      var res = await fetch('/api/applicant-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: indState.extUserId })
+      });
+      var data = await res.json();
+      if (data.review) {
+        indLog('#7ee787', '200 OK');
+        var review = data.review;
+        var reviewResult = review.reviewResult || {};
+        var status = review.reviewStatus || 'unknown';
+        var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
+                          status === 'onHold' || status === 'pending' ? 'badge-yellow' :
+                          status === 'init' ? 'badge-blue' : 'badge-gray';
+        document.getElementById('ind-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+        var ans = reviewResult.reviewAnswer || '—';
+        var ansClass = ans === 'GREEN' ? 'badge-green' : ans === 'RED' ? 'badge-red' : 'badge-gray';
+        document.getElementById('ind-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + ans + '</span>';
+        var aml = review.aml || {};
+        document.getElementById('ind-aml-status').innerHTML = '<span class="badge badge-gray">' + (aml.status || '—') + '</span>';
+        var riskLabels = data.riskLabels || [];
+        document.getElementById('ind-risk-labels').textContent = riskLabels.length > 0 ? riskLabels.join(', ') : '—';
+        indLog('#d2a8ff', 'reviewStatus: ' + status + ', reviewAnswer: ' + ans);
+
+        if (status === 'completed' || ans === 'GREEN' || ans === 'RED') {
+          document.getElementById('ind-btn-aml').disabled = false;
+        }
+        setIndStep(3, 4);
+      }
+    } catch(e) {
+      indLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var c = IND_CASES[indSelected];
+    indLog('#79c0ff', 'GET /resources/applicants/-;externalUserId=' + indState.extUserId + '/one (MOCK)');
+    var hits = c.hit === 'Yes';
+    var status = hits ? 'completed' : 'completed';
+    var answer = hits ? (c.exactMatch === 'Yes' ? 'RED' : 'GREEN') : 'GREEN';
+    var statusClass = 'badge-green';
+    var ansClass = answer === 'RED' ? 'badge-red' : 'badge-green';
+    document.getElementById('ind-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+    document.getElementById('ind-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + answer + '</span>';
+    document.getElementById('ind-aml-status').innerHTML = '<span class="badge badge-gray">completed</span>';
+    document.getElementById('ind-risk-labels').textContent = hits ? c.hitType : '—';
+    indLog('#7ee787', 'reviewStatus: ' + status + ', reviewAnswer: ' + answer + ', AML: completed');
+    document.getElementById('ind-btn-aml').disabled = false;
+    setIndStep(3, 4);
+  }
+  btn.textContent = 'Check';
+}
+
+async function indRunAml() {
+  if (!indState.applicantId) return;
+  var btn = document.getElementById('ind-btn-aml');
+  btn.disabled = true; btn.textContent = 'Running...';
+
+  if (screeningMode === 'real') {
+    indLog('#79c0ff', 'POST /resources/applicants/' + indState.applicantId + '/recheck/aml');
+    try {
+      var res = await fetch('/api/run-aml-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicantId: indState.applicantId })
+      });
+      var data = await res.json();
+      indLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
+      document.getElementById('ind-aml-run-status').textContent = data.status || 'completed';
+      document.getElementById('ind-aml-run-ok').textContent = data.ok !== undefined ? String(data.ok) : '—';
+      document.getElementById('ind-btn-case').disabled = false;
+      setIndStep(4, 4);
+    } catch(e) {
+      indLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var c = IND_CASES[indSelected];
+    indLog('#79c0ff', 'POST /resources/applicants/' + indState.applicantId + '/recheck/aml (MOCK)');
+    indLog('#7ee787', 'AML screening triggered — ' + (c.hit === 'Yes' ? c.hitType + ' hit expected' : 'clean'));
+    document.getElementById('ind-aml-run-status').textContent = 'completed';
+    document.getElementById('ind-aml-run-ok').textContent = 'true';
+    document.getElementById('ind-btn-case').disabled = false;
+    setIndStep(4, 4);
+  }
+  btn.textContent = 'Run AML';
+}
+
+async function indGetAmlCase() {
+  if (!indState.applicantId) return;
+  var btn = document.getElementById('ind-btn-case');
+  btn.disabled = true; btn.textContent = 'Fetching...';
+
+  if (screeningMode === 'real') {
+    indLog('#79c0ff', 'GET /resources/api/applicants/' + indState.applicantId + '/amlCase');
+    try {
+      var res = await fetch('/api/aml-case-data/' + indState.applicantId);
+      var data = await res.json();
+      indLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
+      document.getElementById('ind-case-id').textContent = data.caseId || '—';
+      var ans = data.reviewAnswer || '—';
+      var ansClass = ans === 'GREEN' ? 'badge-green' : ans === 'RED' ? 'badge-red' : 'badge-gray';
+      document.getElementById('ind-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + ans + '</span>';
+      document.getElementById('ind-case-hits').textContent = data.hitsCount || '—';
+      document.getElementById('ind-case-vendor').textContent = data.vendor || '—';
+    } catch(e) {
+      indLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var c = IND_CASES[indSelected];
+    indLog('#79c0ff', 'GET /resources/api/applicants/' + indState.applicantId + '/amlCase (MOCK)');
+    var answer = c.hit === 'Yes' ? (c.exactMatch === 'Yes' ? 'RED' : 'GREEN') : 'GREEN';
+    var ansClass = answer === 'RED' ? 'badge-red' : 'badge-green';
+    document.getElementById('ind-case-id').textContent = 'case-mock-' + indSelected;
+    document.getElementById('ind-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + answer + '</span>';
+    document.getElementById('ind-case-hits').textContent = c.hit === 'Yes' ? '1' : '0';
+    document.getElementById('ind-case-vendor').textContent = 'Sumsub AML';
+    indLog('#7ee787', 'Case: ' + answer + ', Hits: ' + (c.hit === 'Yes' ? '1' : '0') + ', Vendor: Sumsub AML');
+  }
+  btn.textContent = 'Get Case';
+}
+
+// ═══════════════════════════════════════════════════════
+// CORPORATE KYB SCREENING
+// ═══════════════════════════════════════════════════════
+
+async function corpCreateApplicant() {
+  if (corpSelected < 0) return;
+  var c = CORP_CASES[corpSelected];
+  var btn = document.getElementById('corp-btn-create');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  var extUserId = 'aml-corp-' + Date.now().toString(36) + '-' + corpSelected;
+  corpState.extUserId = extUserId;
+
+  if (screeningMode === 'real') {
+    corpLog('#79c0ff', 'POST /api/applicants/create');
+    corpLog('#d2a8ff', 'Body: { externalUserId: "' + extUserId + '", companyName: "' + c.companyName + '", type: "company" }');
+
+    try {
+      var res = await fetch('/api/applicants/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          externalUserId: extUserId,
+          companyName: c.companyName,
+          type: 'company',
+          country: c.country,
+          levelName: 'default'
+        })
+      });
+      var data = await res.json();
+      if (data.id) {
+        corpLog('#7ee787', '200 OK — applicantId: ' + data.id);
+        corpState.applicantId = data.id;
+        document.getElementById('corp-create-app-id').textContent = data.id;
+        document.getElementById('corp-create-ext-id').textContent = extUserId;
+        document.getElementById('corp-create-result-row').style.display = 'flex';
+        document.getElementById('corp-create-ext-row').style.display = 'flex';
+        document.getElementById('corp-create-hint').style.display = 'none';
+        document.getElementById('corp-btn-status').disabled = false;
+        setCorpStep(2, 4);
+      } else {
+        corpLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+      }
+    } catch(e) {
+      corpLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var mockId = 'mock-corp-' + corpSelected + '-' + Math.random().toString(36).substr(2, 8);
+    corpState.applicantId = mockId;
+    corpLog('#79c0ff', 'POST /resources/applicants (MOCK)');
+    corpLog('#7ee787', 'Created: applicantId=' + mockId + ', extUserId=' + extUserId);
+    document.getElementById('corp-create-app-id').textContent = mockId;
+    document.getElementById('corp-create-ext-id').textContent = extUserId;
+    document.getElementById('corp-create-result-row').style.display = 'flex';
+    document.getElementById('corp-create-ext-row').style.display = 'flex';
+    document.getElementById('corp-create-hint').style.display = 'none';
+    document.getElementById('corp-btn-status').disabled = false;
+    setCorpStep(2, 4);
+  }
+  btn.textContent = 'Create';
+}
+
+async function corpCheckStatus() {
+  if (!corpState.applicantId) return;
+  var btn = document.getElementById('corp-btn-status');
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  if (screeningMode === 'real') {
+    corpLog('#79c0ff', 'GET /resources/applicants/-;externalUserId=' + corpState.extUserId + '/one');
+    try {
+      var res = await fetch('/api/applicant-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalUserId: corpState.extUserId })
+      });
+      var data = await res.json();
+      if (data.review) {
+        corpLog('#7ee787', '200 OK');
+        var review = data.review;
+        var reviewResult = review.reviewResult || {};
+        var status = review.reviewStatus || 'unknown';
+        var statusClass = status === 'completed' || status === 'approved' ? 'badge-green' :
+                          status === 'onHold' || status === 'pending' ? 'badge-yellow' :
+                          status === 'init' ? 'badge-blue' : 'badge-gray';
+        document.getElementById('corp-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+        var ans = reviewResult.reviewAnswer || '—';
+        var ansClass = ans === 'GREEN' ? 'badge-green' : ans === 'RED' ? 'badge-red' : 'badge-gray';
+        document.getElementById('corp-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + ans + '</span>';
+        var aml = review.aml || {};
+        document.getElementById('corp-aml-status').innerHTML = '<span class="badge badge-gray">' + (aml.status || '—') + '</span>';
+        var riskLabels = data.riskLabels || [];
+        document.getElementById('corp-risk-labels').textContent = riskLabels.length > 0 ? riskLabels.join(', ') : '—';
+        corpLog('#d2a8ff', 'reviewStatus: ' + status + ', reviewAnswer: ' + ans);
+
+        if (status === 'completed' || ans === 'GREEN' || ans === 'RED') {
+          document.getElementById('corp-btn-aml').disabled = false;
+        }
+        setCorpStep(3, 4);
+      }
+    } catch(e) {
+      corpLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var c = CORP_CASES[corpSelected];
+    corpLog('#79c0ff', 'GET /resources/applicants/-;externalUserId=' + corpState.extUserId + '/one (MOCK)');
+    var hits = c.hit === 'Yes';
+    var status = 'completed';
+    var answer = hits ? 'GREEN' : 'GREEN';
+    var statusClass = 'badge-green';
+    var ansClass = 'badge-green';
+    document.getElementById('corp-review-status').innerHTML = '<span class="badge ' + statusClass + '">' + status + '</span>';
+    document.getElementById('corp-review-answer').innerHTML = '<span class="badge ' + ansClass + '">' + answer + '</span>';
+    document.getElementById('corp-aml-status').innerHTML = '<span class="badge badge-gray">completed</span>';
+    document.getElementById('corp-risk-labels').textContent = hits ? c.hitType : '—';
+    corpLog('#7ee787', 'reviewStatus: ' + status + ', reviewAnswer: ' + answer + ', AML: completed');
+    document.getElementById('corp-btn-aml').disabled = false;
+    setCorpStep(3, 4);
+  }
+  btn.textContent = 'Check';
+}
+
+async function corpRunAml() {
+  if (!corpState.applicantId) return;
+  var btn = document.getElementById('corp-btn-aml');
+  btn.disabled = true; btn.textContent = 'Running...';
+
+  if (screeningMode === 'real') {
+    corpLog('#79c0ff', 'POST /resources/applicants/' + corpState.applicantId + '/recheck/aml');
+    try {
+      var res = await fetch('/api/run-aml-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicantId: corpState.applicantId })
+      });
+      var data = await res.json();
+      corpLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
+      document.getElementById('corp-aml-run-status').textContent = data.status || 'completed';
+      document.getElementById('corp-aml-run-ok').textContent = data.ok !== undefined ? String(data.ok) : '—';
+      document.getElementById('corp-btn-case').disabled = false;
+      setCorpStep(4, 4);
+    } catch(e) {
+      corpLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var c = CORP_CASES[corpSelected];
+    corpLog('#79c0ff', 'POST /resources/applicants/' + corpState.applicantId + '/recheck/aml (MOCK)');
+    corpLog('#7ee787', 'AML screening triggered — ' + (c.hit === 'Yes' ? c.hitType + ' hit expected' : 'clean'));
+    document.getElementById('corp-aml-run-status').textContent = 'completed';
+    document.getElementById('corp-aml-run-ok').textContent = 'true';
+    document.getElementById('corp-btn-case').disabled = false;
+    setCorpStep(4, 4);
+  }
+  btn.textContent = 'Run AML';
+}
+
+async function corpGetAmlCase() {
+  if (!corpState.applicantId) return;
+  var btn = document.getElementById('corp-btn-case');
+  btn.disabled = true; btn.textContent = 'Fetching...';
+
+  if (screeningMode === 'real') {
+    corpLog('#79c0ff', 'GET /resources/api/applicants/' + corpState.applicantId + '/amlCase');
+    try {
+      var res = await fetch('/api/aml-case-data/' + corpState.applicantId);
+      var data = await res.json();
+      corpLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
+      document.getElementById('corp-case-id').textContent = data.caseId || '—';
+      var ans = data.reviewAnswer || '—';
+      var ansClass = ans === 'GREEN' ? 'badge-green' : ans === 'RED' ? 'badge-red' : 'badge-gray';
+      document.getElementById('corp-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + ans + '</span>';
+      document.getElementById('corp-case-hits').textContent = data.hitsCount || '—';
+      document.getElementById('corp-case-vendor').textContent = data.vendor || '—';
+    } catch(e) {
+      corpLog('#ff7b72', 'Failed: ' + e.message);
+    }
+  } else {
+    var c = CORP_CASES[corpSelected];
+    corpLog('#79c0ff', 'GET /resources/api/applicants/' + corpState.applicantId + '/amlCase (MOCK)');
+    var answer = c.hit === 'Yes' ? 'GREEN' : 'GREEN';
+    var ansClass = 'badge-green';
+    document.getElementById('corp-case-id').textContent = 'case-mock-' + corpSelected;
+    document.getElementById('corp-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + answer + '</span>';
+    document.getElementById('corp-case-hits').textContent = c.hit === 'Yes' ? '1' : '0';
+    document.getElementById('corp-case-vendor').textContent = 'Sumsub AML';
+    corpLog('#7ee787', 'Case: ' + answer + ', Hits: ' + (c.hit === 'Yes' ? '1' : '0') + ', Vendor: Sumsub AML');
+  }
+  btn.textContent = 'Get Case';
+}
+</script>
 </body>
 </html>
