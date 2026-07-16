@@ -279,8 +279,13 @@
         <div class="card-body" id="ind-case-area">
           <div class="result-row"><span class="rk">Case ID</span><span class="rv mono" id="ind-case-id">—</span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="ind-case-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Risk Labels</span><span class="rv mono" id="ind-case-labels">—</span></div>
           <div class="result-row"><span class="rk">Hits Count</span><span class="rv mono" id="ind-case-hits">—</span></div>
           <div class="result-row"><span class="rk">Vendor</span><span class="rv mono" id="ind-case-vendor">—</span></div>
+          <div id="ind-case-hits-detail" style="display:none;margin-top:8px;border-top:1px solid #e0e0e0;padding-top:8px">
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin-bottom:6px">Hit Details</div>
+            <div id="ind-case-hits-list"></div>
+          </div>
         </div>
       </div>
 
@@ -444,8 +449,13 @@
         <div class="card-body" id="corp-case-area">
           <div class="result-row"><span class="rk">Case ID</span><span class="rv mono" id="corp-case-id">—</span></div>
           <div class="result-row"><span class="rk">Review Answer</span><span class="rv" id="corp-case-answer"><span class="badge badge-gray">—</span></span></div>
+          <div class="result-row"><span class="rk">Risk Labels</span><span class="rv mono" id="corp-case-labels">—</span></div>
           <div class="result-row"><span class="rk">Hits Count</span><span class="rv mono" id="corp-case-hits">—</span></div>
           <div class="result-row"><span class="rk">Vendor</span><span class="rv mono" id="corp-case-vendor">—</span></div>
+          <div id="corp-case-hits-detail" style="display:none;margin-top:8px;border-top:1px solid #e0e0e0;padding-top:8px">
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin-bottom:6px">Hit Details</div>
+            <div id="corp-case-hits-list"></div>
+          </div>
         </div>
       </div>
 
@@ -557,7 +567,7 @@ function resetIndSteps() {
   ['ind-review-status','ind-review-answer','ind-aml-status'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.innerHTML = '<span class="badge badge-gray">—</span>';
   });
-  ['ind-risk-labels','ind-case-id','ind-case-hits','ind-case-vendor'].forEach(function(id) {
+  ['ind-risk-labels','ind-case-id','ind-case-hits','ind-case-vendor','ind-case-labels'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
   var ca = document.getElementById('ind-case-answer'); if (ca) ca.innerHTML = '<span class="badge badge-gray">—</span>';
@@ -567,6 +577,7 @@ function resetIndSteps() {
   ['ind-check-id'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
+  var hd = document.getElementById('ind-case-hits-detail'); if (hd) hd.style.display = 'none';
   document.getElementById('ind-btn-check').disabled = true;
   document.getElementById('ind-btn-status').disabled = true;
   document.getElementById('ind-btn-aml').disabled = true;
@@ -595,7 +606,7 @@ function resetCorpSteps() {
   ['corp-review-status','corp-review-answer','corp-aml-status'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.innerHTML = '<span class="badge badge-gray">—</span>';
   });
-  ['corp-risk-labels','corp-case-id','corp-case-hits','corp-case-vendor'].forEach(function(id) {
+  ['corp-risk-labels','corp-case-id','corp-case-hits','corp-case-vendor','corp-case-labels'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
   var ca = document.getElementById('corp-case-answer'); if (ca) ca.innerHTML = '<span class="badge badge-gray">—</span>';
@@ -605,6 +616,7 @@ function resetCorpSteps() {
   ['corp-check-id'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
+  var hd = document.getElementById('corp-case-hits-detail'); if (hd) hd.style.display = 'none';
   document.getElementById('corp-btn-check').disabled = true;
   document.getElementById('corp-btn-status').disabled = true;
   document.getElementById('corp-btn-aml').disabled = true;
@@ -828,13 +840,31 @@ async function indGetAmlCase() {
     try {
       var res = await fetch('/api/aml-case-data/' + indState.applicantId);
       var data = await res.json();
-      indLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
-      document.getElementById('ind-case-id').textContent = data.caseId || '—';
-      var ans = data.reviewAnswer || '—';
+      indLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 300));
+      document.getElementById('ind-case-id').textContent = data.id || '—';
+      var ans = (data.review && data.review.reviewAnswer) || '—';
       var ansClass = ans === 'GREEN' ? 'badge-green' : ans === 'RED' ? 'badge-red' : 'badge-gray';
       document.getElementById('ind-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + ans + '</span>';
-      document.getElementById('ind-case-hits').textContent = data.hitsCount || '—';
-      document.getElementById('ind-case-vendor').textContent = data.vendor || '—';
+      document.getElementById('ind-case-labels').textContent = (data.riskLabels && data.riskLabels.length) ? data.riskLabels.join(', ') : '—';
+      var hits = data.hits || [];
+      document.getElementById('ind-case-hits').textContent = hits.length;
+      document.getElementById('ind-case-vendor').textContent = data.vendorAttribution || '—';
+      if (hits.length > 0) {
+        var hd = document.getElementById('ind-case-hits-detail');
+        hd.style.display = 'block';
+        var list = document.getElementById('ind-case-hits-list');
+        list.innerHTML = '';
+        hits.forEach(function(h) {
+          var ml = h.riskLabels ? h.riskLabels.join(', ') : '';
+          var row = document.createElement('div');
+          row.style.cssText = 'background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;margin-bottom:4px;font-size:12px';
+          row.innerHTML = '<div style="font-weight:600">' + (h.name || 'Unknown') + '</div>' +
+            '<div class="mono" style="font-size:11px;color:#888">' + (h.id || '') + '</div>' +
+            '<div><span class="badge badge-red">' + (h.review && h.review.matchStatus || '') + '</span>' +
+            (ml ? ' <span class="badge badge-yellow">' + ml + '</span>' : '') + '</div>';
+          list.appendChild(row);
+        });
+      }
     } catch(e) {
       indLog('#ff7b72', 'Failed: ' + e.message);
     }
@@ -1054,23 +1084,42 @@ async function corpGetAmlCase() {
     try {
       var res = await fetch('/api/aml-case-data/' + corpState.applicantId);
       var data = await res.json();
-      corpLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 200));
-      document.getElementById('corp-case-id').textContent = data.caseId || '—';
-      var ans = data.reviewAnswer || '—';
+      corpLog('#7ee787', '200 OK — ' + JSON.stringify(data).substring(0, 300));
+      document.getElementById('corp-case-id').textContent = data.id || '—';
+      var ans = (data.review && data.review.reviewAnswer) || '—';
       var ansClass = ans === 'GREEN' ? 'badge-green' : ans === 'RED' ? 'badge-red' : 'badge-gray';
       document.getElementById('corp-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + ans + '</span>';
-      document.getElementById('corp-case-hits').textContent = data.hitsCount || '—';
-      document.getElementById('corp-case-vendor').textContent = data.vendor || '—';
+      document.getElementById('corp-case-labels').textContent = (data.riskLabels && data.riskLabels.length) ? data.riskLabels.join(', ') : '—';
+      var hits = data.hits || [];
+      document.getElementById('corp-case-hits').textContent = hits.length;
+      document.getElementById('corp-case-vendor').textContent = data.vendorAttribution || '—';
+      if (hits.length > 0) {
+        var hd = document.getElementById('corp-case-hits-detail');
+        hd.style.display = 'block';
+        var list = document.getElementById('corp-case-hits-list');
+        list.innerHTML = '';
+        hits.forEach(function(h) {
+          var ml = h.riskLabels ? h.riskLabels.join(', ') : '';
+          var row = document.createElement('div');
+          row.style.cssText = 'background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px;padding:6px 8px;margin-bottom:4px;font-size:12px';
+          row.innerHTML = '<div style="font-weight:600">' + (h.name || 'Unknown') + '</div>' +
+            '<div class="mono" style="font-size:11px;color:#888">' + (h.id || '') + '</div>' +
+            '<div><span class="badge badge-red">' + (h.review && h.review.matchStatus || '') + '</span>' +
+            (ml ? ' <span class="badge badge-yellow">' + ml + '</span>' : '') + '</div>';
+          list.appendChild(row);
+        });
+      }
     } catch(e) {
       corpLog('#ff7b72', 'Failed: ' + e.message);
     }
   } else {
     var c = CORP_CASES[corpSelected];
     corpLog('#79c0ff', 'GET /resources/api/applicants/' + corpState.applicantId + '/amlCase (MOCK)');
-    var answer = c.hit === 'Yes' ? 'GREEN' : 'GREEN';
-    var ansClass = 'badge-green';
+    var answer = c.hit === 'Yes' ? (c.exactMatch === 'Yes' ? 'RED' : 'GREEN') : 'GREEN';
+    var ansClass = answer === 'RED' ? 'badge-red' : 'badge-green';
     document.getElementById('corp-case-id').textContent = 'case-mock-' + corpSelected;
     document.getElementById('corp-case-answer').innerHTML = '<span class="badge ' + ansClass + '">' + answer + '</span>';
+    document.getElementById('corp-case-labels').textContent = c.hit === 'Yes' ? c.hitType : '—';
     document.getElementById('corp-case-hits').textContent = c.hit === 'Yes' ? '1' : '0';
     document.getElementById('corp-case-vendor').textContent = 'Sumsub AML';
     corpLog('#7ee787', 'Case: ' + answer + ', Hits: ' + (c.hit === 'Yes' ? '1' : '0') + ', Vendor: Sumsub AML');
