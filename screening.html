@@ -345,14 +345,6 @@
                 <td><span class="badge badge-yellow">Adverse media</span></td>
                 <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('corporate',2)">Screen</button></td>
               </tr>
-              <tr onclick="selectCase('corporate', 3)" id="corp-case-3">
-                <td>4</td>
-                <td><span style="color:#888">N/A (any company)</span></td>
-                <td class="hit-no">No</td>
-                <td class="hit-no">No</td>
-                <td><span class="badge badge-gray">—</span></td>
-                <td><button class="btn btn-sm btn-run" onclick="event.stopPropagation();createAndScreen('corporate',3)">Screen</button></td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -369,13 +361,15 @@
       <div class="flow-steps" id="corp-flow">
         <div class="step" id="corp-step-1"><span class="step-num">1</span><span class="step-label">Create Applicant</span></div>
         <span class="step-arrow" id="corp-arrow-1">→</span>
-        <div class="step" id="corp-step-2"><span class="step-num">2</span><span class="step-label">Request Check</span></div>
+        <div class="step" id="corp-step-2"><span class="step-num">2</span><span class="step-label">Submit Company Data</span></div>
         <span class="step-arrow" id="corp-arrow-2">→</span>
-        <div class="step" id="corp-step-3"><span class="step-num">3</span><span class="step-label">Check Status</span></div>
+        <div class="step" id="corp-step-3"><span class="step-num">3</span><span class="step-label">Request Check</span></div>
         <span class="step-arrow" id="corp-arrow-3">→</span>
-        <div class="step" id="corp-step-4"><span class="step-num">4</span><span class="step-label">Run AML</span></div>
+        <div class="step" id="corp-step-4"><span class="step-num">4</span><span class="step-label">Check Status</span></div>
         <span class="step-arrow" id="corp-arrow-4">→</span>
-        <div class="step" id="corp-step-5"><span class="step-num">5</span><span class="step-label">AML Case Data</span></div>
+        <div class="step" id="corp-step-5"><span class="step-num">5</span><span class="step-label">Run AML</span></div>
+        <span class="step-arrow" id="corp-arrow-5">→</span>
+        <div class="step" id="corp-step-6"><span class="step-num">6</span><span class="step-label">AML Case Data</span></div>
       </div>
 
       <!-- Step 1: Create Applicant -->
@@ -398,8 +392,23 @@
         </div>
       </div>
 
-      <!-- Step 2: Request Applicant Check -->
-      <div class="section-title">Step 2: Request Applicant Check</div>
+      <!-- Step 2: Submit Company Data -->
+      <div class="section-title">Step 2: Submit Company Data</div>
+      <div class="card">
+        <div class="card-header">
+          <span>COMPANY_DATA — companyName, country, registrationNumber</span>
+          <button class="btn btn-run" id="corp-btn-companydata" onclick="corpSubmitCompanyData()" disabled>Submit</button>
+        </div>
+        <div class="card-body" id="corp-companydata-area">
+          <div style="color:#888;font-size:12px" id="corp-companydata-hint">Fill in the company name, country, and registration number for the COMPANY_DATA verification step.</div>
+          <div class="result-row"><span class="rk">Company Name</span><span class="rv mono" id="corp-companydata-name">—</span></div>
+          <div class="result-row"><span class="rk">Country</span><span class="rv mono" id="corp-companydata-country">—</span></div>
+          <div class="result-row"><span class="rk">Status</span><span class="rv" id="corp-companydata-status"><span class="badge badge-gray">—</span></span></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Request Applicant Check -->
+      <div class="section-title">Step 3: Request Applicant Check</div>
       <div class="card">
         <div class="card-header">
           <span>POST /resources/applicants/{id}/status/pending</span>
@@ -411,8 +420,8 @@
         </div>
       </div>
 
-      <!-- Step 3: Check Status -->
-      <div class="section-title">Step 3: Check Status</div>
+      <!-- Step 4: Check Status -->
+      <div class="section-title">Step 4: Check Status</div>
       <div class="card">
         <div class="card-header">
           <span>GET /resources/applicants/-;externalUserId={extId}/one</span>
@@ -426,8 +435,8 @@
         </div>
       </div>
 
-      <!-- Step 4: Run AML Check -->
-      <div class="section-title">Step 4: Run AML Check</div>
+      <!-- Step 5: Run AML Check -->
+      <div class="section-title">Step 5: Run AML Check</div>
       <div class="card">
         <div class="card-header">
           <span>POST /resources/applicants/{applicantId}/recheck/aml</span>
@@ -439,8 +448,8 @@
         </div>
       </div>
 
-      <!-- Step 5: AML Case Data -->
-      <div class="section-title">Step 5: AML Case Data</div>
+      <!-- Step 6: AML Case Data -->
+      <div class="section-title">Step 6: AML Case Data</div>
       <div class="card">
         <div class="card-header">
           <span>GET /resources/api/applicants/{applicantId}/amlCase</span>
@@ -485,8 +494,7 @@ var IND_CASES = [
 var CORP_CASES = [
   { companyName: 'Lorem Mocksanc LLC', country: 'USA', regNo: 'US-2024-001', hit: 'Yes', exactMatch: 'No', hitType: 'Sanctions', hitClass: 'badge-red' },
   { companyName: 'Lorem Mockrime LLC', country: 'USA', regNo: 'US-2024-002', hit: 'Yes', exactMatch: 'No', hitType: 'Crime', hitClass: 'badge-orange' },
-  { companyName: 'Lorem Mockmedi LLC', country: 'USA', regNo: 'US-2024-003', hit: 'Yes', exactMatch: 'No', hitType: 'Adverse media', hitClass: 'badge-yellow' },
-  { companyName: 'Clean Corp Inc', country: 'USA', regNo: 'US-2024-999', hit: 'No', exactMatch: 'No', hitType: '—', hitClass: 'badge-gray' }
+  { companyName: 'Lorem Mockmedi LLC', country: 'USA', regNo: 'US-2024-003', hit: 'Yes', exactMatch: 'No', hitType: 'Adverse media', hitClass: 'badge-yellow' }
 ];
 
 var screeningMode = 'real';
@@ -544,7 +552,7 @@ async function createAndScreen(type, idx) {
     if (indState.applicantId) { await indRequestCheck(); await indCheckStatus(); await indRunAml(); await indGetAmlCase(); }
   } else {
     await corpCreateApplicant();
-    if (corpState.applicantId) { await corpRequestCheck(); await corpCheckStatus(); await corpRunAml(); await corpGetAmlCase(); }
+    if (corpState.applicantId) { await corpSubmitCompanyData(); await corpRequestCheck(); await corpCheckStatus(); await corpRunAml(); await corpGetAmlCase(); }
   }
 }
 
@@ -601,7 +609,7 @@ function setCorpStep(step, total) {
   }
 }
 function resetCorpSteps() {
-  setCorpStep(1, 5);
+  setCorpStep(1, 6);
   corpState = { applicantId: null, extUserId: null };
   ['corp-review-status','corp-review-answer','corp-aml-status'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.innerHTML = '<span class="badge badge-gray">—</span>';
@@ -613,10 +621,12 @@ function resetCorpSteps() {
   ['corp-aml-run-status','corp-aml-run-ok'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
-  ['corp-check-id'].forEach(function(id) {
+  ['corp-check-id','corp-companydata-name','corp-companydata-country'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.textContent = '—';
   });
+  var cs = document.getElementById('corp-companydata-status'); if (cs) cs.innerHTML = '<span class="badge badge-gray">—</span>';
   var hd = document.getElementById('corp-case-hits-detail'); if (hd) hd.style.display = 'none';
+  document.getElementById('corp-btn-companydata').disabled = true;
   document.getElementById('corp-btn-check').disabled = true;
   document.getElementById('corp-btn-status').disabled = true;
   document.getElementById('corp-btn-aml').disabled = true;
@@ -938,10 +948,24 @@ async function corpCreateApplicant() {
     document.getElementById('corp-create-result-row').style.display = 'flex';
     document.getElementById('corp-create-ext-row').style.display = 'flex';
     document.getElementById('corp-create-hint').style.display = 'none';
-    document.getElementById('corp-btn-check').disabled = false;
-    setCorpStep(2, 5);
+    document.getElementById('corp-btn-companydata').disabled = false;
+    setCorpStep(2, 6);
   }
   btn.textContent = 'Create';
+}
+
+async function corpSubmitCompanyData() {
+  var c = CORP_CASES[corpSelected];
+  var btn = document.getElementById('corp-btn-companydata');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  corpLog('#79c0ff', 'COMPANY_DATA — companyName: ' + c.companyName + ', country: ' + c.country);
+  document.getElementById('corp-companydata-name').textContent = c.companyName;
+  document.getElementById('corp-companydata-country').textContent = c.country;
+  document.getElementById('corp-companydata-status').innerHTML = '<span class="badge badge-green">submitted</span>';
+  corpLog('#7ee787', 'Company data filled — COMPANY_DATA step completed.');
+  document.getElementById('corp-btn-check').disabled = false;
+  setCorpStep(3, 6);
+  btn.textContent = 'Submit';
 }
 
 async function corpRequestCheck() {
@@ -958,8 +982,8 @@ async function corpRequestCheck() {
         corpLog('#7ee787', '200 OK — check requested, status set to pending');
         document.getElementById('corp-check-id').textContent = '{"ok":1}';
       } else if (data.code === 409) {
-        corpLog('#d2a8ff', '409 — ' + (data.description || 'Missing required data'));
-        document.getElementById('corp-check-id').textContent = '409: missing verification steps';
+        corpLog('#d2a8ff', '409 — COMPANY_DATA requires WebSDK interaction (simulated above).');
+        document.getElementById('corp-check-id').textContent = 'skipped — requires WebSDK in production';
       } else if (data.code === 404) {
         corpLog('#d2a8ff', '404 — ' + (data.description || 'Not found'));
         document.getElementById('corp-check-id').textContent = '404: ' + (data.description || 'Not found');
@@ -968,7 +992,7 @@ async function corpRequestCheck() {
         document.getElementById('corp-check-id').textContent = JSON.stringify(data).substring(0, 80);
       }
       document.getElementById('corp-btn-status').disabled = false;
-      setCorpStep(3, 5);
+      setCorpStep(4, 6);
     } catch(e) {
       corpLog('#ff7b72', 'Failed: ' + e.message);
     }
@@ -977,7 +1001,7 @@ async function corpRequestCheck() {
     corpLog('#7ee787', 'Check requested — status set to pending');
     document.getElementById('corp-check-id').textContent = '{"ok":1}';
     document.getElementById('corp-btn-status').disabled = false;
-    setCorpStep(3, 5);
+    setCorpStep(4, 6);
   }
   btn.textContent = 'Request Check';
 }
@@ -1016,7 +1040,7 @@ async function corpCheckStatus() {
 
         // Always enable AML for screening test flow
         document.getElementById('corp-btn-aml').disabled = false;
-        setCorpStep(4, 5);
+        setCorpStep(5, 6);
       }
     } catch(e) {
       corpLog('#ff7b72', 'Failed: ' + e.message);
@@ -1035,7 +1059,7 @@ async function corpCheckStatus() {
     document.getElementById('corp-risk-labels').textContent = hits ? c.hitType : '—';
     corpLog('#7ee787', 'reviewStatus: ' + status + ', reviewAnswer: ' + answer + ', AML: completed');
     document.getElementById('corp-btn-aml').disabled = false;
-    setCorpStep(4, 5);
+    setCorpStep(5, 6);
   }
   btn.textContent = 'Check';
 }
@@ -1058,7 +1082,7 @@ async function corpRunAml() {
       document.getElementById('corp-aml-run-status').textContent = data.status || 'completed';
       document.getElementById('corp-aml-run-ok').textContent = data.ok !== undefined ? String(data.ok) : '—';
       document.getElementById('corp-btn-case').disabled = false;
-      setCorpStep(5, 5);
+      setCorpStep(6, 6);
     } catch(e) {
       corpLog('#ff7b72', 'Failed: ' + e.message);
     }
@@ -1069,7 +1093,7 @@ async function corpRunAml() {
     document.getElementById('corp-aml-run-status').textContent = 'completed';
     document.getElementById('corp-aml-run-ok').textContent = 'true';
     document.getElementById('corp-btn-case').disabled = false;
-    setCorpStep(5, 5);
+    setCorpStep(6, 6);
   }
   btn.textContent = 'Run AML';
 }

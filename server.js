@@ -549,8 +549,7 @@ app.post('/api/applicants/create', async (req, res) => {
   const body = { externalUserId, type: type || 'individual' };
   
   if (type === 'company') {
-    // Sumsub: country goes to fixedInfo when sent at top level
-    // companyName and registrationNumber handled through requiredIdDocs prefill
+    // Sumsub: country goes at top level for prefill
     if (country) body.country = country;
   } else {
     body.fixedInfo = {};
