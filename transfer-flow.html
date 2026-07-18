@@ -150,7 +150,6 @@
     Travel Rule Transfer
     <div class="topbar-actions">
       <span id="net-badge"></span>
-      <button class="btn btn-outline btn-sm" id="btn-reset-transfer" onclick="resetTransfer()">Reset Transfer</button>
     </div>
   </div>
   <div class="content">
@@ -165,75 +164,6 @@
     <!-- ═══ Entity A ═══ -->
     <div class="role-page active" id="role-entity-a">
       <div class="role-header"><span class="dot" style="background:#5b4cdb"></span><h2>Entity A</h2><span class="tag">Originator VASP</span></div>
-      <div class="flow-bar" id="flow-bar-entity-a"></div>
-
-      <!-- Transfer Summary (shown when transfer exists) -->
-      <div id="ea-transfer-summary" style="display:none"></div>
-
-      <!-- Transfer Initiation Form -->
-      <div id="ea-transfer-form">
-        <div class="section-title">Initiate Transfer</div>
-        <div class="card">
-          <div class="card-header">New Transfer Request</div>
-          <div class="card-body">
-            <div class="transfer-form">
-              <div class="form-group">
-                <label>Asset</label>
-                <select id="tx-asset">
-                  <option value="USDC">USDC</option>
-                  <option value="USDT">USDT</option>
-                  <option value="ETH">ETH</option>
-                  <option value="BTC">BTC</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Amount</label>
-                <input type="number" id="tx-amount" value="250000" min="1" step="0.01">
-              </div>
-              <div class="form-group">
-                <label>Blockchain</label>
-                <select id="tx-chain">
-                  <option value="Ethereum">Ethereum</option>
-                  <option value="Bitcoin">Bitcoin</option>
-                  <option value="Solana">Solana</option>
-                  <option value="BNB Chain">BNB Chain</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Beneficiary Name</label>
-                <input type="text" id="tx-beneficiary-name" value="Entity B Corp">
-              </div>
-              <div class="form-group full">
-                <label>Beneficiary Wallet Address</label>
-                <input type="text" id="tx-beneficiary-wallet" value="0x9e2b...d48f" class="mono">
-              </div>
-              <div class="full" style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
-                <button class="btn btn-primary" onclick="initiateTransfer()">Create Transfer & Send Travel Rule Info</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Entity A compliance timeline -->
-      <div id="ea-timeline-section" style="display:none">
-        <div class="section-title">Transfer Compliance Chain</div>
-        <div class="card">
-          <div class="card-header">Travel Rule Message Flow</div>
-          <div class="card-body">
-            <div class="timeline" id="ea-timeline"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Entity A info (always shown) -->
-      <div class="section-title">Entity Info</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ea-did">—</span></div>
-        <div class="cred-row"><span class="k">Type</span><span class="v">VASP</span></div>
-        <div class="cred-row"><span class="k">Role</span><span class="v">Originator VASP</span></div>
-        <div class="cred-row"><span class="k">Wallet</span><span class="v mono" id="ea-wallet">—</span></div>
-      </div></div>
 
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
@@ -249,103 +179,16 @@
           <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
         </div>
       </div></div>
-
-      <div class="section-title">Custodian</div>
-      <div class="card custodian-bed"><div class="card-body">
-        <div class="cred-row"><span class="k">Name</span><span class="v">Custodian A</span></div>
-        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ca-did-ref">—</span></div>
-        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v mono" id="ca-wallet-ref">—</span></div>
-      </div></div>
-
-      <div class="section-title">Counterparty</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Beneficiary VASP</span><span class="v">Entity B</span></div>
-        <div class="cred-row"><span class="k">Beneficiary DID</span><span class="v mono" id="eb-did-ref">—</span></div>
-        <div class="cred-row"><span class="k">Beneficiary Custodian</span><span class="v">Custodian B</span></div>
-        <div class="cred-row"><span class="k">Custodian B Wallet</span><span class="v mono" id="cb-wallet-ref">—</span></div>
-      </div></div>
     </div>
 
     <!-- ═══ Custodian A ═══ -->
     <div class="role-page" id="role-custodian-a">
       <div class="role-header"><span class="dot" style="background:#8b5cf6"></span><h2>Custodian A</h2><span class="tag">Custody Provider</span></div>
-      <div class="flow-bar" id="flow-bar-custodian-a"></div>
-
-      <div id="ca-transfer-summary" style="display:none"></div>
-
-      <!-- Custodian A action: sign and forward Travel Rule message -->
-      <div id="ca-action-section" style="display:none">
-        <div class="section-title">Your Action Required</div>
-        <div class="card">
-          <div class="card-header">Sign & Forward Travel Rule Message</div>
-          <div class="card-body">
-            <p style="font-size:12px;color:#666;margin-bottom:10px">Entity A has initiated a transfer. Review the Travel Rule message and forward it through the Notabene Network to Custodian B.</p>
-            <div class="msg-preview" id="ca-tr-message"></div>
-            <div style="margin-top:10px;display:flex;gap:8px;">
-              <button class="btn btn-primary" onclick="custodianAForward()">✓ Sign & Forward to Network</button>
-              <button class="btn btn-danger" onclick="rejectTransfer('custodian-a')">Reject</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="ca-timeline-section" style="display:none">
-        <div class="section-title">Transfer Compliance Chain</div>
-        <div class="card">
-          <div class="card-header">Travel Rule Message Flow</div>
-          <div class="card-body">
-            <div class="timeline" id="ca-timeline"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-title">Entity Info</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ca-did">—</span></div>
-        <div class="cred-row"><span class="k">Type</span><span class="v">Custodian / VASP</span></div>
-        <div class="cred-row"><span class="k">Hot Wallet</span><span class="v mono" id="ca-wallet">—</span></div>
-      </div></div>
-
-      <div class="section-title">Customer</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Entity</span><span class="v">Entity A (Originator VASP)</span></div>
-        <div class="cred-row"><span class="k">Entity DID</span><span class="v mono" id="ea-did-ref-ca">—</span></div>
-        <div class="cred-row"><span class="k">Custody Wallet</span><span class="v mono" id="ea-wallet-ref-ca">—</span></div>
-      </div></div>
     </div>
 
     <!-- ═══ Entity B ═══ -->
     <div class="role-page" id="role-entity-b">
       <div class="role-header"><span class="dot" style="background:#06b6d4"></span><h2>Entity B</h2><span class="tag">Beneficiary VASP</span></div>
-      <div class="flow-bar" id="flow-bar-entity-b"></div>
-
-      <div id="eb-transfer-summary" style="display:none"></div>
-
-      <div id="eb-action-section" style="display:none">
-        <div class="section-title">Incoming Transfer Notification</div>
-        <div class="card">
-          <div class="card-header">Transfer from Entity A via Custodian A</div>
-          <div class="card-body" id="eb-incoming-details"></div>
-        </div>
-      </div>
-
-      <div id="eb-timeline-section" style="display:none">
-        <div class="section-title">Transfer Compliance Chain</div>
-        <div class="card">
-          <div class="card-header">Travel Rule Message Flow</div>
-          <div class="card-body">
-            <div class="timeline" id="eb-timeline"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-title">Entity Info</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="eb-did">—</span></div>
-        <div class="cred-row"><span class="k">Type</span><span class="v">VASP</span></div>
-        <div class="cred-row"><span class="k">Role</span><span class="v">Beneficiary VASP</span></div>
-        <div class="cred-row"><span class="k">Wallet</span><span class="v mono" id="eb-wallet">—</span></div>
-      </div></div>
 
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
@@ -361,75 +204,11 @@
           <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="eb-customer-hit">—</span></div>
         </div>
       </div></div>
-
-      <div class="section-title">Custodian</div>
-      <div class="card custodian-bed"><div class="card-body">
-        <div class="cred-row"><span class="k">Name</span><span class="v">Custodian B</span></div>
-        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="cb-did-ref">—</span></div>
-        <div class="cred-row"><span class="k">Custody Hot Wallet</span><span class="v mono" id="cb-wallet-ref">—</span></div>
-      </div></div>
-
-      <div class="section-title">Counterparty</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Originator VASP</span><span class="v">Entity A</span></div>
-        <div class="cred-row"><span class="k">Originator DID</span><span class="v mono" id="ea-did-ref-eb">—</span></div>
-        <div class="cred-row"><span class="k">Originator Custodian</span><span class="v">Custodian A</span></div>
-        <div class="cred-row"><span class="k">Custodian A Wallet</span><span class="v mono" id="ca-wallet-ref-eb">—</span></div>
-      </div></div>
     </div>
 
     <!-- ═══ Custodian B ═══ -->
     <div class="role-page" id="role-custodian-b">
       <div class="role-header"><span class="dot" style="background:#14b8a6"></span><h2>Custodian B</h2><span class="tag">Custody Provider</span></div>
-      <div class="flow-bar" id="flow-bar-custodian-b"></div>
-
-      <div id="cb-transfer-summary" style="display:none"></div>
-
-      <div id="cb-action-section" style="display:none">
-        <div class="section-title">Your Action Required</div>
-        <div class="card">
-          <div class="card-header">Run Compliance Check & Confirm Receipt</div>
-          <div class="card-body">
-            <p style="font-size:12px;color:#666;margin-bottom:10px">Travel Rule message received from Custodian A via Notabene Network. Run AML/sanctions screening and confirm beneficiary details.</p>
-            <div class="msg-preview" id="cb-tr-message"></div>
-            <div class="compliance-result" id="cb-compliance-result" style="display:none">
-              <div class="compliance-item"><div class="ci-label">AML Screening</div><div class="ci-value" id="cb-aml">—</div></div>
-              <div class="compliance-item"><div class="ci-label">Sanctions Check</div><div class="ci-value" id="cb-sanctions">—</div></div>
-              <div class="compliance-item"><div class="ci-label">Beneficiary KYC</div><div class="ci-value" id="cb-kyc">—</div></div>
-            </div>
-            <div style="margin-top:10px;display:flex;gap:8px;">
-              <button class="btn btn-primary" id="cb-run-check-btn" onclick="custodianBCheck()">Run Compliance Check</button>
-              <button class="btn btn-success" id="cb-confirm-btn" style="display:none" onclick="custodianBConfirm()">✓ Confirm & Notify Entity B</button>
-              <button class="btn btn-danger" onclick="rejectTransfer('custodian-b')">Reject</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="cb-timeline-section" style="display:none">
-        <div class="section-title">Transfer Compliance Chain</div>
-        <div class="card">
-          <div class="card-header">Travel Rule Message Flow</div>
-          <div class="card-body">
-            <div class="timeline" id="cb-timeline"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-title">Entity Info</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">DID</span><span class="v mono" id="cb-did">—</span></div>
-        <div class="cred-row"><span class="k">Type</span><span class="v">Custodian / VASP</span></div>
-        <div class="cred-row"><span class="k">Hot Wallet</span><span class="v mono" id="cb-wallet">—</span></div>
-      </div></div>
-
-      <div class="section-title">Customer</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Belongs to</span><span class="v">Entity B (Beneficiary VASP)</span></div>
-        <div class="cred-row"><span class="k">Name</span><span class="v" id="cb-customer-name">—</span></div>
-        <div class="cred-row"><span class="k">DOB</span><span class="v" id="cb-customer-dob">—</span></div>
-        <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="cb-customer-hit">—</span></div>
-      </div></div>
     </div>
 
   </div>
@@ -480,10 +259,6 @@ function updateEbCustomer() {
   fill('eb-customer-name', c.firstName + ' ' + c.lastName);
   fill('eb-customer-dob', c.dob || '—');
   fill('eb-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
-  // Also update Custodian B's customer display
-  fill('cb-customer-name', c.firstName + ' ' + c.lastName);
-  fill('cb-customer-dob', c.dob || '—');
-  fill('cb-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
 }
 
 function loadSettings() {
@@ -503,28 +278,6 @@ function fill(id, val) {
   if (el) el.textContent = val || '—';
 }
 
-function applyRoleCredentials(s) {
-  fill('ea-did', s.eaDid); fill('ea-wallet', s.eaWallet);
-  fill('ca-did', s.caDid); fill('ca-wallet', s.caWallet);
-  fill('eb-did', s.ebDid); fill('eb-wallet', s.ebWallet);
-  fill('cb-did', s.cbDid); fill('cb-wallet', s.cbWallet);
-  fill('ca-did-ref', s.caDid); fill('ca-wallet-ref', s.caWallet);
-  fill('eb-did-ref', s.ebDid); fill('cb-wallet-ref', s.cbWallet);
-  fill('ea-did-ref-ca', s.eaDid); fill('ea-wallet-ref-ca', s.eaWallet);
-  fill('cb-did-ref', s.cbDid); fill('cb-wallet-ref', s.cbWallet);
-  fill('ea-did-ref-eb', s.eaDid); fill('ca-wallet-ref-eb', s.caWallet);
-  fill('eb-did-ref-cb', s.ebDid); fill('eb-wallet-ref-cb', s.ebWallet);
-  var badge = document.getElementById('net-badge');
-  if (badge) {
-    var url = s.notabeneBaseUrl || '';
-    if (url) {
-      badge.innerHTML = '<span class="net-status net-online">Notabene: ' + url.replace(/https?:\/\//, '') + '</span>';
-    } else {
-      badge.innerHTML = '<span class="net-status net-offline">Notabene: not configured</span>';
-    }
-  }
-}
-
 // ─── Tab Switching ───
 document.querySelectorAll('.role-tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
@@ -532,371 +285,11 @@ document.querySelectorAll('.role-tab').forEach(function(tab) {
     document.querySelectorAll('.role-page').forEach(function(p) { p.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('role-' + tab.dataset.tab).classList.add('active');
-    renderCurrentRole();
   });
 });
 
-// ─── Transfer State ───
-var TRANSFER_KEY = 'tr-transfer-state';
-
-function getTransfer() {
-  var raw = localStorage.getItem(TRANSFER_KEY);
-  if (raw) { try { return JSON.parse(raw); } catch(e) {} }
-  return null;
-}
-
-function saveTransfer(tx) {
-  localStorage.setItem(TRANSFER_KEY, JSON.stringify(tx));
-}
-
-function resetTransfer() {
-  localStorage.removeItem(TRANSFER_KEY);
-  renderAllRoles();
-}
-
-// ─── Flow bar rendering ───
-var FLOW_STEPS = [
-  { key: 'Entity A', label: 'Entity A', color: '#5b4cdb' },
-  { key: 'Custodian A', label: 'Custodian A', color: '#8b5cf6' },
-  { key: 'TR Network', label: 'Notabene Network', color: '#5b4cdb' },
-  { key: 'Custodian B', label: 'Custodian B', color: '#14b8a6' },
-  { key: 'Entity B', label: 'Entity B', color: '#06b6d4' }
-];
-
-var STEP_ORDER = {
-  'initiated': 0,
-  'tr_sent': 1,
-  'network_routed': 2,
-  'tr_received': 2,
-  'compliance_checked': 3,
-  'confirmed': 4,
-  'settled': 4,
-  'rejected': -1
-};
-
-function renderFlowBar(role) {
-  var tx = getTransfer();
-  var el = document.getElementById('flow-bar-' + role);
-  if (!el) return;
-
-  var currentStep = tx ? (STEP_ORDER[tx.status] || 0) : -1;
-  var highlightIdx = {
-    'entity-a': 0, 'custodian-a': 1, 'entity-b': 4, 'custodian-b': 3
-  }[role] || 0;
-
-  var html = '';
-  FLOW_STEPS.forEach(function(step, i) {
-    var isHighlight = (i === highlightIdx);
-    var isDone = (tx && i < currentStep);
-    var cls = isHighlight ? 'hl' : (isDone ? 'done' : '');
-    if (i > 0) html += '<span class="sep">→</span>';
-    html += '<span class="' + cls + '">' + step.label + '</span>';
-  });
-  el.innerHTML = html;
-}
-
-// ─── Transfer summary card ───
-var ROLE_PREFIX = {
-  'entity-a': 'ea', 'custodian-a': 'ca',
-  'entity-b': 'eb', 'custodian-b': 'cb'
-};
-
-function renderTransferSummary(role) {
-  var tx = getTransfer();
-  var p = ROLE_PREFIX[role];
-  var container = document.getElementById(p + '-transfer-summary');
-  if (!container) return;
-
-  if (!tx) {
-    container.style.display = 'none';
-    return;
-  }
-
-  container.style.display = 'block';
-
-  var statusLabels = {
-    'initiated': 'Initiated',
-    'tr_sent': 'TR Message Sent',
-    'network_routed': 'Network Routed',
-    'tr_received': 'TR Message Received',
-    'compliance_checked': 'Compliance Cleared',
-    'confirmed': 'Confirmed',
-    'settled': 'Settled',
-    'rejected': 'Rejected'
-  };
-  var statusClass = {
-    'initiated': 'ts-pending', 'tr_sent': 'ts-tr-sent',
-    'network_routed': 'ts-tr-sent', 'tr_received': 'ts-tr-received',
-    'compliance_checked': 'ts-compliance', 'confirmed': 'ts-confirmed',
-    'settled': 'ts-settled', 'rejected': 'ts-pending'
-  }[tx.status] || 'ts-pending';
-
-  container.innerHTML =
-    '<div class="tx-summary">' +
-      '<div class="tx-id">' + tx.id + '</div>' +
-      '<div class="tx-amount">' + tx.amount.toLocaleString() + ' ' + tx.asset + '</div>' +
-      '<div class="tx-route">' +
-        '<span>Entity A</span> → <span>Custodian A</span> → <span>Notabene</span> → <span>Custodian B</span> → <span>Entity B</span>' +
-      '</div>' +
-      '<div style="margin-top:8px">' +
-        '<span class="transfer-status ' + statusClass + '">' + statusLabels[tx.status] + '</span>' +
-      '</div>' +
-    '</div>';
-}
-
-// ─── Timeline ───
-function renderTimeline(role) {
-  var tx = getTransfer();
-  var p = ROLE_PREFIX[role];
-  var section = document.getElementById(p + '-timeline-section');
-  var container = document.getElementById(p + '-timeline');
-  if (!container) return;
-
-  if (!tx || !tx.timeline || tx.timeline.length === 0) {
-    if (section) section.style.display = 'none';
-    return;
-  }
-
-  if (section) section.style.display = 'block';
-
-  var html = '';
-  tx.timeline.forEach(function(entry, i) {
-    var isLast = (i === tx.timeline.length - 1);
-    var cls = isLast ? 'active' : 'done';
-    html +=
-      '<div class="timeline-item ' + cls + '">' +
-        '<div class="tl-time">' + entry.time + '</div>' +
-        '<div class="tl-role">' + entry.role + '</div>' +
-        '<div class="tl-action">' + entry.action + '</div>' +
-        (entry.detail ? '<div class="tl-detail">' + entry.detail + '</div>' : '') +
-      '</div>';
-  });
-  container.innerHTML = html;
-}
-
-// ─── Role-specific action sections ───
-function renderCurrentRole() {
-  var activeTab = document.querySelector('.role-tab.active');
-  if (!activeTab) return;
-  var role = activeTab.dataset.tab;
-  renderRoleUI(role);
-}
-
-function renderRoleUI(role) {
-  var tx = getTransfer();
-
-  renderFlowBar(role);
-  renderTransferSummary(role);
-  renderTimeline(role);
-
-  if (role === 'entity-a') {
-    var form = document.getElementById('ea-transfer-form');
-    if (form) form.style.display = tx ? 'none' : 'block';
-  }
-
-  if (role === 'custodian-a') {
-    var actionSection = document.getElementById('ca-action-section');
-    if (actionSection) {
-      actionSection.style.display = (tx && tx.status === 'initiated') ? 'block' : 'none';
-      if (tx && tx.status === 'initiated') {
-        renderTRMessage('ca-tr-message', tx);
-      }
-    }
-  }
-
-  if (role === 'entity-b') {
-    var actionSection = document.getElementById('eb-action-section');
-    if (actionSection) {
-      actionSection.style.display = (tx && (tx.status === 'confirmed' || tx.status === 'settled')) ? 'block' : 'none';
-      if (tx && (tx.status === 'confirmed' || tx.status === 'settled')) {
-        renderIncomingDetails(tx);
-      }
-    }
-  }
-
-  if (role === 'custodian-b') {
-    var actionSection = document.getElementById('cb-action-section');
-    if (actionSection) {
-      var showAction = (tx && (tx.status === 'network_routed' || tx.status === 'tr_received' || tx.status === 'compliance_checked'));
-      actionSection.style.display = showAction ? 'block' : 'none';
-      if (tx && (tx.status === 'network_routed' || tx.status === 'tr_received' || tx.status === 'compliance_checked')) {
-        renderTRMessage('cb-tr-message', tx);
-        var resultEl = document.getElementById('cb-compliance-result');
-        var checkBtn = document.getElementById('cb-run-check-btn');
-        var confirmBtn = document.getElementById('cb-confirm-btn');
-        if (tx.status === 'compliance_checked' && tx.compliance) {
-          if (resultEl) {
-            resultEl.style.display = 'grid';
-            document.getElementById('cb-aml').textContent = tx.compliance.aml;
-            document.getElementById('cb-sanctions').textContent = tx.compliance.sanctions;
-            document.getElementById('cb-kyc').textContent = tx.compliance.kyc;
-            ['cb-aml','cb-sanctions','cb-kyc'].forEach(function(id) {
-              var el = document.getElementById(id);
-              el.className = 'ci-value ' + (el.textContent === 'PASS' ? 'ci-pass' : el.textContent === 'FAIL' ? 'ci-fail' : 'ci-pending');
-            });
-          }
-          if (checkBtn) checkBtn.style.display = 'none';
-          if (confirmBtn) confirmBtn.style.display = 'inline-flex';
-        } else {
-          if (resultEl) resultEl.style.display = 'none';
-          if (checkBtn) checkBtn.style.display = 'inline-flex';
-          if (confirmBtn) confirmBtn.style.display = 'none';
-        }
-      }
-    }
-  }
-}
-
-function renderAllRoles() {
-  ['entity-a', 'custodian-a', 'entity-b', 'custodian-b'].forEach(renderRoleUI);
-}
-
-// ─── Transfer actions ───
-function now() {
-  var d = new Date();
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function genTxId() {
-  return 'TX-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-}
-
-function initiateTransfer() {
-  var asset = document.getElementById('tx-asset').value;
-  var amount = parseFloat(document.getElementById('tx-amount').value);
-  var chain = document.getElementById('tx-chain').value;
-  var beneficiaryName = document.getElementById('tx-beneficiary-name').value;
-  var beneficiaryWallet = document.getElementById('tx-beneficiary-wallet').value;
-
-  if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
-
-  var tx = {
-    id: genTxId(),
-    asset: asset,
-    amount: amount,
-    chain: chain,
-    beneficiaryName: beneficiaryName,
-    beneficiaryWallet: beneficiaryWallet,
-    originatorWallet: document.getElementById('ea-wallet').textContent || '0x3f8a...c71d',
-    status: 'initiated',
-    timeline: [
-      { time: now(), role: 'Entity A', action: 'Transfer initiated', detail: amount.toLocaleString() + ' ' + asset + ' → ' + beneficiaryName }
-    ]
-  };
-
-  saveTransfer(tx);
-  renderAllRoles();
-}
-
-function custodianAForward() {
-  var tx = getTransfer();
-  if (!tx || tx.status !== 'initiated') return;
-
-  tx.status = 'network_routed';
-  tx.timeline.push(
-    { time: now(), role: 'Custodian A', action: 'Travel Rule message signed & forwarded', detail: 'Originator: Entity A → Beneficiary: ' + tx.beneficiaryName }
-  );
-
-  saveTransfer(tx);
-  renderAllRoles();
-}
-
-function custodianBCheck() {
-  var tx = getTransfer();
-  if (!tx || tx.status !== 'network_routed') return;
-
-  tx.status = 'compliance_checked';
-  tx.compliance = { aml: 'PASS', sanctions: 'PASS', kyc: 'PASS' };
-  tx.timeline.push(
-    { time: now(), role: 'Custodian B', action: 'Compliance checks completed', detail: 'AML: PASS | Sanctions: PASS | KYC: PASS' }
-  );
-
-  saveTransfer(tx);
-  renderAllRoles();
-}
-
-function custodianBConfirm() {
-  var tx = getTransfer();
-  if (!tx || tx.status !== 'compliance_checked') return;
-
-  tx.status = 'settled';
-  tx.timeline.push(
-    { time: now(), role: 'Custodian B', action: 'Transfer confirmed, funds credited to beneficiary', detail: tx.amount.toLocaleString() + ' ' + tx.asset + ' settled' }
-  );
-
-  saveTransfer(tx);
-  renderAllRoles();
-}
-
-function rejectTransfer(role) {
-  var tx = getTransfer();
-  if (!tx) return;
-
-  tx.status = 'rejected';
-  tx.timeline.push(
-    { time: now(), role: role === 'custodian-a' ? 'Custodian A' : 'Custodian B', action: 'Transfer rejected', detail: 'Compliance review failed' }
-  );
-
-  saveTransfer(tx);
-  renderAllRoles();
-}
-
-// ─── TR Message preview ───
-function renderTRMessage(containerId, tx) {
-  var el = document.getElementById(containerId);
-  if (!el) return;
-
-  var msg = {
-    "travel_rule_message": {
-      "id": tx.id,
-      "originator": {
-        "name": "Entity A Corp",
-        "wallet": tx.originatorWallet,
-        "did": document.getElementById('ea-did').textContent || 'did:trisa:entity-a'
-      },
-      "beneficiary": {
-        "name": tx.beneficiaryName,
-        "wallet": tx.beneficiaryWallet,
-        "did": document.getElementById('eb-did').textContent || 'did:trisa:entity-b'
-      },
-      "transfer": {
-        "amount": tx.amount,
-        "asset": tx.asset,
-        "blockchain": tx.chain
-      },
-      "timestamp": new Date().toISOString()
-    }
-  };
-
-  el.innerHTML = syntaxHighlight(JSON.stringify(msg, null, 2));
-}
-
-function renderIncomingDetails(tx) {
-  var el = document.getElementById('eb-incoming-details');
-  if (!el) return;
-
-  el.innerHTML =
-    '<div class="cred-row"><span class="k">Transfer ID</span><span class="v mono">' + tx.id + '</span></div>' +
-    '<div class="cred-row"><span class="k">From</span><span class="v">Entity A Corp via Custodian A</span></div>' +
-    '<div class="cred-row"><span class="k">Amount</span><span class="v" style="font-weight:600">' + tx.amount.toLocaleString() + ' ' + tx.asset + '</span></div>' +
-    '<div class="cred-row"><span class="k">Blockchain</span><span class="v">' + tx.chain + '</span></div>' +
-    '<div class="cred-row"><span class="k">To Wallet</span><span class="v mono">' + tx.beneficiaryWallet + '</span></div>' +
-    '<div class="cred-row"><span class="k">Status</span><span class="v" style="font-weight:600;color:#059669">Confirmed — Funds Settled</span></div>';
-}
-
-function syntaxHighlight(json) {
-  return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"([^"]+)":/g, '"<span class="key">$1</span>":')
-    .replace(/: "([^"]*)"/g, ': "<span class="str">$1</span>"')
-    .replace(/: (\d+)/g, ': <span class="num">$1</span>')
-    .replace(/: (null)/g, ': <span class="null">$1</span>');
-}
-
 // ─── Init ───
-var saved = loadSettings();
-applyRoleCredentials(saved);
 populateCustomerSelects();
-renderAllRoles();
 </script>
 
 </body>
