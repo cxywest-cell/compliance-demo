@@ -692,14 +692,18 @@ var EA_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/s
 
 var EB_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","verificationMethod":[{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#3f0247fb8537be90a6d843bb47682d581f9b78131111f4eb6872c65e41a2b112","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","publicKeyBase58":"5Exhk2x8MGcFP9sghBCRpm3khrPiQHDJwa2MyqyUPMPf"},{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#51fc32db4f083b2387f261024029db9974fefa296add377a90baf8df4f9154aa","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","publicKeyBase58":"6X3526X7uxfAHju1jiSpVu4cgusKsc31XM46cQSHckwB"},{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"WAuN26H_6P5psuZ2Un0vKeOX1EiTvKzRQSizYahZ-ik","y":"0p3wK6LSg0TJz62_JW2AsUHNqs-DBb4DyO3uLwmpnig"}}],"authentication":["did:web:cregisio-a5f9c.sandbox.notabene.id:ae#51fc32db4f083b2387f261024029db9974fefa296add377a90baf8df4f9154aa"],"assertionMethod":["did:web:cregisio-a5f9c.sandbox.notabene.id:ae#51fc32db4f083b2387f261024029db9974fefa296add377a90baf8df4f9154aa"],"keyAgreement":["did:web:cregisio-a5f9c.sandbox.notabene.id:ae#notabene-pii","did:web:cregisio-a5f9c.sandbox.notabene.id:ae#3f0247fb8537be90a6d843bb47682d581f9b78131111f4eb6872c65e41a2b112"],"service":[{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
 
+var DID_ROLES = ['ea', 'ca', 'eb', 'cb'];
+
 function toggleDidDoc(role) {
   var el = document.getElementById(role + '-did-doc');
-  var tog = document.getElementById(role + '-did-toggle');
-  if (el) {
-    var show = el.style.display === 'none';
-    el.style.display = show ? 'block' : 'none';
-    if (tog) tog.textContent = show ? '▾' : '▸';
-  }
+  if (!el) return;
+  var show = el.style.display === 'none';
+  DID_ROLES.forEach(function(r) {
+    var e = document.getElementById(r + '-did-doc');
+    var t = document.getElementById(r + '-did-toggle');
+    if (e) e.style.display = show ? 'block' : 'none';
+    if (t) t.textContent = show ? '▾' : '▸';
+  });
 }
 
 function fillDidDoc(role, doc) {
