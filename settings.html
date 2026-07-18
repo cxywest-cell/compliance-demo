@@ -106,18 +106,14 @@
         <div class="card-body">
           <div class="field">
             <label>Network Base URL</label>
-            <input type="text" id="s-notabene-baseurl" placeholder="https://api.notabene.io">
-            <div class="hint">Notabene Travel Rule API endpoint</div>
-          </div>
-          <div class="field">
-            <label>API Key</label>
-            <input type="text" id="s-notabene-apikey" placeholder="notabene-api-key...">
+            <input type="text" id="s-notabene-baseurl" placeholder="https://api.eu1.notabene.id">
+            <div class="hint">Notabene Travel Rule API endpoint (EU region)</div>
           </div>
         </div>
       </div>
 
       <div class="section-title">Role Credentials</div>
-      <p style="font-size:11px;color:#888;margin-bottom:12px">Each role gets independent API credentials for the Notabene Travel Rule network.</p>
+      <p style="font-size:11px;color:#888;margin-bottom:12px">Each role authenticates with its own OAuth clientId / clientSecret — no universal API key.</p>
 
       <div class="grid-2">
         <!-- Entity A -->
@@ -479,8 +475,7 @@ var defaults = {
   ellipticSecret: '5fc70fdd01205490b1a3d386cbb4fe78',
   ellipticEndpoint: 'aml-api.elliptic.co',
   ellipticSign: 'HMAC-SHA256',
-  notabeneBaseUrl: 'https://api.notabene.io',
-  notabeneApiKey: '',
+  notabeneBaseUrl: 'https://api.eu1.notabene.id',
   eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
   caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
   ebDid: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
@@ -514,7 +509,6 @@ function saveAll() {
     ellipticEndpoint: document.getElementById('s-ellipticendpoint').value,
     ellipticSign: document.getElementById('s-ellipticsign').value,
     notabeneBaseUrl: document.getElementById('s-notabene-baseurl').value,
-    notabeneApiKey: document.getElementById('s-notabene-apikey').value,
     eaDid: document.getElementById('s-ea-did').value,
     eaApikey: document.getElementById('s-ea-apikey').value,
     eaApisecret: document.getElementById('s-ea-apisecret').value,
@@ -540,7 +534,7 @@ function resetDefaults() {
   var ids = ['s-baseurl','s-webhookurl','s-webhooksecret','s-doclevel','s-nondoclevel','s-kyblevel',
     's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl','s-websdkdomains',
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
-    's-notabene-baseurl','s-notabene-apikey',
+    's-notabene-baseurl',
     's-ea-did','s-ea-apikey','s-ea-apisecret','s-ea-wallet',
     's-ca-did','s-ca-apikey','s-ca-apisecret','s-ca-wallet',
     's-eb-did','s-eb-apikey','s-eb-apisecret','s-eb-wallet',
@@ -548,7 +542,7 @@ function resetDefaults() {
   var keys = ['baseUrl','webhookUrl','docLevel','nonDocLevel','kybLevel',
     'appToken','apiSecret','websdkSecret','sumsubBaseUrl','websdkDomains',
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
-    'notabeneBaseUrl','notabeneApiKey',
+    'notabeneBaseUrl',
     'eaDid','eaApikey','eaApisecret','eaWallet',
     'caDid','caApikey','caApisecret','caWallet',
     'ebDid','ebApikey','ebApisecret','ebWallet',
@@ -820,7 +814,7 @@ var fieldMap = {
   's-sumsubbaseurl': saved.sumsubBaseUrl, 's-websdkdomains': saved.websdkDomains,
   's-elliptickey': saved.ellipticKey, 's-ellipticsecret': saved.ellipticSecret,
   's-ellipticendpoint': saved.ellipticEndpoint, 's-ellipticsign': saved.ellipticSign,
-  's-notabene-baseurl': saved.notabeneBaseUrl, 's-notabene-apikey': saved.notabeneApiKey,
+  's-notabene-baseurl': saved.notabeneBaseUrl,
   's-ea-did': saved.eaDid, 's-ea-apikey': saved.eaApikey, 's-ea-apisecret': saved.eaApisecret, 's-ea-wallet': saved.eaWallet,
   's-ca-did': saved.caDid, 's-ca-apikey': saved.caApikey, 's-ca-apisecret': saved.caApisecret, 's-ca-wallet': saved.caWallet,
   's-eb-did': saved.ebDid, 's-eb-apikey': saved.ebApikey, 's-eb-apisecret': saved.ebApisecret, 's-eb-wallet': saved.ebWallet,
