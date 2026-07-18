@@ -18,7 +18,8 @@
   .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
   .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
   .content { flex: 1; overflow-y: auto; padding: 16px; }
   .role-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; }
   .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
@@ -31,9 +32,10 @@
   .flow-bar { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 14px; margin-bottom: 14px; font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
   .flow-bar .hl { color: #5b4cdb; font-weight: 600; }
   .flow-bar .sep { color: #ccc; }
+  .flow-bar .done { color: #059669; }
   .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
   .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
-  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; }
   .card-body { padding: 10px 12px; }
   .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
   .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
@@ -50,6 +52,81 @@
   .net-online { background: #d1fae5; color: #065f46; }
   .net-offline { background: #fee2e2; color: #991b1b; }
   .hint { font-size: 10px; color: #aaa; }
+
+  /* Transfer form */
+  .transfer-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .transfer-form .full { grid-column: 1 / -1; }
+  .form-group label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+  .form-group input, .form-group select { width: 100%; padding: 7px 10px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; font-family: inherit; background: #fff; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: #5b4cdb; box-shadow: 0 0 0 2px rgba(91,76,219,0.1); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: #5b4cdb; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #4a3db8; }
+  .btn-success { background: #059669; color: #fff; }
+  .btn-success:hover:not(:disabled) { background: #047857; }
+  .btn-outline { background: transparent; border: 1px solid #e0e0e0; color: #1a1a1a; }
+  .btn-outline:hover:not(:disabled) { background: #f5f5f5; }
+  .btn-danger { background: #dc2626; color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* Transfer timeline */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #e0e0e0; }
+  .timeline-item { position: relative; padding: 8px 0 14px; }
+  .timeline-item::before { content: ''; position: absolute; left: -20px; top: 12px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e0e0e0; background: #fff; }
+  .timeline-item.done::before { background: #059669; border-color: #059669; }
+  .timeline-item.active::before { background: #5b4cdb; border-color: #5b4cdb; animation: pulse 1.5s infinite; }
+  .timeline-item.pending::before { background: #fff; border-color: #e0e0e0; }
+  .timeline-item .tl-time { font-size: 10px; color: #aaa; }
+  .timeline-item .tl-role { font-size: 11px; font-weight: 600; color: #5b4cdb; }
+  .timeline-item .tl-action { font-size: 12px; color: #1a1a1a; margin-top: 2px; }
+  .timeline-item .tl-detail { font-size: 11px; color: #666; margin-top: 2px; font-family: 'SF Mono', 'Fira Code', monospace; }
+
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(91,76,219,0.4); } 50% { box-shadow: 0 0 0 6px rgba(91,76,219,0); } }
+
+  /* Transfer status badge */
+  .transfer-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .ts-pending { background: #fef3c7; color: #92400e; }
+  .ts-tr-sent { background: #dbeafe; color: #1e40af; }
+  .ts-tr-received { background: #e0e7ff; color: #3730a3; }
+  .ts-compliance { background: #d1fae5; color: #065f46; }
+  .ts-confirmed { background: #ede9fe; color: #5b21b6; }
+  .ts-settled { background: #d1fae5; color: #047857; }
+
+  /* Transfer summary card */
+  .tx-summary { background: linear-gradient(135deg, #f8f7ff, #f0efff); border: 1px solid #e0dff8; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .tx-summary .tx-id { font-size: 10px; color: #888; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .tx-summary .tx-amount { font-size: 22px; font-weight: 700; color: #1a1a1a; margin: 4px 0; }
+  .tx-summary .tx-route { font-size: 11px; color: #666; }
+  .tx-summary .tx-route span { color: #5b4cdb; font-weight: 600; }
+
+  /* Role action area */
+  .role-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: #fafafa; border-top: 1px solid #e0e0e0; }
+
+  /* Compliance check result */
+  .compliance-result { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .compliance-item { background: #f8f8f8; border-radius: 6px; padding: 10px; text-align: center; }
+  .compliance-item .ci-label { font-size: 10px; text-transform: uppercase; color: #888; font-weight: 600; }
+  .compliance-item .ci-value { font-size: 13px; font-weight: 600; margin-top: 4px; }
+  .ci-pass { color: #059669; }
+  .ci-fail { color: #dc2626; }
+  .ci-pending { color: #f59e0b; }
+
+  /* Message preview */
+  .msg-preview { background: #1e1e2e; color: #cdd6f4; border-radius: 6px; padding: 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; line-height: 1.5; overflow-x: auto; margin-top: 8px; max-height: 200px; overflow-y: auto; }
+  .msg-preview .key { color: #89b4fa; }
+  .msg-preview .str { color: #a6e3a1; }
+  .msg-preview .num { color: #fab387; }
+  .msg-preview .null { color: #f38ba8; }
+
+  .no-transfer { text-align: center; padding: 40px 20px; }
+  .no-transfer .icon { font-size: 40px; margin-bottom: 12px; }
+  .no-transfer h3 { font-size: 14px; color: #1a1a1a; margin-bottom: 6px; }
+  .no-transfer p { font-size: 12px; color: #888; }
 </style>
 
 </head>
@@ -69,7 +146,13 @@
 </div>
 
 <div class="main">
-  <div class="topbar">Travel Rule Transfer <span id="net-badge" style="float:right"></span></div>
+  <div class="topbar">
+    Travel Rule Transfer
+    <div class="topbar-actions">
+      <span id="net-badge"></span>
+      <button class="btn btn-outline btn-sm" id="btn-reset-transfer" onclick="resetTransfer()">Reset Transfer</button>
+    </div>
+  </div>
   <div class="content">
 
     <div class="role-tabs">
@@ -82,14 +165,89 @@
     <!-- ═══ Entity A ═══ -->
     <div class="role-page active" id="role-entity-a">
       <div class="role-header"><span class="dot" style="background:#5b4cdb"></span><h2>Entity A</h2><span class="tag">Originator VASP</span></div>
-      <div class="flow-bar"><span class="hl">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>Notabene Network<span class="sep">→</span>Custodian B<span class="sep">→</span><span class="dim">Entity B</span></div>
+      <div class="flow-bar" id="flow-bar-entity-a"></div>
 
+      <!-- Transfer Summary (shown when transfer exists) -->
+      <div id="ea-transfer-summary" style="display:none"></div>
+
+      <!-- Transfer Initiation Form -->
+      <div id="ea-transfer-form">
+        <div class="section-title">Initiate Transfer</div>
+        <div class="card">
+          <div class="card-header">New Transfer Request</div>
+          <div class="card-body">
+            <div class="transfer-form">
+              <div class="form-group">
+                <label>Asset</label>
+                <select id="tx-asset">
+                  <option value="USDC">USDC</option>
+                  <option value="USDT">USDT</option>
+                  <option value="ETH">ETH</option>
+                  <option value="BTC">BTC</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="tx-amount" value="250000" min="1" step="0.01">
+              </div>
+              <div class="form-group">
+                <label>Blockchain</label>
+                <select id="tx-chain">
+                  <option value="Ethereum">Ethereum</option>
+                  <option value="Bitcoin">Bitcoin</option>
+                  <option value="Solana">Solana</option>
+                  <option value="BNB Chain">BNB Chain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Beneficiary Name</label>
+                <input type="text" id="tx-beneficiary-name" value="Entity B Corp">
+              </div>
+              <div class="form-group full">
+                <label>Beneficiary Wallet Address</label>
+                <input type="text" id="tx-beneficiary-wallet" value="0x9e2b...d48f" class="mono">
+              </div>
+              <div class="full" style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+                <button class="btn btn-primary" onclick="initiateTransfer()">Create Transfer & Send Travel Rule Info</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entity A compliance timeline -->
+      <div id="ea-timeline-section" style="display:none">
+        <div class="section-title">Transfer Compliance Chain</div>
+        <div class="card">
+          <div class="card-header">Travel Rule Message Flow</div>
+          <div class="card-body">
+            <div class="timeline" id="ea-timeline"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entity A info (always shown) -->
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
         <div class="cred-row"><span class="k">DID</span><span class="v mono" id="ea-did">—</span></div>
         <div class="cred-row"><span class="k">Type</span><span class="v">VASP</span></div>
         <div class="cred-row"><span class="k">Role</span><span class="v">Originator VASP</span></div>
         <div class="cred-row"><span class="k">Wallet</span><span class="v mono" id="ea-wallet">—</span></div>
+      </div></div>
+
+      <div class="section-title">Customer</div>
+      <div class="card"><div class="card-body">
+        <div class="cred-row" style="margin-bottom:6px">
+          <span class="k">Select Individual</span>
+          <select id="ea-customer-select" onchange="updateEaCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
+            <option value="">— choose —</option>
+          </select>
+        </div>
+        <div id="ea-customer-detail" style="display:none">
+          <div class="cred-row"><span class="k">Name</span><span class="v" id="ea-customer-name">—</span></div>
+          <div class="cred-row"><span class="k">DOB</span><span class="v" id="ea-customer-dob">—</span></div>
+          <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
+        </div>
       </div></div>
 
       <div class="section-title">Custodian</div>
@@ -106,18 +264,40 @@
         <div class="cred-row"><span class="k">Beneficiary Custodian</span><span class="v">Custodian B</span></div>
         <div class="cred-row"><span class="k">Custodian B Wallet</span><span class="v mono" id="cb-wallet-ref">—</span></div>
       </div></div>
-
-      <div class="section-title">Notabene Network Credentials</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="ea-apikey">—</span></div>
-        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="ea-apisecret">—</span></div>
-      </div></div>
     </div>
 
     <!-- ═══ Custodian A ═══ -->
     <div class="role-page" id="role-custodian-a">
       <div class="role-header"><span class="dot" style="background:#8b5cf6"></span><h2>Custodian A</h2><span class="tag">Custody Provider</span></div>
-      <div class="flow-bar"><span class="dim">Entity A</span><span class="sep">→</span><span class="hl">Custodian A</span><span class="sep">→</span>Notabene Network<span class="sep">→</span>Custodian B<span class="sep">→</span><span class="dim">Entity B</span></div>
+      <div class="flow-bar" id="flow-bar-custodian-a"></div>
+
+      <div id="ca-transfer-summary" style="display:none"></div>
+
+      <!-- Custodian A action: sign and forward Travel Rule message -->
+      <div id="ca-action-section" style="display:none">
+        <div class="section-title">Your Action Required</div>
+        <div class="card">
+          <div class="card-header">Sign & Forward Travel Rule Message</div>
+          <div class="card-body">
+            <p style="font-size:12px;color:#666;margin-bottom:10px">Entity A has initiated a transfer. Review the Travel Rule message and forward it through the Notabene Network to Custodian B.</p>
+            <div class="msg-preview" id="ca-tr-message"></div>
+            <div style="margin-top:10px;display:flex;gap:8px;">
+              <button class="btn btn-primary" onclick="custodianAForward()">✓ Sign & Forward to Network</button>
+              <button class="btn btn-danger" onclick="rejectTransfer('custodian-a')">Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ca-timeline-section" style="display:none">
+        <div class="section-title">Transfer Compliance Chain</div>
+        <div class="card">
+          <div class="card-header">Travel Rule Message Flow</div>
+          <div class="card-body">
+            <div class="timeline" id="ca-timeline"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
@@ -132,18 +312,32 @@
         <div class="cred-row"><span class="k">Entity DID</span><span class="v mono" id="ea-did-ref-ca">—</span></div>
         <div class="cred-row"><span class="k">Custody Wallet</span><span class="v mono" id="ea-wallet-ref-ca">—</span></div>
       </div></div>
-
-      <div class="section-title">Notabene Network Credentials</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="ca-apikey">—</span></div>
-        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="ca-apisecret">—</span></div>
-      </div></div>
     </div>
 
     <!-- ═══ Entity B ═══ -->
     <div class="role-page" id="role-entity-b">
       <div class="role-header"><span class="dot" style="background:#06b6d4"></span><h2>Entity B</h2><span class="tag">Beneficiary VASP</span></div>
-      <div class="flow-bar"><span class="dim">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>Notabene Network<span class="sep">→</span><span class="hl">Custodian B</span><span class="sep">→</span><span class="dim">Entity B</span></div>
+      <div class="flow-bar" id="flow-bar-entity-b"></div>
+
+      <div id="eb-transfer-summary" style="display:none"></div>
+
+      <div id="eb-action-section" style="display:none">
+        <div class="section-title">Incoming Transfer Notification</div>
+        <div class="card">
+          <div class="card-header">Transfer from Entity A via Custodian A</div>
+          <div class="card-body" id="eb-incoming-details"></div>
+        </div>
+      </div>
+
+      <div id="eb-timeline-section" style="display:none">
+        <div class="section-title">Transfer Compliance Chain</div>
+        <div class="card">
+          <div class="card-header">Travel Rule Message Flow</div>
+          <div class="card-body">
+            <div class="timeline" id="eb-timeline"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
@@ -151,6 +345,21 @@
         <div class="cred-row"><span class="k">Type</span><span class="v">VASP</span></div>
         <div class="cred-row"><span class="k">Role</span><span class="v">Beneficiary VASP</span></div>
         <div class="cred-row"><span class="k">Wallet</span><span class="v mono" id="eb-wallet">—</span></div>
+      </div></div>
+
+      <div class="section-title">Customer</div>
+      <div class="card"><div class="card-body">
+        <div class="cred-row" style="margin-bottom:6px">
+          <span class="k">Select Individual</span>
+          <select id="eb-customer-select" onchange="updateEbCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
+            <option value="">— choose —</option>
+          </select>
+        </div>
+        <div id="eb-customer-detail" style="display:none">
+          <div class="cred-row"><span class="k">Name</span><span class="v" id="eb-customer-name">—</span></div>
+          <div class="cred-row"><span class="k">DOB</span><span class="v" id="eb-customer-dob">—</span></div>
+          <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="eb-customer-hit">—</span></div>
+        </div>
       </div></div>
 
       <div class="section-title">Custodian</div>
@@ -167,18 +376,45 @@
         <div class="cred-row"><span class="k">Originator Custodian</span><span class="v">Custodian A</span></div>
         <div class="cred-row"><span class="k">Custodian A Wallet</span><span class="v mono" id="ca-wallet-ref-eb">—</span></div>
       </div></div>
-
-      <div class="section-title">Notabene Network Credentials</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="eb-apikey">—</span></div>
-        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="eb-apisecret">—</span></div>
-      </div></div>
     </div>
 
     <!-- ═══ Custodian B ═══ -->
     <div class="role-page" id="role-custodian-b">
       <div class="role-header"><span class="dot" style="background:#14b8a6"></span><h2>Custodian B</h2><span class="tag">Custody Provider</span></div>
-      <div class="flow-bar"><span class="dim">Entity A</span><span class="sep">→</span>Custodian A<span class="sep">→</span>Notabene Network<span class="sep">→</span><span class="hl">Custodian B</span><span class="sep">→</span><span class="dim">Entity B</span></div>
+      <div class="flow-bar" id="flow-bar-custodian-b"></div>
+
+      <div id="cb-transfer-summary" style="display:none"></div>
+
+      <div id="cb-action-section" style="display:none">
+        <div class="section-title">Your Action Required</div>
+        <div class="card">
+          <div class="card-header">Run Compliance Check & Confirm Receipt</div>
+          <div class="card-body">
+            <p style="font-size:12px;color:#666;margin-bottom:10px">Travel Rule message received from Custodian A via Notabene Network. Run AML/sanctions screening and confirm beneficiary details.</p>
+            <div class="msg-preview" id="cb-tr-message"></div>
+            <div class="compliance-result" id="cb-compliance-result" style="display:none">
+              <div class="compliance-item"><div class="ci-label">AML Screening</div><div class="ci-value" id="cb-aml">—</div></div>
+              <div class="compliance-item"><div class="ci-label">Sanctions Check</div><div class="ci-value" id="cb-sanctions">—</div></div>
+              <div class="compliance-item"><div class="ci-label">Beneficiary KYC</div><div class="ci-value" id="cb-kyc">—</div></div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;">
+              <button class="btn btn-primary" id="cb-run-check-btn" onclick="custodianBCheck()">Run Compliance Check</button>
+              <button class="btn btn-success" id="cb-confirm-btn" style="display:none" onclick="custodianBConfirm()">✓ Confirm & Notify Entity B</button>
+              <button class="btn btn-danger" onclick="rejectTransfer('custodian-b')">Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cb-timeline-section" style="display:none">
+        <div class="section-title">Transfer Compliance Chain</div>
+        <div class="card">
+          <div class="card-header">Travel Rule Message Flow</div>
+          <div class="card-body">
+            <div class="timeline" id="cb-timeline"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="section-title">Entity Info</div>
       <div class="card"><div class="card-body">
@@ -189,15 +425,10 @@
 
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">Entity</span><span class="v">Entity B (Beneficiary VASP)</span></div>
-        <div class="cred-row"><span class="k">Entity DID</span><span class="v mono" id="eb-did-ref-cb">—</span></div>
-        <div class="cred-row"><span class="k">Custody Wallet</span><span class="v mono" id="eb-wallet-ref-cb">—</span></div>
-      </div></div>
-
-      <div class="section-title">Notabene Network Credentials</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row"><span class="k">API Key</span><span class="v mono" id="cb-apikey">—</span></div>
-        <div class="cred-row"><span class="k">API Secret</span><span class="v mono" id="cb-apisecret">—</span></div>
+        <div class="cred-row"><span class="k">Belongs to</span><span class="v">Entity B (Beneficiary VASP)</span></div>
+        <div class="cred-row"><span class="k">Name</span><span class="v" id="cb-customer-name">—</span></div>
+        <div class="cred-row"><span class="k">DOB</span><span class="v" id="cb-customer-dob">—</span></div>
+        <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="cb-customer-hit">—</span></div>
       </div></div>
     </div>
 
@@ -205,10 +436,66 @@
 </div>
 
 <script>
+// ─── Settings & Credentials ───
+var IND_CASES = [
+  { firstName: 'Joelamltest', lastName: 'Red', dob: '1999-01-24', hit: 'Yes', hitType: 'Any' },
+  { firstName: 'Joelamltest', lastName: 'Red', dob: null, hit: 'Yes', hitType: 'Any' },
+  { firstName: 'Joelamltest', lastName: 'Yellow', dob: null, hit: 'Yes', hitType: 'Any' },
+  { firstName: 'Joelamltest', lastName: 'Testpep', dob: null, hit: 'Yes', hitType: 'PEP' },
+  { firstName: 'Joelamltest', lastName: 'Testsanc', dob: null, hit: 'Yes', hitType: 'Sanctions' },
+  { firstName: 'John', lastName: 'Doe', dob: '1990-01-01', hit: 'No', hitType: '—' }
+];
+
+function populateCustomerSelects() {
+  ['ea', 'eb'].forEach(function(role) {
+    var sel = document.getElementById(role + '-customer-select');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— choose —</option>';
+    IND_CASES.forEach(function(c, i) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = c.firstName + ' ' + c.lastName + (c.dob ? ' (' + c.dob + ')' : '');
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function updateEaCustomer() {
+  var idx = document.getElementById('ea-customer-select').value;
+  var detail = document.getElementById('ea-customer-detail');
+  if (idx === '') { detail.style.display = 'none'; return; }
+  detail.style.display = 'block';
+  var c = IND_CASES[parseInt(idx)];
+  fill('ea-customer-name', c.firstName + ' ' + c.lastName);
+  fill('ea-customer-dob', c.dob || '—');
+  fill('ea-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
+}
+
+function updateEbCustomer() {
+  var idx = document.getElementById('eb-customer-select').value;
+  var detail = document.getElementById('eb-customer-detail');
+  if (idx === '') { detail.style.display = 'none'; return; }
+  detail.style.display = 'block';
+  var c = IND_CASES[parseInt(idx)];
+  fill('eb-customer-name', c.firstName + ' ' + c.lastName);
+  fill('eb-customer-dob', c.dob || '—');
+  fill('eb-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
+  // Also update Custodian B's customer display
+  fill('cb-customer-name', c.firstName + ' ' + c.lastName);
+  fill('cb-customer-dob', c.dob || '—');
+  fill('cb-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
+}
+
 function loadSettings() {
   var s = localStorage.getItem('compliance-demo-settings');
   if (s) { try { return JSON.parse(s); } catch(e) {} }
-  return {};
+  return {
+    notabeneBaseUrl: 'https://api.notabene.io',
+    eaDid: 'did:trisa:entity-a-0x3f8a', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
+    caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
+    ebDid: 'did:trisa:entity-b-0x9e2b', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
+    cbDid: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae', cbApikey: 'hXc7MF4W3xCGAoBLIXp5bEdHjMlXQId3', cbApisecret: 'tpYr-KmDVADagzYbsEBSzaMYK2NL9KXFJw8umkvWiLSITyim_amlVVpIKqK-c__g', cbWallet: '0x2d5a...e81c'
+  };
 }
 
 function fill(id, val) {
@@ -217,26 +504,16 @@ function fill(id, val) {
 }
 
 function applyRoleCredentials(s) {
-  // Entity A
   fill('ea-did', s.eaDid); fill('ea-wallet', s.eaWallet);
-  fill('ea-apikey', s.eaApikey); fill('ea-apisecret', s.eaApisecret);
-  // Custodian A
   fill('ca-did', s.caDid); fill('ca-wallet', s.caWallet);
-  fill('ca-apikey', s.caApikey); fill('ca-apisecret', s.caApisecret);
-  // Entity B
   fill('eb-did', s.ebDid); fill('eb-wallet', s.ebWallet);
-  fill('eb-apikey', s.ebApikey); fill('eb-apisecret', s.ebApisecret);
-  // Custodian B
   fill('cb-did', s.cbDid); fill('cb-wallet', s.cbWallet);
-  fill('cb-apikey', s.cbApikey); fill('cb-apisecret', s.cbApisecret);
-  // Cross-references
   fill('ca-did-ref', s.caDid); fill('ca-wallet-ref', s.caWallet);
   fill('eb-did-ref', s.ebDid); fill('cb-wallet-ref', s.cbWallet);
   fill('ea-did-ref-ca', s.eaDid); fill('ea-wallet-ref-ca', s.eaWallet);
   fill('cb-did-ref', s.cbDid); fill('cb-wallet-ref', s.cbWallet);
   fill('ea-did-ref-eb', s.eaDid); fill('ca-wallet-ref-eb', s.caWallet);
   fill('eb-did-ref-cb', s.ebDid); fill('eb-wallet-ref-cb', s.ebWallet);
-  // Network badge
   var badge = document.getElementById('net-badge');
   if (badge) {
     var url = s.notabeneBaseUrl || '';
@@ -248,19 +525,378 @@ function applyRoleCredentials(s) {
   }
 }
 
-// Tab switching
+// ─── Tab Switching ───
 document.querySelectorAll('.role-tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.role-tab').forEach(function(t) { t.classList.remove('active'); });
     document.querySelectorAll('.role-page').forEach(function(p) { p.classList.remove('active'); });
     tab.classList.add('active');
     document.getElementById('role-' + tab.dataset.tab).classList.add('active');
+    renderCurrentRole();
   });
 });
 
-// Load credentials on start
+// ─── Transfer State ───
+var TRANSFER_KEY = 'tr-transfer-state';
+
+function getTransfer() {
+  var raw = localStorage.getItem(TRANSFER_KEY);
+  if (raw) { try { return JSON.parse(raw); } catch(e) {} }
+  return null;
+}
+
+function saveTransfer(tx) {
+  localStorage.setItem(TRANSFER_KEY, JSON.stringify(tx));
+}
+
+function resetTransfer() {
+  localStorage.removeItem(TRANSFER_KEY);
+  renderAllRoles();
+}
+
+// ─── Flow bar rendering ───
+var FLOW_STEPS = [
+  { key: 'Entity A', label: 'Entity A', color: '#5b4cdb' },
+  { key: 'Custodian A', label: 'Custodian A', color: '#8b5cf6' },
+  { key: 'TR Network', label: 'Notabene Network', color: '#5b4cdb' },
+  { key: 'Custodian B', label: 'Custodian B', color: '#14b8a6' },
+  { key: 'Entity B', label: 'Entity B', color: '#06b6d4' }
+];
+
+var STEP_ORDER = {
+  'initiated': 0,
+  'tr_sent': 1,
+  'network_routed': 2,
+  'tr_received': 2,
+  'compliance_checked': 3,
+  'confirmed': 4,
+  'settled': 4,
+  'rejected': -1
+};
+
+function renderFlowBar(role) {
+  var tx = getTransfer();
+  var el = document.getElementById('flow-bar-' + role);
+  if (!el) return;
+
+  var currentStep = tx ? (STEP_ORDER[tx.status] || 0) : -1;
+  var highlightIdx = {
+    'entity-a': 0, 'custodian-a': 1, 'entity-b': 4, 'custodian-b': 3
+  }[role] || 0;
+
+  var html = '';
+  FLOW_STEPS.forEach(function(step, i) {
+    var isHighlight = (i === highlightIdx);
+    var isDone = (tx && i < currentStep);
+    var cls = isHighlight ? 'hl' : (isDone ? 'done' : '');
+    if (i > 0) html += '<span class="sep">→</span>';
+    html += '<span class="' + cls + '">' + step.label + '</span>';
+  });
+  el.innerHTML = html;
+}
+
+// ─── Transfer summary card ───
+var ROLE_PREFIX = {
+  'entity-a': 'ea', 'custodian-a': 'ca',
+  'entity-b': 'eb', 'custodian-b': 'cb'
+};
+
+function renderTransferSummary(role) {
+  var tx = getTransfer();
+  var p = ROLE_PREFIX[role];
+  var container = document.getElementById(p + '-transfer-summary');
+  if (!container) return;
+
+  if (!tx) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+
+  var statusLabels = {
+    'initiated': 'Initiated',
+    'tr_sent': 'TR Message Sent',
+    'network_routed': 'Network Routed',
+    'tr_received': 'TR Message Received',
+    'compliance_checked': 'Compliance Cleared',
+    'confirmed': 'Confirmed',
+    'settled': 'Settled',
+    'rejected': 'Rejected'
+  };
+  var statusClass = {
+    'initiated': 'ts-pending', 'tr_sent': 'ts-tr-sent',
+    'network_routed': 'ts-tr-sent', 'tr_received': 'ts-tr-received',
+    'compliance_checked': 'ts-compliance', 'confirmed': 'ts-confirmed',
+    'settled': 'ts-settled', 'rejected': 'ts-pending'
+  }[tx.status] || 'ts-pending';
+
+  container.innerHTML =
+    '<div class="tx-summary">' +
+      '<div class="tx-id">' + tx.id + '</div>' +
+      '<div class="tx-amount">' + tx.amount.toLocaleString() + ' ' + tx.asset + '</div>' +
+      '<div class="tx-route">' +
+        '<span>Entity A</span> → <span>Custodian A</span> → <span>Notabene</span> → <span>Custodian B</span> → <span>Entity B</span>' +
+      '</div>' +
+      '<div style="margin-top:8px">' +
+        '<span class="transfer-status ' + statusClass + '">' + statusLabels[tx.status] + '</span>' +
+      '</div>' +
+    '</div>';
+}
+
+// ─── Timeline ───
+function renderTimeline(role) {
+  var tx = getTransfer();
+  var p = ROLE_PREFIX[role];
+  var section = document.getElementById(p + '-timeline-section');
+  var container = document.getElementById(p + '-timeline');
+  if (!container) return;
+
+  if (!tx || !tx.timeline || tx.timeline.length === 0) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+
+  if (section) section.style.display = 'block';
+
+  var html = '';
+  tx.timeline.forEach(function(entry, i) {
+    var isLast = (i === tx.timeline.length - 1);
+    var cls = isLast ? 'active' : 'done';
+    html +=
+      '<div class="timeline-item ' + cls + '">' +
+        '<div class="tl-time">' + entry.time + '</div>' +
+        '<div class="tl-role">' + entry.role + '</div>' +
+        '<div class="tl-action">' + entry.action + '</div>' +
+        (entry.detail ? '<div class="tl-detail">' + entry.detail + '</div>' : '') +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// ─── Role-specific action sections ───
+function renderCurrentRole() {
+  var activeTab = document.querySelector('.role-tab.active');
+  if (!activeTab) return;
+  var role = activeTab.dataset.tab;
+  renderRoleUI(role);
+}
+
+function renderRoleUI(role) {
+  var tx = getTransfer();
+
+  renderFlowBar(role);
+  renderTransferSummary(role);
+  renderTimeline(role);
+
+  if (role === 'entity-a') {
+    var form = document.getElementById('ea-transfer-form');
+    if (form) form.style.display = tx ? 'none' : 'block';
+  }
+
+  if (role === 'custodian-a') {
+    var actionSection = document.getElementById('ca-action-section');
+    if (actionSection) {
+      actionSection.style.display = (tx && tx.status === 'initiated') ? 'block' : 'none';
+      if (tx && tx.status === 'initiated') {
+        renderTRMessage('ca-tr-message', tx);
+      }
+    }
+  }
+
+  if (role === 'entity-b') {
+    var actionSection = document.getElementById('eb-action-section');
+    if (actionSection) {
+      actionSection.style.display = (tx && (tx.status === 'confirmed' || tx.status === 'settled')) ? 'block' : 'none';
+      if (tx && (tx.status === 'confirmed' || tx.status === 'settled')) {
+        renderIncomingDetails(tx);
+      }
+    }
+  }
+
+  if (role === 'custodian-b') {
+    var actionSection = document.getElementById('cb-action-section');
+    if (actionSection) {
+      var showAction = (tx && (tx.status === 'network_routed' || tx.status === 'tr_received' || tx.status === 'compliance_checked'));
+      actionSection.style.display = showAction ? 'block' : 'none';
+      if (tx && (tx.status === 'network_routed' || tx.status === 'tr_received' || tx.status === 'compliance_checked')) {
+        renderTRMessage('cb-tr-message', tx);
+        var resultEl = document.getElementById('cb-compliance-result');
+        var checkBtn = document.getElementById('cb-run-check-btn');
+        var confirmBtn = document.getElementById('cb-confirm-btn');
+        if (tx.status === 'compliance_checked' && tx.compliance) {
+          if (resultEl) {
+            resultEl.style.display = 'grid';
+            document.getElementById('cb-aml').textContent = tx.compliance.aml;
+            document.getElementById('cb-sanctions').textContent = tx.compliance.sanctions;
+            document.getElementById('cb-kyc').textContent = tx.compliance.kyc;
+            ['cb-aml','cb-sanctions','cb-kyc'].forEach(function(id) {
+              var el = document.getElementById(id);
+              el.className = 'ci-value ' + (el.textContent === 'PASS' ? 'ci-pass' : el.textContent === 'FAIL' ? 'ci-fail' : 'ci-pending');
+            });
+          }
+          if (checkBtn) checkBtn.style.display = 'none';
+          if (confirmBtn) confirmBtn.style.display = 'inline-flex';
+        } else {
+          if (resultEl) resultEl.style.display = 'none';
+          if (checkBtn) checkBtn.style.display = 'inline-flex';
+          if (confirmBtn) confirmBtn.style.display = 'none';
+        }
+      }
+    }
+  }
+}
+
+function renderAllRoles() {
+  ['entity-a', 'custodian-a', 'entity-b', 'custodian-b'].forEach(renderRoleUI);
+}
+
+// ─── Transfer actions ───
+function now() {
+  var d = new Date();
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function genTxId() {
+  return 'TX-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+}
+
+function initiateTransfer() {
+  var asset = document.getElementById('tx-asset').value;
+  var amount = parseFloat(document.getElementById('tx-amount').value);
+  var chain = document.getElementById('tx-chain').value;
+  var beneficiaryName = document.getElementById('tx-beneficiary-name').value;
+  var beneficiaryWallet = document.getElementById('tx-beneficiary-wallet').value;
+
+  if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+
+  var tx = {
+    id: genTxId(),
+    asset: asset,
+    amount: amount,
+    chain: chain,
+    beneficiaryName: beneficiaryName,
+    beneficiaryWallet: beneficiaryWallet,
+    originatorWallet: document.getElementById('ea-wallet').textContent || '0x3f8a...c71d',
+    status: 'initiated',
+    timeline: [
+      { time: now(), role: 'Entity A', action: 'Transfer initiated', detail: amount.toLocaleString() + ' ' + asset + ' → ' + beneficiaryName }
+    ]
+  };
+
+  saveTransfer(tx);
+  renderAllRoles();
+}
+
+function custodianAForward() {
+  var tx = getTransfer();
+  if (!tx || tx.status !== 'initiated') return;
+
+  tx.status = 'network_routed';
+  tx.timeline.push(
+    { time: now(), role: 'Custodian A', action: 'Travel Rule message signed & forwarded', detail: 'Originator: Entity A → Beneficiary: ' + tx.beneficiaryName }
+  );
+
+  saveTransfer(tx);
+  renderAllRoles();
+}
+
+function custodianBCheck() {
+  var tx = getTransfer();
+  if (!tx || tx.status !== 'network_routed') return;
+
+  tx.status = 'compliance_checked';
+  tx.compliance = { aml: 'PASS', sanctions: 'PASS', kyc: 'PASS' };
+  tx.timeline.push(
+    { time: now(), role: 'Custodian B', action: 'Compliance checks completed', detail: 'AML: PASS | Sanctions: PASS | KYC: PASS' }
+  );
+
+  saveTransfer(tx);
+  renderAllRoles();
+}
+
+function custodianBConfirm() {
+  var tx = getTransfer();
+  if (!tx || tx.status !== 'compliance_checked') return;
+
+  tx.status = 'settled';
+  tx.timeline.push(
+    { time: now(), role: 'Custodian B', action: 'Transfer confirmed, funds credited to beneficiary', detail: tx.amount.toLocaleString() + ' ' + tx.asset + ' settled' }
+  );
+
+  saveTransfer(tx);
+  renderAllRoles();
+}
+
+function rejectTransfer(role) {
+  var tx = getTransfer();
+  if (!tx) return;
+
+  tx.status = 'rejected';
+  tx.timeline.push(
+    { time: now(), role: role === 'custodian-a' ? 'Custodian A' : 'Custodian B', action: 'Transfer rejected', detail: 'Compliance review failed' }
+  );
+
+  saveTransfer(tx);
+  renderAllRoles();
+}
+
+// ─── TR Message preview ───
+function renderTRMessage(containerId, tx) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+
+  var msg = {
+    "travel_rule_message": {
+      "id": tx.id,
+      "originator": {
+        "name": "Entity A Corp",
+        "wallet": tx.originatorWallet,
+        "did": document.getElementById('ea-did').textContent || 'did:trisa:entity-a'
+      },
+      "beneficiary": {
+        "name": tx.beneficiaryName,
+        "wallet": tx.beneficiaryWallet,
+        "did": document.getElementById('eb-did').textContent || 'did:trisa:entity-b'
+      },
+      "transfer": {
+        "amount": tx.amount,
+        "asset": tx.asset,
+        "blockchain": tx.chain
+      },
+      "timestamp": new Date().toISOString()
+    }
+  };
+
+  el.innerHTML = syntaxHighlight(JSON.stringify(msg, null, 2));
+}
+
+function renderIncomingDetails(tx) {
+  var el = document.getElementById('eb-incoming-details');
+  if (!el) return;
+
+  el.innerHTML =
+    '<div class="cred-row"><span class="k">Transfer ID</span><span class="v mono">' + tx.id + '</span></div>' +
+    '<div class="cred-row"><span class="k">From</span><span class="v">Entity A Corp via Custodian A</span></div>' +
+    '<div class="cred-row"><span class="k">Amount</span><span class="v" style="font-weight:600">' + tx.amount.toLocaleString() + ' ' + tx.asset + '</span></div>' +
+    '<div class="cred-row"><span class="k">Blockchain</span><span class="v">' + tx.chain + '</span></div>' +
+    '<div class="cred-row"><span class="k">To Wallet</span><span class="v mono">' + tx.beneficiaryWallet + '</span></div>' +
+    '<div class="cred-row"><span class="k">Status</span><span class="v" style="font-weight:600;color:#059669">Confirmed — Funds Settled</span></div>';
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"([^"]+)":/g, '"<span class="key">$1</span>":')
+    .replace(/: "([^"]*)"/g, ': "<span class="str">$1</span>"')
+    .replace(/: (\d+)/g, ': <span class="num">$1</span>')
+    .replace(/: (null)/g, ': <span class="null">$1</span>');
+}
+
+// ─── Init ───
 var saved = loadSettings();
 applyRoleCredentials(saved);
+populateCustomerSelects();
+renderAllRoles();
 </script>
 
 </body>

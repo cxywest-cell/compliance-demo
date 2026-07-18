@@ -142,6 +142,19 @@
               <input type="text" id="s-ea-wallet" placeholder="0xEntityAWallet...">
             </div>
           </div>
+          <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('ea')">
+            DID Document <span id="ea-did-toggle" style="float:right;color:#888;font-size:10px">▸</span>
+          </div>
+          <div id="ea-did-doc" style="display:none">
+            <div class="card-body">
+              <div class="field"><label>DID</label><div class="mono" id="ea-did-val" style="font-size:11px;word-break:break-all">—</div></div>
+              <div class="field"><label>Auth (Ed25519)</label><div class="mono" id="ea-ed25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Key Agreement (X25519)</label><div class="mono" id="ea-x25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>PII Key (P-256)</label><div class="mono" id="ea-pii-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>DIDComm Endpoint</label><div class="mono" id="ea-didcomm-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Full DID Document</label><div class="preview-box" id="ea-did-full-json" style="max-height:200px;overflow-y:auto">—</div></div>
+            </div>
+          </div>
         </div>
 
         <!-- Custodian A -->
@@ -164,6 +177,19 @@
             <div class="field">
               <label>Hot Wallet Address</label>
               <input type="text" id="s-ca-wallet" placeholder="0xCustodianAHot...">
+            </div>
+          </div>
+          <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('ca')">
+            DID Document <span id="ca-did-toggle" style="float:right;color:#888;font-size:10px">▸</span>
+          </div>
+          <div id="ca-did-doc" style="display:none">
+            <div class="card-body">
+              <div class="field"><label>DID</label><div class="mono" id="ca-did-val" style="font-size:11px;word-break:break-all">—</div></div>
+              <div class="field"><label>Auth (Ed25519)</label><div class="mono" id="ca-ed25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Key Agreement (X25519)</label><div class="mono" id="ca-x25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>PII Key (P-256)</label><div class="mono" id="ca-pii-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>DIDComm Endpoint</label><div class="mono" id="ca-didcomm-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Full DID Document</label><div class="preview-box" id="ca-did-full-json" style="max-height:200px;overflow-y:auto">—</div></div>
             </div>
           </div>
         </div>
@@ -190,6 +216,19 @@
               <input type="text" id="s-eb-wallet" placeholder="0xEntityBWallet...">
             </div>
           </div>
+          <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('eb')">
+            DID Document <span id="eb-did-toggle" style="float:right;color:#888;font-size:10px">▸</span>
+          </div>
+          <div id="eb-did-doc" style="display:none">
+            <div class="card-body">
+              <div class="field"><label>DID</label><div class="mono" id="eb-did-val" style="font-size:11px;word-break:break-all">—</div></div>
+              <div class="field"><label>Auth (Ed25519)</label><div class="mono" id="eb-ed25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Key Agreement (X25519)</label><div class="mono" id="eb-x25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>PII Key (P-256)</label><div class="mono" id="eb-pii-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>DIDComm Endpoint</label><div class="mono" id="eb-didcomm-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Full DID Document</label><div class="preview-box" id="eb-did-full-json" style="max-height:200px;overflow-y:auto">—</div></div>
+            </div>
+          </div>
         </div>
 
         <!-- Custodian B -->
@@ -212,6 +251,19 @@
             <div class="field">
               <label>Hot Wallet Address</label>
               <input type="text" id="s-cb-wallet" placeholder="0xCustodianBHot...">
+            </div>
+          </div>
+          <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('cb')">
+            DID Document <span id="cb-did-toggle" style="float:right;color:#888;font-size:10px">▸</span>
+          </div>
+          <div id="cb-did-doc" style="display:none">
+            <div class="card-body">
+              <div class="field"><label>DID</label><div class="mono" id="cb-did-val" style="font-size:11px;word-break:break-all">—</div></div>
+              <div class="field"><label>Auth (Ed25519)</label><div class="mono" id="cb-ed25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Key Agreement (X25519)</label><div class="mono" id="cb-x25519-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>PII Key (P-256)</label><div class="mono" id="cb-pii-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>DIDComm Endpoint</label><div class="mono" id="cb-didcomm-val" style="font-size:11px">—</div></div>
+              <div class="field"><label>Full DID Document</label><div class="preview-box" id="cb-did-full-json" style="max-height:200px;overflow-y:auto">—</div></div>
             </div>
           </div>
         </div>
@@ -429,10 +481,11 @@ var defaults = {
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.notabene.io',
   notabeneApiKey: '',
-  eaDid: 'did:trisa:entity-a-0x3f8a', eaApikey: 'lC0eHOAkD6sYYYR5hVpMFXCmC9ZaDD1k', eaApisecret: 'TS8cReg-ZE60XXB3U9midw3Hi4jIIl8O2Plo-5cZO9iQN5y2iIesfaqinRlsh7UQ', eaWallet: '0x3f8a...c71d',
-  caDid: 'did:trisa:custodian-a-vasp', caApikey: 'ca_sbx_8f2e9a1b3c4d5e6f', caApisecret: 'TS8cReg-A1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvWxYz-1234567890abcdef', caWallet: '0x7c4e...b93a',
-  ebDid: 'did:trisa:entity-b-0x9e2b', ebApikey: 'eb_sbx_7d1c2b3a4e5f6g7h', ebApisecret: 'TS8cReg-B2c3D4e5F6g7H8i9J0k1LmNoPqRsTuVwXyZa-0987654321fedcba', ebWallet: '0x9e2b...d48f',
-  cbDid: 'did:trisa:custodian-b-vasp', cbApikey: 'cb_sbx_6e3d4c5b2a1f0g9h', cbApisecret: 'TS8cReg-C3d4E5f6G7h8I9j0K1l2MnOpQrStUvWxYzAb-fedcba0987654321', cbWallet: '0x2d5a...e81c'
+  eaDid: 'did:trisa:entity-a-0x3f8a', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
+  caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
+  ebDid: 'did:trisa:entity-b-0x9e2b', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
+  cbDid: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae', cbApikey: 'hXc7MF4W3xCGAoBLIXp5bEdHjMlXQId3', cbApisecret: 'tpYr-KmDVADagzYbsEBSzaMYK2NL9KXFJw8umkvWiLSITyim_amlVVpIKqK-c__g', cbWallet: '0x2d5a...e81c',
+  cbEntityName: "cregis counterparty's custodian", cbJurisdiction: 'AE', cbLegalStructure: 'CORPORATION', cbIsRegulated: 'YES', cbWebsite: 'https://www.cregis-counterparty-custodian.com', cbSandbox: true
 };
 
 function loadSettings() {
@@ -636,6 +689,56 @@ async function checkTunnelStatus() {
   } catch(e) {}
 }
 
+// ─── DID Document Toggle & Fill ───
+var CB_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","verificationMethod":[{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#3d1adf94b3353ae0ed04227f942baa83d06224ae6f1c15ec248a2e42da72bd4c","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","publicKeyBase58":"57XdvC7acZc2JRAW1SwYR8xMNLoaApvrrxp2NJdSpqVD"},{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#83497a27bb9778dc9c825309357fe9968f93f63c4abbf06083dbff10016ed7b2","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","publicKeyBase58":"9qVPjeRPJghQmMYsjpdgLds8YXEi9TMvAaPiWnvqZd8m"},{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"UeH8RgqJtXrSptHR131JY8XATmqNepq8RujkS63Brog","y":"MBLB7LNQsYHFXyReyBnR45DPaPqL8EBgQBqi2Q3ukSQ"}}],"authentication":["did:web:cregisio-fb18c.sandbox.notabene.id:ae#83497a27bb9778dc9c825309357fe9968f93f63c4abbf06083dbff10016ed7b2"],"assertionMethod":["did:web:cregisio-fb18c.sandbox.notabene.id:ae#83497a27bb9778dc9c825309357fe9968f93f63c4abbf06083dbff10016ed7b2"],"keyAgreement":["did:web:cregisio-fb18c.sandbox.notabene.id:ae#notabene-pii","did:web:cregisio-fb18c.sandbox.notabene.id:ae#3d1adf94b3353ae0ed04227f942baa83d06224ae6f1c15ec248a2e42da72bd4c"],"service":[{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
+
+var CA_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-5a794.sandbox.notabene.id:am","verificationMethod":[{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#5ef93950cc426a04fd21ab5bede15203266422cf4cd932eb7e626938cfa89d31","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyBase58":"7PjjqBWSNuEDxnMHh1AKQ3es7Jun5LzxjmAH8q77CwdS"},{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyBase58":"ANeEFYcqN99C8AunMuetriibeqWJkXKrvezpJHvPbhWg"},{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"5cMZRBurSEOo2SH_bMyrvlMY-4FIfs444ALO4AotpYg","y":"RdzIn4RHIegEQsEQa2EY3ew1f-Cz1QxKZ4fCV2QDzHU"}}],"authentication":["did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9"],"assertionMethod":["did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9"],"keyAgreement":["did:web:cregisio-5a794.sandbox.notabene.id:am#notabene-pii","did:web:cregisio-5a794.sandbox.notabene.id:am#5ef93950cc426a04fd21ab5bede15203266422cf4cd932eb7e626938cfa89d31"],"service":[{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
+
+function toggleDidDoc(role) {
+  var el = document.getElementById(role + '-did-doc');
+  var tog = document.getElementById(role + '-did-toggle');
+  if (el) {
+    var show = el.style.display === 'none';
+    el.style.display = show ? 'block' : 'none';
+    if (tog) tog.textContent = show ? '▾' : '▸';
+  }
+}
+
+function fillDidDoc(role, doc) {
+  if (!doc) return;
+  var prefix = role + '-';
+  document.getElementById(prefix + 'did-val').textContent = doc.id;
+  var ed = doc.verificationMethod.find(function(m) { return m.type === 'Ed25519VerificationKey2018'; });
+  document.getElementById(prefix + 'ed25519-val').textContent = ed ? ed.publicKeyBase58 : '—';
+  var x2 = doc.verificationMethod.find(function(m) { return m.type === 'X25519KeyAgreementKey2019'; });
+  document.getElementById(prefix + 'x25519-val').textContent = x2 ? x2.publicKeyBase58 : '—';
+  var pii = doc.verificationMethod.find(function(m) { return m.type === 'JsonWebKey2020'; });
+  document.getElementById(prefix + 'pii-val').textContent = pii ? 'crv:' + pii.publicKeyJwk.crv + ' x:' + pii.publicKeyJwk.x : '—';
+  var svc = doc.service.find(function(s) { return s.type === 'DIDCommMessaging'; });
+  document.getElementById(prefix + 'didcomm-val').textContent = svc ? svc.serviceEndpoint : '—';
+  var jsonEl = document.getElementById(prefix + 'did-full-json');
+  if (jsonEl) jsonEl.textContent = JSON.stringify(doc, null, 2);
+}
+
+function fillDidEntity(role, info) {
+  var prefix = role + '-';
+  var el = document.getElementById(prefix + 'did-full-json');
+  if (!el || !info) return;
+  el.textContent = JSON.stringify(info, null, 2);
+  // Also update DID val
+  var didEl = document.getElementById(prefix + 'did-val');
+  if (didEl) didEl.textContent = info.did || '—';
+  // Show entity details
+  var edEl = document.getElementById(prefix + 'ed25519-val');
+  if (edEl) edEl.textContent = info.name || info.legalName || '—';
+  var x2El = document.getElementById(prefix + 'x25519-val');
+  if (x2El) x2El.textContent = 'Jurisdiction: ' + (info.jurisdiction || info.country || '—') + ' | ' + (info.legalStructure || '—');
+  var piiEl = document.getElementById(prefix + 'pii-val');
+  if (piiEl) piiEl.textContent = 'Regulated: ' + (info.isRegulated || '—') + ' | ' + (info.sandbox ? 'Sandbox' : 'Production');
+  var commEl = document.getElementById(prefix + 'didcomm-val');
+  if (commEl) commEl.textContent = info.website || '—';
+}
+
 // Connection tests
 async function testSumsubConnection() {
   var el = document.getElementById('s-status-sumsub');
@@ -725,6 +828,41 @@ for (var id in fieldMap) {
 }
 updatePreviews();
 checkTunnelStatus();
+var CB_ENTITY_INFO = {
+  did: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae',
+  name: "cregis counterparty's custodian",
+  legalName: "cregis counterparty's custodian",
+  domain: 'cregisio-fb18c.sandbox.notabene.id',
+  jurisdiction: 'AE',
+  website: 'https://www.cregis-counterparty-custodian.com',
+  legalStructure: 'CORPORATION',
+  yearFounded: '2001',
+  incorporationCountry: 'AE',
+  isRegulated: 'YES',
+  sandbox: true,
+  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
+};
+
+fillDidDoc('cb', CB_DID_DOC);
+fillDidEntity('cb', CB_ENTITY_INFO);
+fillDidDoc('ca', CA_DID_DOC);
+var CA_ENTITY_INFO = {
+  did: 'did:web:cregisio-5a794.sandbox.notabene.id:am',
+  name: "cregis's custodian",
+  legalName: "cregis's custodian",
+  domain: 'cregisio-5a794.sandbox.notabene.id',
+  jurisdiction: 'AM',
+  website: 'https://www.cregis-custodian.com',
+  legalStructure: 'CORPORATION',
+  yearFounded: '2001',
+  incorporationCountry: 'AM',
+  isRegulated: 'YES',
+  sandbox: true,
+  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
+};
+fillDidEntity('ca', CA_ENTITY_INFO);
+fillDidDoc('ea', null);
+fillDidDoc('eb', null);
 
 // ─── Webhook Console ───
 var whSeen = new Set();
