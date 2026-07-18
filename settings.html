@@ -481,7 +481,7 @@ var defaults = {
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.notabene.io',
   notabeneApiKey: '',
-  eaDid: 'did:trisa:entity-a-0x3f8a', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
+  eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
   caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
   ebDid: 'did:trisa:entity-b-0x9e2b', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
   cbDid: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae', cbApikey: 'hXc7MF4W3xCGAoBLIXp5bEdHjMlXQId3', cbApisecret: 'tpYr-KmDVADagzYbsEBSzaMYK2NL9KXFJw8umkvWiLSITyim_amlVVpIKqK-c__g', cbWallet: '0x2d5a...e81c',
@@ -694,6 +694,8 @@ var CB_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/s
 
 var CA_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-5a794.sandbox.notabene.id:am","verificationMethod":[{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#5ef93950cc426a04fd21ab5bede15203266422cf4cd932eb7e626938cfa89d31","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyBase58":"7PjjqBWSNuEDxnMHh1AKQ3es7Jun5LzxjmAH8q77CwdS"},{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyBase58":"ANeEFYcqN99C8AunMuetriibeqWJkXKrvezpJHvPbhWg"},{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"5cMZRBurSEOo2SH_bMyrvlMY-4FIfs444ALO4AotpYg","y":"RdzIn4RHIegEQsEQa2EY3ew1f-Cz1QxKZ4fCV2QDzHU"}}],"authentication":["did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9"],"assertionMethod":["did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9"],"keyAgreement":["did:web:cregisio-5a794.sandbox.notabene.id:am#notabene-pii","did:web:cregisio-5a794.sandbox.notabene.id:am#5ef93950cc426a04fd21ab5bede15203266422cf4cd932eb7e626938cfa89d31"],"service":[{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
 
+var EA_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am","verificationMethod":[{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#510ae76ad8eae042f94fb86baac006d8ce8ed8a9019831b52d99d8615e219a59","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-8f89b.sandbox.notabene.id:am","publicKeyBase58":"6TMfgxCHEkscZcPZYPB2xsgyKKVJdPSYUU4C3PT4b81W"},{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#16e0f7956ac8bbb3ada03803500f52873f1041c9bbb6fc3d8c8191a737530413","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-8f89b.sandbox.notabene.id:am","publicKeyBase58":"2YJw2HKJCmuK6DXYTwsPgvpHRhuNPG13VvA9nGec921Y"},{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-8f89b.sandbox.notabene.id:am","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"asbjBgrkc_bN26bFngXL-_6Sa7coc0ICTQxdbFiCo4w","y":"rGrDPuXNFYCFv67T1SMCqRa6pi0QA7lEaoAoIpmQQgM"}}],"authentication":["did:web:cregisio-8f89b.sandbox.notabene.id:am#16e0f7956ac8bbb3ada03803500f52873f1041c9bbb6fc3d8c8191a737530413"],"assertionMethod":["did:web:cregisio-8f89b.sandbox.notabene.id:am#16e0f7956ac8bbb3ada03803500f52873f1041c9bbb6fc3d8c8191a737530413"],"keyAgreement":["did:web:cregisio-8f89b.sandbox.notabene.id:am#notabene-pii","did:web:cregisio-8f89b.sandbox.notabene.id:am#510ae76ad8eae042f94fb86baac006d8ce8ed8a9019831b52d99d8615e219a59"],"service":[{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
+
 function toggleDidDoc(role) {
   var el = document.getElementById(role + '-did-doc');
   var tog = document.getElementById(role + '-did-toggle');
@@ -861,7 +863,23 @@ var CA_ENTITY_INFO = {
   supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
 };
 fillDidEntity('ca', CA_ENTITY_INFO);
-fillDidDoc('ea', null);
+fillDidDoc('ea', EA_DID_DOC);
+var EA_ENTITY_INFO = {
+  did: 'did:web:cregisio-8f89b.sandbox.notabene.id:am',
+  name: 'cregis',
+  legalName: 'cregis',
+  domain: 'cregisio-8f89b.sandbox.notabene.id',
+  jurisdiction: 'AM',
+  website: 'https://www.cregis.com',
+  legalStructure: 'CORPORATION',
+  yearFounded: '7',
+  incorporationCountry: 'AS',
+  country: 'BG',
+  isRegulated: 'YES',
+  sandbox: true,
+  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
+};
+fillDidEntity('ea', EA_ENTITY_INFO);
 fillDidDoc('eb', null);
 
 // ─── Webhook Console ───
