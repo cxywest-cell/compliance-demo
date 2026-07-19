@@ -234,10 +234,6 @@
               <label>API Secret</label>
               <input type="text" id="s-ea-apisecret" placeholder="ea-api-secret...">
             </div>
-            <div class="field">
-              <label>Wallet Address</label>
-              <input type="text" id="s-ea-wallet" placeholder="0xEntityAWallet...">
-            </div>
           </div>
           <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('ea')">
             DID Document <span id="ea-did-toggle" style="float:right;color:#888;font-size:10px">▸</span>
@@ -270,10 +266,6 @@
             <div class="field">
               <label>API Secret</label>
               <input type="text" id="s-ca-apisecret" placeholder="ca-api-secret...">
-            </div>
-            <div class="field">
-              <label>Hot Wallet Address</label>
-              <input type="text" id="s-ca-wallet" placeholder="0xCustodianAHot...">
             </div>
           </div>
           <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('ca')">
@@ -308,10 +300,6 @@
               <label>API Secret</label>
               <input type="text" id="s-eb-apisecret" placeholder="eb-api-secret...">
             </div>
-            <div class="field">
-              <label>Wallet Address</label>
-              <input type="text" id="s-eb-wallet" placeholder="0xEntityBWallet...">
-            </div>
           </div>
           <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('eb')">
             DID Document <span id="eb-did-toggle" style="float:right;color:#888;font-size:10px">▸</span>
@@ -344,10 +332,6 @@
             <div class="field">
               <label>API Secret</label>
               <input type="text" id="s-cb-apisecret" placeholder="cb-api-secret...">
-            </div>
-            <div class="field">
-              <label>Hot Wallet Address</label>
-              <input type="text" id="s-cb-wallet" placeholder="0xCustodianBHot...">
             </div>
           </div>
           <div class="card-header" style="cursor:pointer;border-top:1px solid #e0e0e0" onclick="toggleDidDoc('cb')">
@@ -582,10 +566,10 @@ var defaults = {
   assetContract: '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66',
   eaWalletAddr: '', eaWalletPk: '',
   ebWalletAddr: '', ebWalletPk: '',
-  eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
-  caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
-  ebDid: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
-  cbDid: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae', cbApikey: 'hXc7MF4W3xCGAoBLIXp5bEdHjMlXQId3', cbApisecret: 'tpYr-KmDVADagzYbsEBSzaMYK2NL9KXFJw8umkvWiLSITyim_amlVVpIKqK-c__g', cbWallet: '0x2d5a...e81c',
+  eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf',
+  caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA',
+  ebDid: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy',
+  cbDid: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae', cbApikey: 'hXc7MF4W3xCGAoBLIXp5bEdHjMlXQId3', cbApisecret: 'tpYr-KmDVADagzYbsEBSzaMYK2NL9KXFJw8umkvWiLSITyim_amlVVpIKqK-c__g',
   cbEntityName: "cregis counterparty's custodian", cbJurisdiction: 'AE', cbLegalStructure: 'CORPORATION', cbIsRegulated: 'YES', cbWebsite: 'https://www.cregis-counterparty-custodian.com', cbSandbox: true
 };
 
@@ -625,19 +609,15 @@ function saveAll() {
     eaDid: document.getElementById('s-ea-did').value,
     eaApikey: document.getElementById('s-ea-apikey').value,
     eaApisecret: document.getElementById('s-ea-apisecret').value,
-    eaWallet: document.getElementById('s-ea-wallet').value,
     caDid: document.getElementById('s-ca-did').value,
     caApikey: document.getElementById('s-ca-apikey').value,
     caApisecret: document.getElementById('s-ca-apisecret').value,
-    caWallet: document.getElementById('s-ca-wallet').value,
     ebDid: document.getElementById('s-eb-did').value,
     ebApikey: document.getElementById('s-eb-apikey').value,
     ebApisecret: document.getElementById('s-eb-apisecret').value,
-    ebWallet: document.getElementById('s-eb-wallet').value,
     cbDid: document.getElementById('s-cb-did').value,
     cbApikey: document.getElementById('s-cb-apikey').value,
-    cbApisecret: document.getElementById('s-cb-apisecret').value,
-    cbWallet: document.getElementById('s-cb-wallet').value
+    cbApisecret: document.getElementById('s-cb-apisecret').value
   };
   storeSettings(s);
   updatePreviews();
@@ -652,10 +632,10 @@ function resetDefaults() {
     's-asset-contract',
     's-ea-wallet-addr', 's-ea-wallet-pk',
     's-eb-wallet-addr', 's-eb-wallet-pk',
-    's-ea-did','s-ea-apikey','s-ea-apisecret','s-ea-wallet',
-    's-ca-did','s-ca-apikey','s-ca-apisecret','s-ca-wallet',
-    's-eb-did','s-eb-apikey','s-eb-apisecret','s-eb-wallet',
-    's-cb-did','s-cb-apikey','s-cb-apisecret','s-cb-wallet'];
+    's-ea-did','s-ea-apikey','s-ea-apisecret',
+    's-ca-did','s-ca-apikey','s-ca-apisecret',
+    's-eb-did','s-eb-apikey','s-eb-apisecret',
+    's-cb-did','s-cb-apikey','s-cb-apisecret'];
   var keys = ['baseUrl','webhookUrl','docLevel','nonDocLevel','kybLevel',
     'appToken','apiSecret','websdkSecret','sumsubBaseUrl','websdkDomains',
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
@@ -664,10 +644,10 @@ function resetDefaults() {
     'assetContract',
     'eaWalletAddr', 'eaWalletPk',
     'ebWalletAddr', 'ebWalletPk',
-    'eaDid','eaApikey','eaApisecret','eaWallet',
-    'caDid','caApikey','caApisecret','caWallet',
-    'ebDid','ebApikey','ebApisecret','ebWallet',
-    'cbDid','cbApikey','cbApisecret','cbWallet'];
+    'eaDid','eaApikey','eaApisecret',
+    'caDid','caApikey','caApisecret',
+    'ebDid','ebApikey','ebApisecret',
+    'cbDid','cbApikey','cbApisecret'];
   for (var i = 0; i < ids.length; i++) {
     document.getElementById(ids[i]).value = defaults[keys[i]];
   }
@@ -1038,10 +1018,10 @@ var fieldMap = {
   's-asset-contract': saved.assetContract,
   's-ea-wallet-addr': saved.eaWalletAddr, 's-ea-wallet-pk': saved.eaWalletPk,
   's-eb-wallet-addr': saved.ebWalletAddr, 's-eb-wallet-pk': saved.ebWalletPk,
-  's-ea-did': saved.eaDid, 's-ea-apikey': saved.eaApikey, 's-ea-apisecret': saved.eaApisecret, 's-ea-wallet': saved.eaWallet,
-  's-ca-did': saved.caDid, 's-ca-apikey': saved.caApikey, 's-ca-apisecret': saved.caApisecret, 's-ca-wallet': saved.caWallet,
-  's-eb-did': saved.ebDid, 's-eb-apikey': saved.ebApikey, 's-eb-apisecret': saved.ebApisecret, 's-eb-wallet': saved.ebWallet,
-  's-cb-did': saved.cbDid, 's-cb-apikey': saved.cbApikey, 's-cb-apisecret': saved.cbApisecret, 's-cb-wallet': saved.cbWallet
+  's-ea-did': saved.eaDid, 's-ea-apikey': saved.eaApikey, 's-ea-apisecret': saved.eaApisecret,
+  's-ca-did': saved.caDid, 's-ca-apikey': saved.caApikey, 's-ca-apisecret': saved.caApisecret,
+  's-eb-did': saved.ebDid, 's-eb-apikey': saved.ebApikey, 's-eb-apisecret': saved.ebApisecret,
+  's-cb-did': saved.cbDid, 's-cb-apikey': saved.cbApikey, 's-cb-apisecret': saved.cbApisecret
 };
 for (var id in fieldMap) {
   var el = document.getElementById(id);
