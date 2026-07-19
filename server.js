@@ -34,6 +34,7 @@ const app = express();
 
 // Raw body parser for webhook HMAC verification (MUST be before express.json)
 app.use('/sumsub/webhook', express.raw({ type: 'application/json' }));
+app.use('/notabene/webhook', express.raw({ type: '*/*' }));
 
 app.use(express.json());
 app.use(express.static(__dirname)); // Serve static files (HTML, CSS, JS)
@@ -549,8 +550,12 @@ app.post('/api/applicants/create', async (req, res) => {
   const body = { externalUserId, type: type || 'individual' };
   
   if (type === 'company') {
-    // Sumsub: country goes at top level for prefill
-    if (country) body.country = country;
+    body.fixedInfo = {
+      companyInfo: {}
+    };
+    if (companyName) body.fixedInfo.companyInfo.companyName = companyName;
+    if (country) body.fixedInfo.companyInfo.country = country;
+    if (regNo) body.fixedInfo.companyInfo.registrationNumber = regNo;
   } else {
     body.fixedInfo = {};
     if (firstName) body.fixedInfo.firstName = firstName;
@@ -610,6 +615,174 @@ app.post('/api/applicant/reset/:applicantId', async (req, res) => {
   const result = await sumsubApi('POST', `/resources/applicants/${applicantId}/reset`, {});
   console.log(`[RESET RESULT]`, JSON.stringify(result));
   res.json(result);
+});
+
+// ─── Notabene Travel Rule API ───
+
+const NOTABENE_AUTH_URL = 'https://auth.notabene.id/oauth/token';
+const NOTABENE_API_BASE = 'https://api.eu1.notabene.id';
+
+// Token cache (24h validity, refresh at 23h)
+let notabeneTokenCache = {}; // keyed by clientId
+
+async function getNotabeneToken(clientId, clientSecret) {
+  // Check cache
+  if (notabeneTokenCache[clientId]) {
+    const cached = notabeneTokenCache[clientId];
+    if (Date.now() < cached.expiresAt) {
+      return cached.token;
+    }
+  }
+
+  console.log(`[NOTABENE AUTH] Getting token for ${clientId}`);
+  const resp = await fetch(NOTABENE_AUTH_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'client_credentials',
+      audience: NOTABENE_API_BASE
+    })
+  });
+  const data = await resp.json();
+  if (!data.access_token) {
+    throw new Error('Notabene auth failed: ' + JSON.stringify(data));
+  }
+  notabeneTokenCache[clientId] = {
+    token: data.access_token,
+    expiresAt: Date.now() + (data.expires_in - 3600) * 1000
+  };
+  return data.access_token;
+}
+
+async function notabeneApi(method, path, token, body) {
+  const url = NOTABENE_API_BASE + path;
+  console.log(`[NOTABENE] ${method} ${path}`);
+  const opts = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    }
+  };
+  if (body && method !== 'GET') opts.body = JSON.stringify(body);
+
+  const resp = await fetch(url, opts);
+  const text = await resp.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { data = text; }
+  console.log(`[NOTABENE RESULT] ${resp.status}`);
+  return data;
+}
+
+// Get auth token
+app.post('/api/notabene/token', async (req, res) => {
+  const { clientId, clientSecret } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    res.json({ token });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// List network entities
+app.get('/api/notabene/network', async (req, res) => {
+  const { clientId, clientSecret, listing } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const path = '/network' + (listing ? '?listing=' + listing : '');
+    const data = await notabeneApi('GET', path, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get entity info
+app.get('/api/notabene/entity', async (req, res) => {
+  const { clientId, clientSecret, did } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('GET', '/entity/' + did, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create transfer
+app.post('/api/notabene/transfer', async (req, res) => {
+  const { clientId, clientSecret, entityDid, transferBody } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const path = '/entity/' + entityDid + '/tx';
+    const data = await notabeneApi('POST', path, token, transferBody);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// List transfers for entity
+app.get('/api/notabene/transfers', async (req, res) => {
+  const { clientId, clientSecret, did } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('GET', '/entity/' + did + '/tx', token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get specific transfer
+app.get('/api/notabene/transfer', async (req, res) => {
+  const { clientId, clientSecret, did, txId } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('GET', '/entity/' + did + '/tx/' + txId, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Authorize transfer
+app.post('/api/notabene/transfer/authorize', async (req, res) => {
+  const { clientId, clientSecret, did, txId } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entity/' + did + '/tx/' + txId + '/authorize', token, {});
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Reject transfer
+app.post('/api/notabene/transfer/reject', async (req, res) => {
+  const { clientId, clientSecret, did, txId, reason, comment } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entity/' + did + '/tx/' + txId + '/reject', token, { reason: reason || 'OTHER', comment: comment || '' });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Settle transfer
+app.post('/api/notabene/transfer/settle', async (req, res) => {
+  const { clientId, clientSecret, did, txId, settlementId } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entity/' + did + '/tx/' + txId + '/settle', token, { settlementId });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── Cloudflare Tunnel Management ───
@@ -941,6 +1114,20 @@ app.get('/callback', (req, res) => {
 // Receives applicant status change events from Sumsub
 const WEBHOOK_LOG_PATH = path.join(__dirname, '.webhooks.json');
 
+function logWebhook(entry) {
+  try {
+    let log = [];
+    if (fs.existsSync(WEBHOOK_LOG_PATH)) {
+      log = JSON.parse(fs.readFileSync(WEBHOOK_LOG_PATH, 'utf8'));
+    }
+    log.push(entry);
+    if (log.length > 100) log = log.slice(-100);
+    fs.writeFileSync(WEBHOOK_LOG_PATH, JSON.stringify(log, null, 2));
+  } catch(e) {
+    console.error('[Webhook] Failed to save log:', e.message);
+  }
+}
+
 app.post('/sumsub/webhook', (req, res) => {
   const rawBody = req.body;
   const signature = req.headers['x-payload-hmac-sha256'];
@@ -958,7 +1145,7 @@ app.post('/sumsub/webhook', (req, res) => {
   }
   
   const timestamp = new Date().toISOString();
-  const entry = { timestamp, verified: valid, signature, signatureMatch: computedHmac, ...payload };
+  const entry = { type: 'sumsub', timestamp, verified: valid, signature, signatureMatch: computedHmac, ...payload };
   
   const status = valid ? 'VERIFIED' : 'UNVERIFIED';
   console.log(`[Webhook] ${status} | ${timestamp} — type: ${payload.type || 'unknown'}, applicantId: ${payload.applicantId || '—'}, extUserId: ${payload.externalUserId || '—'}`);
@@ -968,24 +1155,38 @@ app.post('/sumsub/webhook', (req, res) => {
     console.log(`[Webhook] Received: ${signature}`);
   }
   
-  // Append to webhook log
-  try {
-    let log = [];
-    if (fs.existsSync(WEBHOOK_LOG_PATH)) {
-      log = JSON.parse(fs.readFileSync(WEBHOOK_LOG_PATH, 'utf8'));
-    }
-    log.push(entry);
-    if (log.length > 100) log = log.slice(-100);
-    fs.writeFileSync(WEBHOOK_LOG_PATH, JSON.stringify(log, null, 2));
-  } catch(e) {
-    console.error('[Webhook] Failed to save log:', e.message);
-  }
-  
+  logWebhook(entry);
   res.status(200).send('OK');
 });
 
 app.get('/sumsub/webhook', (req, res) => {
   // Sumsub validates webhooks with GET first
+  res.status(200).send('OK');
+});
+
+// ─── Notabene webhook receiver ───
+// Logs incoming Notabene Travel Rule webhook events to the shared webhook log.
+// Payload structure is TBD — Notabene docs need to be consulted.
+// For now we capture everything: headers + body.
+// Raw body parser is registered at the top of the file, before express.json().
+app.post('/notabene/webhook', (req, res) => {
+  const rawBody = req.body && req.body.length ? req.body.toString('utf8') : '';
+  let parsedBody;
+  try { parsedBody = JSON.parse(rawBody); } catch(e) { parsedBody = rawBody; }
+
+  const entry = {
+    type: 'notabene',
+    timestamp: new Date().toISOString(),
+    headers: req.headers,
+    body: parsedBody,
+    rawBody: rawBody.substring(0, 5000)
+  };
+  logWebhook(entry);
+  console.log('[Notabene Webhook] Received:', JSON.stringify(parsedBody).substring(0, 500));
+  res.status(200).send('OK');
+});
+
+app.get('/notabene/webhook', (req, res) => {
   res.status(200).send('OK');
 });
 

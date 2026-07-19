@@ -112,6 +112,28 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-header">Webhook</div>
+        <div class="card-body">
+          <div class="field">
+            <label>Webhook URL</label>
+            <input type="text" id="s-notabene-webhookurl" placeholder="Start tunnel to auto-fill" readonly style="background:#f8f8f8">
+            <div class="hint">Notabene sends Travel Rule webhook events here. Set via tunnel (Generate URL below).</div>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label>Webhook Secret</label>
+            <input type="text" id="s-notabene-webhooksecret" placeholder="Optional — for signature verification">
+            <div class="hint">Shared secret for verifying incoming Notabene webhook payloads (if configured in dashboard).</div>
+          </div>
+          <div class="url-display show" id="notabene-webhook-preview" style="display:none"></div>
+          <div class="field" style="display:flex;align-items:flex-end;gap:8px;margin-top:12px">
+            <button class="tunnel-btn" id="notabene-tunnel-generate-btn" onclick="generateUrl('notabene')">Generate URL</button>
+            <button class="tunnel-btn" id="notabene-tunnel-test-btn" onclick="testTunnel('notabene')" disabled>Test</button>
+          </div>
+          <div id="notabene-tunnel-test-result" class="test-result" style="display:none"></div>
+        </div>
+      </div>
+
       <div class="section-title">Role Credentials</div>
       <p style="font-size:11px;color:#888;margin-bottom:12px">Each role authenticates with its own OAuth clientId / clientSecret — no universal API key.</p>
 
@@ -476,6 +498,8 @@ var defaults = {
   ellipticEndpoint: 'aml-api.elliptic.co',
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.eu1.notabene.id',
+  notabeneWebhookUrl: '',
+  notabeneWebhookSecret: '',
   eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
   caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
   ebDid: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
@@ -509,6 +533,8 @@ function saveAll() {
     ellipticEndpoint: document.getElementById('s-ellipticendpoint').value,
     ellipticSign: document.getElementById('s-ellipticsign').value,
     notabeneBaseUrl: document.getElementById('s-notabene-baseurl').value,
+    notabeneWebhookUrl: document.getElementById('s-notabene-webhookurl').value,
+    notabeneWebhookSecret: document.getElementById('s-notabene-webhooksecret').value,
     eaDid: document.getElementById('s-ea-did').value,
     eaApikey: document.getElementById('s-ea-apikey').value,
     eaApisecret: document.getElementById('s-ea-apisecret').value,
@@ -535,6 +561,7 @@ function resetDefaults() {
     's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl','s-websdkdomains',
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
     's-notabene-baseurl',
+    's-notabene-webhookurl', 's-notabene-webhooksecret',
     's-ea-did','s-ea-apikey','s-ea-apisecret','s-ea-wallet',
     's-ca-did','s-ca-apikey','s-ca-apisecret','s-ca-wallet',
     's-eb-did','s-eb-apikey','s-eb-apisecret','s-eb-wallet',
@@ -543,6 +570,7 @@ function resetDefaults() {
     'appToken','apiSecret','websdkSecret','sumsubBaseUrl','websdkDomains',
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
     'notabeneBaseUrl',
+    'notabeneWebhookUrl', 'notabeneWebhookSecret',
     'eaDid','eaApikey','eaApisecret','eaWallet',
     'caDid','caApikey','caApisecret','caWallet',
     'ebDid','ebApikey','ebApisecret','ebWallet',
@@ -575,91 +603,96 @@ function switchTab(tab) {
   document.querySelectorAll('.settings-tab')[tabs[tab]].classList.add('active');
 }
 
-// Tunnel management
-async function generateUrl() {
-  var genBtn = document.getElementById('tunnel-generate-btn');
-  var testBtn = document.getElementById('tunnel-test-btn');
-  var tr = document.getElementById('tunnel-test-result');
-  genBtn.disabled = true;
-  genBtn.textContent = 'Generating...';
+// Tunnel management — shared cloudflared tunnel, callable from Sumsub or Notabene tab
+async function generateUrl(source) {
+  source = source || 'sumsub';
+  var genBtn = document.getElementById(source + '-tunnel-generate-btn') || document.getElementById('tunnel-generate-btn');
+  var testBtn = document.getElementById(source + '-tunnel-test-btn') || document.getElementById('tunnel-test-btn');
+  var tr = document.getElementById(source + '-tunnel-test-result') || document.getElementById('tunnel-test-result');
+  if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
   if (tr) tr.style.display = 'none';
 
   try {
     var controller = new AbortController();
     var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
-    // Always use /api/tunnel/refresh to get a fresh URL
     var res = await fetch('/api/tunnel/refresh', { method: 'POST', signal: controller.signal });
     clearTimeout(timeoutId);
     var data = await res.json();
     if (data.error) {
-      genBtn.textContent = 'Generate URL';
-      genBtn.disabled = false;
+      if (genBtn) { genBtn.textContent = 'Generate URL'; genBtn.disabled = false; }
       alert('Tunnel error: ' + data.error);
     } else {
-      var url = data.url;
-      // Update topbar badge
-      var badge = document.getElementById('tunnel-badge');
-      if (badge) badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + url.replace(/https?:\/\//, '') + '</span>';
-      // Auto-fill WebSDK redirect URL
-      document.getElementById('s-baseurl').value = url;
-      // Auto-fill Webhook URL
-      document.getElementById('s-webhookurl').value = url + '/sumsub/webhook';
-      // Update webhook preview
-      var wp = document.getElementById('tunnel-webhook-preview');
-      if (wp) { wp.style.display = 'block'; wp.textContent = url + '/sumsub/webhook'; }
-      // Enable test button
-      testBtn.disabled = false;
-      genBtn.textContent = 'Regenerate';
-      genBtn.disabled = false;
+      applyTunnelUrl(data.url);
+      // Enable all test buttons
+      ['tunnel-test-btn', 'notabene-tunnel-test-btn'].forEach(function(id) {
+        var b = document.getElementById(id);
+        if (b) b.disabled = false;
+      });
+      ['tunnel-generate-btn', 'notabene-tunnel-generate-btn'].forEach(function(id) {
+        var b = document.getElementById(id);
+        if (b) { b.textContent = 'Regenerate'; b.disabled = false; }
+      });
       updatePreviews();
     }
   } catch(e) {
-    genBtn.textContent = 'Generate URL';
-    genBtn.disabled = false;
+    if (genBtn) { genBtn.textContent = 'Generate URL'; genBtn.disabled = false; }
     var detail = e.name === 'AbortError' ? 'Request timed out (30s)' : e.message;
     alert('Failed to generate URL: ' + detail);
   }
 }
 
-async function testTunnel() {
-  var testBtn = document.getElementById('tunnel-test-btn');
-  var url = document.getElementById('s-baseurl').value;
-  var tr = document.getElementById('tunnel-test-result');
+function applyTunnelUrl(url) {
+  // Topbar badge
+  var badge = document.getElementById('tunnel-badge');
+  if (badge) badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + url.replace(/https?:\/\//, '') + '</span>';
+  // Sumsub auto-fill
+  var su = document.getElementById('s-baseurl'); if (su) su.value = url;
+  var sw = document.getElementById('s-webhookurl'); if (sw) sw.value = url + '/sumsub/webhook';
+  var wp = document.getElementById('tunnel-webhook-preview');
+  if (wp) { wp.style.display = 'block'; wp.textContent = url + '/sumsub/webhook'; }
+  // Notabene auto-fill
+  var nw = document.getElementById('s-notabene-webhookurl'); if (nw) nw.value = url + '/notabene/webhook';
+  var nwp = document.getElementById('notabene-webhook-preview');
+  if (nwp) { nwp.style.display = 'block'; nwp.textContent = url + '/notabene/webhook'; }
+}
+
+async function testTunnel(source) {
+  source = source || 'sumsub';
+  var testBtn = document.getElementById(source + '-tunnel-test-btn') || document.getElementById('tunnel-test-btn');
+  var url = (source === 'notabene')
+    ? (document.getElementById('s-notabene-webhookurl') || {}).value
+    : (document.getElementById('s-baseurl') || {}).value;
+  // Strip the path — just test the tunnel base
+  if (url) url = url.replace(/\/(sumsub|notabene)\/webhook.*$/, '');
+  var tr = document.getElementById(source + '-tunnel-test-result') || document.getElementById('tunnel-test-result');
   if (!url) { alert('Generate a URL first'); return; }
 
-  testBtn.disabled = true;
-  testBtn.textContent = 'Testing...';
+  if (testBtn) { testBtn.disabled = true; testBtn.textContent = 'Testing...'; }
   if (tr) { tr.style.display = 'block'; tr.className = 'test-result'; tr.textContent = 'Checking connectivity...'; }
 
   try {
     var startTime = Date.now();
-    // Use Image ping — bypasses CORS entirely, works with any URL
     var img = new Image();
     var timeout = setTimeout(function() {
       if (tr) { tr.className = 'test-result err'; tr.textContent = 'Failed — ' + url + ' (timeout, 10s)'; }
-      testBtn.disabled = false;
-      testBtn.textContent = 'Test';
+      if (testBtn) { testBtn.disabled = false; testBtn.textContent = 'Test'; }
     }, 10000);
     img.onload = function() {
       clearTimeout(timeout);
       var latency = Date.now() - startTime;
       if (tr) { tr.className = 'test-result ok'; tr.textContent = 'OK — ' + url + ' is reachable (' + latency + 'ms)'; }
-      testBtn.disabled = false;
-      testBtn.textContent = 'Test';
+      if (testBtn) { testBtn.disabled = false; testBtn.textContent = 'Test'; }
     };
     img.onerror = function() {
       clearTimeout(timeout);
       var latency = Date.now() - startTime;
-      // Even 404/500 means the server is reachable (image request to HTML page = error, but connection works)
       if (tr) { tr.className = 'test-result ok'; tr.textContent = 'OK — ' + url + ' is reachable (' + latency + 'ms)'; }
-      testBtn.disabled = false;
-      testBtn.textContent = 'Test';
+      if (testBtn) { testBtn.disabled = false; testBtn.textContent = 'Test'; }
     };
     img.src = url + '/settings?t=' + Date.now();
   } catch(e) {
     if (tr) { tr.className = 'test-result err'; tr.textContent = 'Failed — ' + url + ' (' + e.message + ')'; }
-    testBtn.disabled = false;
-    testBtn.textContent = 'Test';
+    if (testBtn) { testBtn.disabled = false; testBtn.textContent = 'Test'; }
   }
 }
 
@@ -668,16 +701,13 @@ async function checkTunnelStatus() {
     var res = await fetch('/api/tunnel/status');
     var data = await res.json();
     if (data.running && data.url) {
-      var badge = document.getElementById('tunnel-badge');
-      if (badge) badge.innerHTML = '<span class="tunnel-badge-online">Tunnel: ' + data.url.replace(/https?:\/\//, '') + '</span>';
-      document.getElementById('s-baseurl').value = data.url;
-      document.getElementById('s-webhookurl').value = data.url + '/sumsub/webhook';
-      var wp = document.getElementById('tunnel-webhook-preview');
-      if (wp) { wp.style.display = 'block'; wp.textContent = data.url + '/sumsub/webhook'; }
-      var testBtn = document.getElementById('tunnel-test-btn');
-      if (testBtn) testBtn.disabled = false;
-      var genBtn = document.getElementById('tunnel-generate-btn');
-      if (genBtn) genBtn.textContent = 'Regenerate';
+      applyTunnelUrl(data.url);
+      ['tunnel-test-btn', 'notabene-tunnel-test-btn'].forEach(function(id) {
+        var b = document.getElementById(id); if (b) b.disabled = false;
+      });
+      ['tunnel-generate-btn', 'notabene-tunnel-generate-btn'].forEach(function(id) {
+        var b = document.getElementById(id); if (b) b.textContent = 'Regenerate';
+      });
       updatePreviews();
     }
   } catch(e) {}
@@ -819,6 +849,7 @@ var fieldMap = {
   's-elliptickey': saved.ellipticKey, 's-ellipticsecret': saved.ellipticSecret,
   's-ellipticendpoint': saved.ellipticEndpoint, 's-ellipticsign': saved.ellipticSign,
   's-notabene-baseurl': saved.notabeneBaseUrl,
+  's-notabene-webhookurl': saved.notabeneWebhookUrl, 's-notabene-webhooksecret': saved.notabeneWebhookSecret,
   's-ea-did': saved.eaDid, 's-ea-apikey': saved.eaApikey, 's-ea-apisecret': saved.eaApisecret, 's-ea-wallet': saved.eaWallet,
   's-ca-did': saved.caDid, 's-ca-apikey': saved.caApikey, 's-ca-apisecret': saved.caApisecret, 's-ca-wallet': saved.caWallet,
   's-eb-did': saved.ebDid, 's-eb-apikey': saved.ebApikey, 's-eb-apisecret': saved.ebApisecret, 's-eb-wallet': saved.ebWallet,
