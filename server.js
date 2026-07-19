@@ -1492,6 +1492,68 @@ app.get('/api/wallet/asset-info', async (req, res) => {
   }
 });
 
+// Send ERC-20 transfer (signs and broadcasts on-chain)
+app.post('/api/wallet/transfer', async (req, res) => {
+  const { privateKey, to, amount, contract: contractAddr } = req.body;
+  if (!privateKey) return res.status(400).json({ error: 'privateKey required' });
+  if (!to)        return res.status(400).json({ error: 'to (recipient address) required' });
+  if (!amount)    return res.status(400).json({ error: 'amount required' });
+
+  const tokenAddr = contractAddr || KLCC_CONTRACT;
+  try {
+    const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+    const signer = new ethers.Wallet(privateKey, provider);
+
+    // Resolve ENS/idempotency checks
+    if (!ethers.isAddress(to)) {
+      return res.status(400).json({ error: 'Invalid recipient address' });
+    }
+    if (!ethers.isAddress(signer.address)) {
+      return res.status(400).json({ error: 'Invalid sender address (bad private key)' });
+    }
+
+    const contract = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+    const [symbol, decimals, balance] = await Promise.all([
+      contract.symbol(),
+      contract.decimals(),
+      contract.balanceOf(signer.address)
+    ]);
+
+    const parsedAmount = ethers.parseUnits(String(amount), Number(decimals));
+    if (parsedAmount > balance) {
+      return res.status(400).json({
+        error: `Insufficient ${symbol} balance. Have ${ethers.formatUnits(balance, Number(decimals))}, tried to send ${amount}`
+      });
+    }
+
+    // Small ETH balance check for gas
+    const ethBalance = await provider.getBalance(signer.address);
+    if (ethBalance === 0n) {
+      return res.status(400).json({
+        error: 'Sender has 0 ETH — cannot pay for gas. Fund the address with Sepolia ETH first.'
+      });
+    }
+
+    const tx = await contract.transfer(to, parsedAmount);
+    const receipt = await tx.wait();
+
+    res.json({
+      ok: true,
+      txHash: tx.hash,
+      from: signer.address,
+      to: to,
+      amount: String(amount),
+      symbol: symbol,
+      token: tokenAddr,
+      explorerUrl: `https://sepolia.etherscan.io/tx/${tx.hash}`,
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString()
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.listen(8000, '0.0.0.0', () => {
   console.log('Server running on http://0.0.0.0:8000');
   console.log('  Dashboard:  http://localhost:8000/');

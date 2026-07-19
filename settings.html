@@ -184,8 +184,26 @@
             <div style="display:flex;gap:6px;margin-top:8px">
               <button class="tunnel-btn" id="ea-gen-btn" onclick="generateWallet('ea')">Generate New</button>
               <button class="tunnel-btn" id="ea-bal-btn" onclick="refreshBalance('ea')" disabled>Refresh Balance</button>
+              <button class="tunnel-btn" id="ea-tx-btn" onclick="toggleTransferForm('ea')" disabled>Transfer</button>
             </div>
             <div id="ea-balance-display" style="margin-top:8px;font-size:12px"></div>
+            <div id="ea-transfer-panel" style="display:none;margin-top:10px;padding:10px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px">
+              <div style="font-size:11px;color:#888;margin-bottom:6px">Send KLCC from this wallet</div>
+              <div class="field" style="margin-bottom:6px">
+                <label style="font-size:11px">Amount (KLCC)</label>
+                <input type="text" id="ea-tx-amount" placeholder="e.g. 100" style="width:100%">
+              </div>
+              <div class="field" style="margin-bottom:6px">
+                <label style="font-size:11px">Destination Address</label>
+                <input type="text" id="ea-tx-to" placeholder="0x..." style="width:100%;font-family:monospace;font-size:11px">
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button class="tunnel-btn" id="ea-tx-send" onclick="sendTransfer('ea')">Send</button>
+                <button class="tunnel-btn" onclick="toggleTransferForm('ea')">Cancel</button>
+                <span id="ea-tx-status" style="font-size:11px"></span>
+              </div>
+              <div id="ea-tx-result" style="margin-top:8px;font-size:11px"></div>
+            </div>
           </div>
         </div>
 
@@ -207,8 +225,26 @@
             <div style="display:flex;gap:6px;margin-top:8px">
               <button class="tunnel-btn" id="eb-gen-btn" onclick="generateWallet('eb')">Generate New</button>
               <button class="tunnel-btn" id="eb-bal-btn" onclick="refreshBalance('eb')" disabled>Refresh Balance</button>
+              <button class="tunnel-btn" id="eb-tx-btn" onclick="toggleTransferForm('eb')" disabled>Transfer</button>
             </div>
             <div id="eb-balance-display" style="margin-top:8px;font-size:12px"></div>
+            <div id="eb-transfer-panel" style="display:none;margin-top:10px;padding:10px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px">
+              <div style="font-size:11px;color:#888;margin-bottom:6px">Send KLCC from this wallet</div>
+              <div class="field" style="margin-bottom:6px">
+                <label style="font-size:11px">Amount (KLCC)</label>
+                <input type="text" id="eb-tx-amount" placeholder="e.g. 100" style="width:100%">
+              </div>
+              <div class="field" style="margin-bottom:6px">
+                <label style="font-size:11px">Destination Address</label>
+                <input type="text" id="eb-tx-to" placeholder="0x..." style="width:100%;font-family:monospace;font-size:11px">
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button class="tunnel-btn" id="eb-tx-send" onclick="sendTransfer('eb')">Send</button>
+                <button class="tunnel-btn" onclick="toggleTransferForm('eb')">Cancel</button>
+                <span id="eb-tx-status" style="font-size:11px"></span>
+              </div>
+              <div id="eb-tx-result" style="margin-top:8px;font-size:11px"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -689,6 +725,8 @@ async function generateWallet(role) {
     document.getElementById('s-' + role + '-wallet-pk').value = data.privateKey;
     saveSettings();
     if (balBtn) balBtn.disabled = false;
+    var txBtn = document.getElementById(role + '-tx-btn');
+    if (txBtn) txBtn.disabled = false;
     if (genBtn) { genBtn.textContent = 'Regenerate'; genBtn.disabled = false; }
     refreshBalance(role);
     persistWallet(role, data.address, data.privateKey);
@@ -730,12 +768,14 @@ async function loadPersistedWallets() {
       var badge = document.getElementById(role + '-persist-badge');
       var genBtn = document.getElementById(role + '-gen-btn');
       var balBtn = document.getElementById(role + '-bal-btn');
+      var txBtn = document.getElementById(role + '-tx-btn');
       // If browser localStorage is empty but server has a wallet, restore it
       if (w && w.address && (!addrEl.value || addrEl.value !== w.address)) {
         addrEl.value = w.address;
         pkEl.value = w.privateKey;
         if (genBtn) genBtn.textContent = 'Regenerate';
         if (balBtn) balBtn.disabled = false;
+        if (txBtn) txBtn.disabled = false;
         saveSettings();
       }
       // Update badge based on persistence state
@@ -748,9 +788,84 @@ async function loadPersistedWallets() {
           badge.innerHTML = '<span style="color:#888">○ Not generated</span>';
         }
       }
+      // Enable Transfer button if wallet exists
+      if (txBtn && addrEl.value) txBtn.disabled = false;
     });
+    // Pre-fill cross-direction destination addresses
+    var eaAddr = document.getElementById('s-ea-wallet-addr').value;
+    var ebAddr = document.getElementById('s-eb-wallet-addr').value;
+    var eaTo = document.getElementById('ea-tx-to');
+    var ebTo = document.getElementById('eb-tx-to');
+    if (eaTo && !eaTo.value && ebAddr) eaTo.value = ebAddr;
+    if (ebTo && !ebTo.value && eaAddr) ebTo.value = eaAddr;
   } catch(e) {
     console.warn('Could not load persisted wallets:', e);
+  }
+}
+
+// Toggle inline transfer form
+function toggleTransferForm(role) {
+  var panel = document.getElementById(role + '-transfer-panel');
+  if (!panel) return;
+  var addrEl = document.getElementById('s-' + role + '-wallet-addr');
+  // Pre-fill destination with the OTHER wallet's address
+  var otherRole = role === 'ea' ? 'eb' : 'ea';
+  var otherAddr = document.getElementById('s-' + otherRole + '-wallet-addr').value;
+  var toInput = document.getElementById(role + '-tx-to');
+  if (otherAddr && toInput && !toInput.value) toInput.value = otherAddr;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+// Send ERC-20 transfer on-chain
+async function sendTransfer(role) {
+  var fromAddr = document.getElementById('s-' + role + '-wallet-addr').value;
+  var fromPk   = document.getElementById('s-' + role + '-wallet-pk').value;
+  var amount   = document.getElementById(role + '-tx-amount').value.trim();
+  var to       = document.getElementById(role + '-tx-to').value.trim();
+  var status   = document.getElementById(role + '-tx-status');
+  var result   = document.getElementById(role + '-tx-result');
+  var sendBtn  = document.getElementById(role + '-tx-send');
+
+  if (!fromPk)   { alert('No private key for this wallet. Generate first.'); return; }
+  if (!amount)   { alert('Amount required'); return; }
+  if (!to)       { alert('Destination address required'); return; }
+
+  if (!confirm('Send ' + amount + ' KLCC\nfrom: ' + fromAddr + '\nto:   ' + to + '\n\nThis is a REAL on-chain transaction on Sepolia.')) {
+    return;
+  }
+
+  if (status) status.innerHTML = '<span style="color:#888">Signing and broadcasting...</span>';
+  if (result) result.innerHTML = '';
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Sending...'; }
+
+  try {
+    var contract = document.getElementById('s-asset-contract').value;
+    var res = await fetch('/api/wallet/transfer', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ privateKey: fromPk, to: to, amount: amount, contract: contract })
+    });
+    var data = await res.json();
+    if (data.error || !data.ok) throw new Error(data.error || 'Transfer failed');
+
+    if (status) status.innerHTML = '<span style="color:#059669">✓ Confirmed in block ' + data.blockNumber + '</span>';
+    if (result) result.innerHTML =
+      '<div style="background:#fff;padding:8px;border:1px solid #e0e0e0;border-radius:3px;font-family:monospace;font-size:10px;word-break:break-all">' +
+        '<div><span style="color:#888">tx:</span> ' + data.txHash + '</div>' +
+        '<div style="margin-top:4px"><span style="color:#888">from:</span> ' + data.from + '</div>' +
+        '<div><span style="color:#888">to:</span> ' + data.to + '</div>' +
+        '<div style="margin-top:4px"><span style="color:#888">amount:</span> ' + data.amount + ' ' + data.symbol + '</div>' +
+        '<div><span style="color:#888">gas:</span> ' + data.gasUsed + '</div>' +
+        '<div style="margin-top:6px"><a href="' + data.explorerUrl + '" target="_blank" style="color:#2563eb">↗ View on Etherscan</a></div>' +
+      '</div>';
+    // Refresh both balances
+    refreshBalance(role);
+    var otherRole = role === 'ea' ? 'eb' : 'ea';
+    setTimeout(function() { refreshBalance(otherRole); }, 2000);
+  } catch(e) {
+    if (status) status.innerHTML = '<span style="color:#dc2626">✗ ' + e.message + '</span>';
+  } finally {
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send'; }
   }
 }
 
