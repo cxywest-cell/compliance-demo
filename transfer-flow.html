@@ -165,6 +165,16 @@
     <div class="role-page active" id="role-entity-a">
       <div class="role-header"><span class="dot" style="background:#5b4cdb"></span><h2>Entity A</h2><span class="tag">Originator VASP</span></div>
 
+      <div class="section-title">Step 1 · Connection Test</div>
+      <div class="card">
+        <div class="card-header">Verify Notabene Network Access</div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
+          <button class="btn btn-primary" id="ea-verify-btn" onclick="verifyConnection('ea')">Verify Connection</button>
+          <div id="ea-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
+
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
         <div class="cred-row" style="margin-bottom:6px">
@@ -184,11 +194,31 @@
     <!-- ═══ Custodian A ═══ -->
     <div class="role-page" id="role-custodian-a">
       <div class="role-header"><span class="dot" style="background:#8b5cf6"></span><h2>Custodian A</h2><span class="tag">Custody Provider</span></div>
+
+      <div class="section-title">Step 1 · Connection Test</div>
+      <div class="card">
+        <div class="card-header">Verify Notabene Network Access</div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
+          <button class="btn btn-primary" id="ca-verify-btn" onclick="verifyConnection('ca')">Verify Connection</button>
+          <div id="ca-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ Entity B ═══ -->
     <div class="role-page" id="role-entity-b">
       <div class="role-header"><span class="dot" style="background:#06b6d4"></span><h2>Entity B</h2><span class="tag">Beneficiary VASP</span></div>
+
+      <div class="section-title">Step 1 · Connection Test</div>
+      <div class="card">
+        <div class="card-header">Verify Notabene Network Access</div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
+          <button class="btn btn-primary" id="eb-verify-btn" onclick="verifyConnection('eb')">Verify Connection</button>
+          <div id="eb-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
 
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
@@ -209,6 +239,16 @@
     <!-- ═══ Custodian B ═══ -->
     <div class="role-page" id="role-custodian-b">
       <div class="role-header"><span class="dot" style="background:#14b8a6"></span><h2>Custodian B</h2><span class="tag">Custody Provider</span></div>
+
+      <div class="section-title">Step 1 · Connection Test</div>
+      <div class="card">
+        <div class="card-header">Verify Notabene Network Access</div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
+          <button class="btn btn-primary" id="cb-verify-btn" onclick="verifyConnection('cb')">Verify Connection</button>
+          <div id="cb-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -276,6 +316,64 @@ function loadSettings() {
 function fill(id, val) {
   var el = document.getElementById(id);
   if (el) el.textContent = val || '—';
+}
+
+// ─── Step 1: Connection Test ───
+async function verifyConnection(role) {
+  var s = loadSettings();
+  var clientId = s[role + 'Apikey'];
+  var clientSecret = s[role + 'Apisecret'];
+  var did = s[role + 'Did'];
+  var btn = document.getElementById(role + '-verify-btn');
+  var result = document.getElementById(role + '-verify-result');
+
+  if (!clientId || !clientSecret || !did) {
+    result.style.display = 'block';
+    result.innerHTML = '<div class="cred-row"><span class="k">Status</span><span class="v" style="color:#dc2626;font-weight:600">✗ Missing credentials</span></div>' +
+                       '<div class="cred-row"><span class="k">Hint</span><span class="v">Configure ' + role.toUpperCase() + ' API key, secret, and DID in Settings.</span></div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+  result.style.display = 'block';
+  result.innerHTML = '<div class="cred-row"><span class="k">Status</span><span class="v" style="color:#888">Authenticating via OAuth...</span></div>';
+
+  try {
+    var url = '/api/notabene/entity?clientId=' + encodeURIComponent(clientId) +
+              '&clientSecret=' + encodeURIComponent(clientSecret) +
+              '&did=' + encodeURIComponent(did);
+    var res = await fetch(url);
+    var data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+
+    result.innerHTML =
+      '<div class="cred-row"><span class="k">Status</span><span class="v" style="color:#059669;font-weight:600">✓ Connected</span></div>' +
+      '<div class="cred-row"><span class="k">Entity Name</span><span class="v" style="font-weight:600">' + esc(data.name || data.legalName || '—') + '</span></div>' +
+      '<div class="cred-row"><span class="k">DID</span><span class="v mono">' + esc(data.did) + '</span></div>' +
+      '<div class="cred-row"><span class="k">Jurisdiction</span><span class="v">' + esc(data.jurisdiction || '—') + '</span></div>' +
+      '<div class="cred-row"><span class="k">Legal Structure</span><span class="v">' + esc(data.legalStructure || '—') + '</span></div>' +
+      '<div class="cred-row"><span class="k">Regulated</span><span class="v">' + esc(data.isRegulated || '—') + '</span></div>' +
+      '<div class="cred-row"><span class="k">Sandbox</span><span class="v">' + (data.sandbox ? 'Yes' : 'No') + '</span></div>' +
+      '<div class="cred-row"><span class="k">Website</span><span class="v">' + esc(data.website || '—') + '</span></div>';
+    btn.textContent = '✓ Verified';
+    btn.className = 'btn btn-success';
+  } catch(e) {
+    result.innerHTML = '<div class="cred-row"><span class="k">Status</span><span class="v" style="color:#dc2626;font-weight:600">✗ Failed</span></div>' +
+                       '<div class="cred-row"><span class="k">Error</span><span class="v mono">' + esc(e.message) + '</span></div>';
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+    btn.className = 'btn btn-danger';
+  }
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
 }
 
 // ─── Tab Switching ───
