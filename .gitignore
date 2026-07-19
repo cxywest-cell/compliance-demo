@@ -1,0 +1,15 @@
+# Persisted wallet keys — NEVER commit
+.wallets.json
+
+# Other state files
+.compliance-applicants.json
+.webhooks.json
+
+# Secrets
+.env
+
+# Node
+node_modules/
+
+# WSL artifacts
+*:Zone.Identifier

@@ -168,7 +168,7 @@
       <div class="grid-2">
         <!-- Originating Wallet -->
         <div class="card">
-          <div class="card-header"><span class="role-badge role-entity-a">Originating</span> Entity A owns · Custodian A holds</div>
+          <div class="card-header"><span class="role-badge role-entity-a">Originating</span> Entity A owns · Custodian A holds <span id="ea-persist-badge" style="float:right;font-size:10px"></span></div>
           <div class="card-body">
             <div class="field">
               <label>Wallet Address</label>
@@ -191,7 +191,7 @@
 
         <!-- Destination Wallet -->
         <div class="card">
-          <div class="card-header"><span class="role-badge role-entity-b">Destination</span> Entity B owns · Custodian B holds</div>
+          <div class="card-header"><span class="role-badge role-entity-b">Destination</span> Entity B owns · Custodian B holds <span id="eb-persist-badge" style="float:right;font-size:10px"></span></div>
           <div class="card-body">
             <div class="field">
               <label>Wallet Address</label>
@@ -691,9 +691,66 @@ async function generateWallet(role) {
     if (balBtn) balBtn.disabled = false;
     if (genBtn) { genBtn.textContent = 'Regenerate'; genBtn.disabled = false; }
     refreshBalance(role);
+    persistWallet(role, data.address, data.privateKey);
   } catch(e) {
     alert('Wallet generation failed: ' + e.message);
     if (genBtn) { genBtn.textContent = 'Generate New'; genBtn.disabled = false; }
+  }
+}
+
+// Persist wallet to server-side file (survives browser clears)
+async function persistWallet(role, address, privateKey) {
+  var badge = document.getElementById(role + '-persist-badge');
+  if (badge) badge.innerHTML = '<span style="color:#888">saving...</span>';
+  try {
+    var body = {}; body[role] = { address: address, privateKey: privateKey, savedAt: new Date().toISOString() };
+    var res = await fetch('/api/wallet/persist', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (badge) badge.innerHTML = '<span style="color:#059669">● Persisted</span>';
+  } catch(e) {
+    if (badge) badge.innerHTML = '<span style="color:#dc2626">✗ ' + e.message + '</span>';
+  }
+}
+
+// Load persisted wallets from server on page load
+async function loadPersistedWallets() {
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    ['ea','eb'].forEach(function(role) {
+      var w = data[role];
+      var addrEl = document.getElementById('s-' + role + '-wallet-addr');
+      var pkEl = document.getElementById('s-' + role + '-wallet-pk');
+      var badge = document.getElementById(role + '-persist-badge');
+      var genBtn = document.getElementById(role + '-gen-btn');
+      var balBtn = document.getElementById(role + '-bal-btn');
+      // If browser localStorage is empty but server has a wallet, restore it
+      if (w && w.address && (!addrEl.value || addrEl.value !== w.address)) {
+        addrEl.value = w.address;
+        pkEl.value = w.privateKey;
+        if (genBtn) genBtn.textContent = 'Regenerate';
+        if (balBtn) balBtn.disabled = false;
+        saveSettings();
+      }
+      // Update badge based on persistence state
+      if (badge) {
+        if (w && w.address) {
+          badge.innerHTML = '<span style="color:#059669">● Persisted</span>';
+        } else if (addrEl.value) {
+          badge.innerHTML = '<span style="color:#d97706">● Local only (not saved)</span>';
+        } else {
+          badge.innerHTML = '<span style="color:#888">○ Not generated</span>';
+        }
+      }
+    });
+  } catch(e) {
+    console.warn('Could not load persisted wallets:', e);
   }
 }
 
@@ -757,14 +814,17 @@ window.addEventListener('load', function() {
   if (contract && contract.value) {
     setTimeout(verifyAsset, 500);
   }
-  // Auto-refresh balances if wallets exist
-  ['ea', 'eb'].forEach(function(role) {
-    var addr = document.getElementById('s-' + role + '-wallet-addr');
-    if (addr && addr.value) {
-      var balBtn = document.getElementById(role + '-bal-btn');
-      if (balBtn) balBtn.disabled = false;
-      setTimeout(function() { refreshBalance(role); }, 1000);
-    }
+  // Load persisted wallets from server FIRST (restores if localStorage cleared)
+  loadPersistedWallets().then(function() {
+    // After restore, auto-refresh balances if wallets exist
+    ['ea', 'eb'].forEach(function(role) {
+      var addr = document.getElementById('s-' + role + '-wallet-addr');
+      if (addr && addr.value) {
+        var balBtn = document.getElementById(role + '-bal-btn');
+        if (balBtn) balBtn.disabled = false;
+        setTimeout(function() { refreshBalance(role); }, 1000);
+      }
+    });
   });
 });
 

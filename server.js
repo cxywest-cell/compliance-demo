@@ -1360,6 +1360,7 @@ app.post('/api/webhooks/clear', (req, res) => {
 
 const SEPOLIA_RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
 const KLCC_CONTRACT = '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66';
+const WALLETS_FILE = path.resolve(__dirname, '.wallets.json');
 const ERC20_ABI = [
   'function name() view returns (string)',
   'function symbol() view returns (string)',
@@ -1367,6 +1368,50 @@ const ERC20_ABI = [
   'function balanceOf(address) view returns (uint256)',
   'function transfer(address to, uint256 amount) returns (bool)'
 ];
+
+// Read persisted wallets (server-side file, survives browser clears)
+function loadPersistedWallets() {
+  try {
+    if (fs.existsSync(WALLETS_FILE)) {
+      return JSON.parse(fs.readFileSync(WALLETS_FILE, 'utf8'));
+    }
+  } catch(e) { /* ignore malformed */ }
+  return { ea: null, eb: null };
+}
+
+// Write wallets to disk
+function savePersistedWallets(data) {
+  fs.writeFileSync(WALLETS_FILE, JSON.stringify(data, null, 2));
+}
+
+// Get persisted wallets
+app.get('/api/wallet/persisted', (req, res) => {
+  res.json(loadPersistedWallets());
+});
+
+// Persist wallets to disk (called by frontend after generate/import)
+app.post('/api/wallet/persist', (req, res) => {
+  const { ea, eb } = req.body;
+  const current = loadPersistedWallets();
+  if (ea !== undefined) current.ea = ea || null;
+  if (eb !== undefined) current.eb = eb || null;
+  try {
+    savePersistedWallets(current);
+    res.json({ ok: true, saved: current });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete a persisted wallet (for "Reset" / regeneration with new address)
+app.delete('/api/wallet/persist', (req, res) => {
+  const { role } = req.body;
+  if (!['ea', 'eb'].includes(role)) return res.status(400).json({ error: 'role must be ea or eb' });
+  const current = loadPersistedWallets();
+  current[role] = null;
+  savePersistedWallets(current);
+  res.json({ ok: true, saved: current });
+});
 
 // Generate a fresh Ethereum wallet
 app.post('/api/wallet/generate', (req, res) => {
