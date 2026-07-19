@@ -113,7 +113,10 @@
       </div>
 
       <div class="card">
-        <div class="card-header">Webhook</div>
+        <div class="card-header">
+          <span>Webhook</span>
+          <span style="font-size:10px;font-weight:400;color:#888" id="notabene-wh-count">0 events</span>
+        </div>
         <div class="card-body">
           <div class="field">
             <label>Webhook URL</label>
@@ -131,6 +134,82 @@
             <button class="tunnel-btn" id="notabene-tunnel-test-btn" onclick="testTunnel('notabene')" disabled>Test</button>
           </div>
           <div id="notabene-tunnel-test-result" class="test-result" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Webhook Console</div>
+        <div class="card-body" style="padding:0">
+          <div id="notabene-wh-console" style="background:#0d1117;max-height:300px;overflow-y:auto;font-size:10px;font-family:'SF Mono',monospace;color:#c9d1d9;min-height:80px;padding:8px 10px">
+            <div style="color:#6e7681">Waiting for Notabene webhooks...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Custody Wallets</div>
+      <div class="card">
+        <div class="card-header">Test Asset (Sepolia)</div>
+        <div class="card-body">
+          <div class="grid-2">
+            <div class="field">
+              <label>Contract Address</label>
+              <input type="text" id="s-asset-contract" value="0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66">
+            </div>
+            <div class="field">
+              <label>Token Info (from chain)</label>
+              <div style="padding:7px 10px;border:1px solid #e0e0e0;border-radius:4px;background:#f8f8f8;font-size:12px" id="asset-info-display">— click Verify —</div>
+            </div>
+          </div>
+          <button class="tunnel-btn" onclick="verifyAsset()">Verify on Chain</button>
+          <span id="asset-verify-result" style="font-size:11px;margin-left:8px"></span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Originating Wallet -->
+        <div class="card">
+          <div class="card-header"><span class="role-badge role-entity-a">Originating</span> Entity A owns · Custodian A holds</div>
+          <div class="card-body">
+            <div class="field">
+              <label>Wallet Address</label>
+              <input type="text" id="s-ea-wallet-addr" placeholder="0x... (click Generate)" readonly style="background:#f8f8f8">
+            </div>
+            <div class="field">
+              <label>Private Key <span style="font-size:9px;color:#aaa">(held by Custodian A)</span></label>
+              <div style="display:flex;gap:4px">
+                <input type="password" id="s-ea-wallet-pk" placeholder="0x..." readonly style="background:#f8f8f8;flex:1">
+                <button class="tunnel-btn" onclick="toggleKeyVisibility('ea')">👁</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="tunnel-btn" id="ea-gen-btn" onclick="generateWallet('ea')">Generate New</button>
+              <button class="tunnel-btn" id="ea-bal-btn" onclick="refreshBalance('ea')" disabled>Refresh Balance</button>
+            </div>
+            <div id="ea-balance-display" style="margin-top:8px;font-size:12px"></div>
+          </div>
+        </div>
+
+        <!-- Destination Wallet -->
+        <div class="card">
+          <div class="card-header"><span class="role-badge role-entity-b">Destination</span> Entity B owns · Custodian B holds</div>
+          <div class="card-body">
+            <div class="field">
+              <label>Wallet Address</label>
+              <input type="text" id="s-eb-wallet-addr" placeholder="0x... (click Generate)" readonly style="background:#f8f8f8">
+            </div>
+            <div class="field">
+              <label>Private Key <span style="font-size:9px;color:#aaa">(held by Custodian B)</span></label>
+              <div style="display:flex;gap:4px">
+                <input type="password" id="s-eb-wallet-pk" placeholder="0x..." readonly style="background:#f8f8f8;flex:1">
+                <button class="tunnel-btn" onclick="toggleKeyVisibility('eb')">👁</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="tunnel-btn" id="eb-gen-btn" onclick="generateWallet('eb')">Generate New</button>
+              <button class="tunnel-btn" id="eb-bal-btn" onclick="refreshBalance('eb')" disabled>Refresh Balance</button>
+            </div>
+            <div id="eb-balance-display" style="margin-top:8px;font-size:12px"></div>
+          </div>
         </div>
       </div>
 
@@ -499,7 +578,10 @@ var defaults = {
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.eu1.notabene.id',
   notabeneWebhookUrl: '',
-  notabeneWebhookSecret: '',
+  notabeneWebhookSecret: 'whsec_bZTI8qRmPZMrwASEuAUTJDBnSJD8aPMM',
+  assetContract: '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66',
+  eaWalletAddr: '', eaWalletPk: '',
+  ebWalletAddr: '', ebWalletPk: '',
   eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf', eaWallet: '0x3f8a...c71d',
   caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA', caWallet: '0x7c4e...b93a',
   ebDid: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy', ebWallet: '0x9e2b...d48f',
@@ -535,6 +617,11 @@ function saveAll() {
     notabeneBaseUrl: document.getElementById('s-notabene-baseurl').value,
     notabeneWebhookUrl: document.getElementById('s-notabene-webhookurl').value,
     notabeneWebhookSecret: document.getElementById('s-notabene-webhooksecret').value,
+    assetContract: document.getElementById('s-asset-contract').value,
+    eaWalletAddr: document.getElementById('s-ea-wallet-addr').value,
+    eaWalletPk: document.getElementById('s-ea-wallet-pk').value,
+    ebWalletAddr: document.getElementById('s-eb-wallet-addr').value,
+    ebWalletPk: document.getElementById('s-eb-wallet-pk').value,
     eaDid: document.getElementById('s-ea-did').value,
     eaApikey: document.getElementById('s-ea-apikey').value,
     eaApisecret: document.getElementById('s-ea-apisecret').value,
@@ -562,6 +649,9 @@ function resetDefaults() {
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
     's-notabene-baseurl',
     's-notabene-webhookurl', 's-notabene-webhooksecret',
+    's-asset-contract',
+    's-ea-wallet-addr', 's-ea-wallet-pk',
+    's-eb-wallet-addr', 's-eb-wallet-pk',
     's-ea-did','s-ea-apikey','s-ea-apisecret','s-ea-wallet',
     's-ca-did','s-ca-apikey','s-ca-apisecret','s-ca-wallet',
     's-eb-did','s-eb-apikey','s-eb-apisecret','s-eb-wallet',
@@ -571,6 +661,9 @@ function resetDefaults() {
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
     'notabeneBaseUrl',
     'notabeneWebhookUrl', 'notabeneWebhookSecret',
+    'assetContract',
+    'eaWalletAddr', 'eaWalletPk',
+    'ebWalletAddr', 'ebWalletPk',
     'eaDid','eaApikey','eaApisecret','eaWallet',
     'caDid','caApikey','caApisecret','caWallet',
     'ebDid','ebApikey','ebApisecret','ebWallet',
@@ -602,6 +695,98 @@ function switchTab(tab) {
   var tabs = { notabene: 0, sumsub: 1, elliptic: 2 };
   document.querySelectorAll('.settings-tab')[tabs[tab]].classList.add('active');
 }
+
+// ─── Wallet Management ───
+async function generateWallet(role) {
+  var genBtn = document.getElementById(role + '-gen-btn');
+  var balBtn = document.getElementById(role + '-bal-btn');
+  if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
+  try {
+    var res = await fetch('/api/wallet/generate', { method: 'POST' });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    document.getElementById('s-' + role + '-wallet-addr').value = data.address;
+    document.getElementById('s-' + role + '-wallet-pk').value = data.privateKey;
+    saveSettings();
+    if (balBtn) balBtn.disabled = false;
+    if (genBtn) { genBtn.textContent = 'Regenerate'; genBtn.disabled = false; }
+    refreshBalance(role);
+  } catch(e) {
+    alert('Wallet generation failed: ' + e.message);
+    if (genBtn) { genBtn.textContent = 'Generate New'; genBtn.disabled = false; }
+  }
+}
+
+function toggleKeyVisibility(role) {
+  var pk = document.getElementById('s-' + role + '-wallet-pk');
+  if (!pk) return;
+  pk.type = pk.type === 'password' ? 'text' : 'password';
+}
+
+async function refreshBalance(role) {
+  var addr = document.getElementById('s-' + role + '-wallet-addr').value;
+  var display = document.getElementById(role + '-balance-display');
+  var balBtn = document.getElementById(role + '-bal-btn');
+  if (!addr || !display) return;
+  if (balBtn) { balBtn.disabled = true; balBtn.textContent = 'Fetching...'; }
+  display.innerHTML = '<span style="color:#888">Querying Sepolia...</span>';
+  try {
+    var res = await fetch('/api/wallet/balance?address=' + encodeURIComponent(addr));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    var eth = parseFloat(data.ethBalance).toFixed(4);
+    var tok = parseFloat(data.tokenBalance).toFixed(3);
+    var sym = (data.token && data.token.symbol) || 'TOKEN';
+    display.innerHTML =
+      '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+        '<span><span style="color:#888">ETH:</span> <b>' + eth + '</b></span>' +
+        '<span><span style="color:#888">' + sym + ':</span> <b>' + tok + '</b></span>' +
+      '</div>';
+  } catch(e) {
+    display.innerHTML = '<span style="color:#dc2626">Error: ' + e.message + '</span>';
+  }
+  if (balBtn) { balBtn.disabled = false; balBtn.textContent = 'Refresh Balance'; }
+}
+
+async function verifyAsset() {
+  var contract = document.getElementById('s-asset-contract').value;
+  var info = document.getElementById('asset-info-display');
+  var result = document.getElementById('asset-verify-result');
+  info.textContent = 'Verifying...';
+  result.textContent = '';
+  try {
+    var res = await fetch('/api/wallet/asset-info?contract=' + encodeURIComponent(contract));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    info.innerHTML = '<b>' + data.name + '</b> (' + data.symbol + ') · ' + data.decimals + ' decimals';
+    result.innerHTML = '<span style="color:#059669">✓ Verified on Sepolia</span>';
+  } catch(e) {
+    info.textContent = 'Verification failed';
+    result.innerHTML = '<span style="color:#dc2626">✗ ' + e.message + '</span>';
+  }
+}
+
+function saveSettings() {
+  // Delegate to the main save function
+  if (typeof saveAll === 'function') return saveAll();
+}
+
+// Auto-verify asset on load if contract is set
+window.addEventListener('load', function() {
+  var contract = document.getElementById('s-asset-contract');
+  if (contract && contract.value) {
+    setTimeout(verifyAsset, 500);
+  }
+  // Auto-refresh balances if wallets exist
+  ['ea', 'eb'].forEach(function(role) {
+    var addr = document.getElementById('s-' + role + '-wallet-addr');
+    if (addr && addr.value) {
+      var balBtn = document.getElementById(role + '-bal-btn');
+      if (balBtn) balBtn.disabled = false;
+      setTimeout(function() { refreshBalance(role); }, 1000);
+    }
+  });
+});
 
 // Tunnel management — shared cloudflared tunnel, callable from Sumsub or Notabene tab
 async function generateUrl(source) {
@@ -850,6 +1035,9 @@ var fieldMap = {
   's-ellipticendpoint': saved.ellipticEndpoint, 's-ellipticsign': saved.ellipticSign,
   's-notabene-baseurl': saved.notabeneBaseUrl,
   's-notabene-webhookurl': saved.notabeneWebhookUrl, 's-notabene-webhooksecret': saved.notabeneWebhookSecret,
+  's-asset-contract': saved.assetContract,
+  's-ea-wallet-addr': saved.eaWalletAddr, 's-ea-wallet-pk': saved.eaWalletPk,
+  's-eb-wallet-addr': saved.ebWalletAddr, 's-eb-wallet-pk': saved.ebWalletPk,
   's-ea-did': saved.eaDid, 's-ea-apikey': saved.eaApikey, 's-ea-apisecret': saved.eaApisecret, 's-ea-wallet': saved.eaWallet,
   's-ca-did': saved.caDid, 's-ca-apikey': saved.caApikey, 's-ca-apisecret': saved.caApisecret, 's-ca-wallet': saved.caWallet,
   's-eb-did': saved.ebDid, 's-eb-apikey': saved.ebApikey, 's-eb-apisecret': saved.ebApisecret, 's-eb-wallet': saved.ebWallet,
@@ -934,49 +1122,114 @@ var whSeen = new Set();
 
 function renderWebhooks(entries) {
   var el = document.getElementById('wh-console');
+  var elNotabene = document.getElementById('notabene-wh-console');
   var countEl = document.getElementById('wh-count');
-  if (!el) return;
+  var countNotabene = document.getElementById('notabene-wh-count');
+  if (!el && !elNotabene) return;
   if (!entries || entries.length === 0) return;
 
-  countEl.textContent = entries.length + ' events';
-  var html = '';
-  for (var i = entries.length - 1; i >= 0; i--) {
-    var e = entries[i];
-    var key = e.timestamp + e.applicantId + e.type;
-    var isNew = !whSeen.has(key);
-    whSeen.add(key);
+  var sumsubEntries = entries.filter(function(e) { return e.type !== 'notabene'; });
+  var notabeneEntries = entries.filter(function(e) { return e.type === 'notabene'; });
 
-    var vTag = e.verified
-      ? '<span style="color:#7ee787">\u2713</span>'
-      : '<span style="color:#ff7b72">\u2717</span>';
-    var typeColor = e.type === 'applicantReviewed' ? '#7ee787'
-                  : e.type === 'applicantCreated' ? '#79c0ff'
-                  : e.type === 'applicantOnHold' ? '#d2a8ff'
-                  : e.type === 'applicantPending' ? '#ffa657'
-                  : '#c9d1d9';
-    var review = '';
-    if (e.reviewResult && e.reviewResult.reviewAnswer) {
-      var ans = e.reviewResult.reviewAnswer;
-      var ansColor = ans === 'GREEN' ? '#7ee787' : '#ff7b72';
-      review = ' <span style="color:' + ansColor + '">' + ans + '</span>';
-      if (e.reviewResult.reviewRejectType) review += ' (' + e.reviewResult.reviewRejectType + ')';
+  if (countEl) countEl.textContent = sumsubEntries.length + ' events';
+  if (countNotabene) countNotabene.textContent = notabeneEntries.length + ' events';
+
+  // --- Sumsub rendering (existing) ---
+  if (el) {
+    var html = '';
+    for (var i = sumsubEntries.length - 1; i >= 0; i--) {
+      var e = sumsubEntries[i];
+      var key = e.timestamp + (e.applicantId || '') + (e.type || '');
+      var isNew = !whSeen.has(key);
+      whSeen.add(key);
+
+      var vTag = e.verified
+        ? '<span style="color:#7ee787">\u2713</span>'
+        : '<span style="color:#ff7b72">\u2717</span>';
+      var typeColor = e.type === 'applicantReviewed' ? '#7ee787'
+                    : e.type === 'applicantCreated' ? '#79c0ff'
+                    : e.type === 'applicantOnHold' ? '#d2a8ff'
+                    : e.type === 'applicantPending' ? '#ffa657'
+                    : '#c9d1d9';
+      var review = '';
+      if (e.reviewResult && e.reviewResult.reviewAnswer) {
+        var ans = e.reviewResult.reviewAnswer;
+        var ansColor = ans === 'GREEN' ? '#7ee787' : '#ff7b72';
+        review = ' <span style="color:' + ansColor + '">' + ans + '</span>';
+        if (e.reviewResult.reviewRejectType) review += ' (' + e.reviewResult.reviewRejectType + ')';
+      }
+      var statusBadge = e.reviewStatus === 'completed' ? '\u26ab'
+                      : e.reviewStatus === 'onHold' ? '\u23f8'
+                      : e.reviewStatus === 'pending' ? '\u23f3'
+                      : '\u25cb';
+
+      var bg = isNew ? 'background:rgba(56,139,253,0.08)' : '';
+      html += '<div style="padding:3px 0;border-bottom:1px solid #161b22;' + bg + '">' +
+        '<span style="color:#6e7681">' + (e.timestamp || '').slice(11, 19) + '</span> ' +
+        vTag + ' ' +
+        statusBadge + ' ' +
+        '<span style="color:' + typeColor + '">' + (e.type || '').replace('applicant', '') + '</span>' +
+        review +
+        '<br/><span style="color:#6e7681;margin-left:16px">' + (e.externalUserId || '\u2014') + ' \u00b7 ' + (e.applicantId || '\u2014').slice(-8) + '</span>' +
+        '</div>';
     }
-    var statusBadge = e.reviewStatus === 'completed' ? '\u26ab'
-                    : e.reviewStatus === 'onHold' ? '\u23f8'
-                    : e.reviewStatus === 'pending' ? '\u23f3'
-                    : '\u25cb';
-
-    var bg = isNew ? 'background:rgba(56,139,253,0.08)' : '';
-    html += '<div style="padding:3px 0;border-bottom:1px solid #161b22;' + bg + '">' +
-      '<span style="color:#6e7681">' + e.timestamp.slice(11, 19) + '</span> ' +
-      vTag + ' ' +
-      statusBadge + ' ' +
-      '<span style="color:' + typeColor + '">' + e.type.replace('applicant', '') + '</span>' +
-      review +
-      '<br/><span style="color:#6e7681;margin-left:16px">' + (e.externalUserId || '\u2014') + ' \u00b7 ' + (e.applicantId || '\u2014').slice(-8) + '</span>' +
-      '</div>';
+    el.innerHTML = html || '<div style="color:#6e7681">Waiting for webhooks...</div>';
   }
-  el.innerHTML = html;
+
+  // --- Notabene rendering ---
+  if (elNotabene) {
+    var htmlN = '';
+    for (var j = notabeneEntries.length - 1; j >= 0; j--) {
+      var ev = notabeneEntries[j];
+      var k = 'nb-' + ev.timestamp + JSON.stringify(ev.body).substring(0, 50);
+      var isEvNew = !whSeen.has(k);
+      whSeen.add(k);
+
+      var msgType = 'unknown';
+      var forDid = '\u2014';
+      var txId = '\u2014';
+      var extra = '';
+
+      if (typeof ev.body === 'object' && ev.body) {
+        var inner = ev.body.payload && ev.body.payload.payload ? ev.body.payload.payload : (ev.body.payload || {});
+        msgType = ev.body.message || ev.body.eventType || (ev.body.payload && ev.body.payload.message) || 'unknown';
+        forDid = inner.for || (ev.body.payload && ev.body.payload.for) || '\u2014';
+        txId = inner.id || (ev.body.payload && ev.body.payload.id) || '\u2014';
+        if (inner.fromStatus && inner.toStatus) {
+          extra = ' <span style="color:#ffa657">' + inner.fromStatus + '</span>\u2192<span style="color:#7ee787">' + inner.toStatus + '</span>';
+        }
+      } else if (typeof ev.body === 'string' && ev.body) {
+        msgType = ev.body.substring(0, 80);
+      }
+
+      var cat = msgType.startsWith('notification.') ? 'notification'
+              : msgType.startsWith('tap.') ? 'tap'
+              : msgType === 'unknown' ? '?'
+              : 'other';
+      var catColor = cat === 'notification' ? '#79c0ff'
+                    : cat === 'tap' ? '#d2a8ff'
+                    : '#c9d1d9';
+      var catBadge = cat === 'notification' ? 'N'
+                    : cat === 'tap' ? 'T'
+                    : '?';
+
+      var bgN = isEvNew ? 'background:rgba(56,139,253,0.08)' : '';
+      var vTagN = ev.verified === true
+        ? '<span style="color:#7ee787">\u2713</span>'
+        : ev.verified === false
+        ? '<span style="color:#ff7b72">\u2717</span>'
+        : '<span style="color:#ffa657">?</span>';
+      htmlN += '<div style="padding:4px 0;border-bottom:1px solid #161b22;' + bgN + '">' +
+        '<span style="color:#6e7681">' + (ev.timestamp || '').slice(11, 19) + '</span> ' +
+        vTagN + ' ' +
+        '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + catColor + ';color:#0d1117;text-align:center;font-weight:600;font-size:9px;line-height:14px">' + catBadge + '</span> ' +
+        '<span style="color:' + catColor + '">' + msgType + '</span>' +
+        extra +
+        '<br/><span style="color:#6e7681;margin-left:16px">for: ' + forDid + ' \u00b7 tx: ' + (txId || '\u2014').slice(-12) + '</span>' +
+        '</div>';
+    }
+    elNotabene.innerHTML = htmlN || '<div style="color:#6e7681">Waiting for Notabene webhooks...</div>';
+  }
 }
 
 function pollWebhooks() {

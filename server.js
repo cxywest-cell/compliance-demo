@@ -8,6 +8,7 @@ const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { ethers } = require('ethers');
 
 // Don't crash on socket errors from Sumsub API
 process.on('unhandledRejection', (err) => {
@@ -43,6 +44,7 @@ const SUMSUB_API_SECRET = process.env.SUMSUB_API_SECRET;
 const SUMSUB_WEBSDK_SECRET = process.env.SUMSUB_WEBSDK_SECRET;
 const SUMSUB_APP_TOKEN = process.env.SUMSUB_APP_TOKEN;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'SukZpD1QZhvzyo5cAcWiROJJant';
+const NOTABENE_WEBHOOK_SECRET = process.env.NOTABENE_WEBHOOK_SECRET || 'whsec_bZTI8qRmPZMrwASEuAUTJDBnSJD8aPMM';
 const BASE_URL = 'api.sumsub.com';
 const LEVEL_NAME = 'kyb-test-daniel-0626';
 
@@ -1174,15 +1176,48 @@ app.post('/notabene/webhook', (req, res) => {
   let parsedBody;
   try { parsedBody = JSON.parse(rawBody); } catch(e) { parsedBody = rawBody; }
 
+  // Attempt signature verification — Notabene's exact scheme is TBD.
+  // Check common header names; verify if any matches HMAC-SHA256(rawBody, secret).
+  const candidateHeaders = [
+    'x-notabene-signature',
+    'x-signature',
+    'x-hub-signature',
+    'x-payload-hmac-sha256',
+    'notabene-signature',
+    'signature'
+  ];
+  let sigHeader = null;
+  let sigValue = null;
+  for (const h of candidateHeaders) {
+    if (req.headers[h]) {
+      sigHeader = h;
+      sigValue = req.headers[h];
+      break;
+    }
+  }
+  const computedHmac = crypto.createHmac('sha256', NOTABENE_WEBHOOK_SECRET).update(rawBody).digest('hex');
+  // Some schemes prefix with "sha256="
+  const computedHmacPrefixed = 'sha256=' + computedHmac;
+  let verified = false;
+  if (sigValue) {
+    const sv = sigValue.replace(/^sha256=/, '');
+    verified = (sv === computedHmac || sv === computedHmacPrefixed || sigValue === computedHmac);
+  }
+
   const entry = {
     type: 'notabene',
     timestamp: new Date().toISOString(),
-    headers: req.headers,
+    verified: verified,
+    signatureHeader: sigHeader,
+    signature: sigValue,
+    signatureMatch: sigValue ? computedHmac : null,
+    allHeaders: req.headers,
     body: parsedBody,
     rawBody: rawBody.substring(0, 5000)
   };
   logWebhook(entry);
-  console.log('[Notabene Webhook] Received:', JSON.stringify(parsedBody).substring(0, 500));
+  const status = verified ? 'VERIFIED' : (sigValue ? 'UNVERIFIED' : 'NO_SIGNATURE');
+  console.log(`[Notabene Webhook] ${status} | ${entry.timestamp} — sigHeader: ${sigHeader || 'none'}, msgType: ${typeof parsedBody === 'object' ? (parsedBody.message || parsedBody.eventType || 'unknown') : 'raw'}`);
   res.status(200).send('OK');
 });
 
@@ -1319,6 +1354,97 @@ app.post('/api/action-check', async (req, res) => {
 app.post('/api/webhooks/clear', (req, res) => {
   fs.writeFileSync(WEBHOOK_LOG_PATH, '[]');
   res.json({ ok: true });
+});
+
+// ─── Wallet Management (Sepolia / ERC-20) ───
+
+const SEPOLIA_RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
+const KLCC_CONTRACT = '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66';
+const ERC20_ABI = [
+  'function name() view returns (string)',
+  'function symbol() view returns (string)',
+  'function decimals() view returns (uint8)',
+  'function balanceOf(address) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)'
+];
+
+// Generate a fresh Ethereum wallet
+app.post('/api/wallet/generate', (req, res) => {
+  try {
+    const wallet = ethers.Wallet.createRandom();
+    res.json({
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+      mnemonic: wallet.mnemonic.phrase
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Import a wallet from private key (returns address)
+app.post('/api/wallet/import', (req, res) => {
+  const { privateKey } = req.body;
+  if (!privateKey) return res.status(400).json({ error: 'privateKey required' });
+  try {
+    const wallet = new ethers.Wallet(privateKey);
+    res.json({ address: wallet.address });
+  } catch(e) {
+    res.status(400).json({ error: 'Invalid private key' });
+  }
+});
+
+// Get balances (ETH + KLCC token) for an address
+app.get('/api/wallet/balance', async (req, res) => {
+  const { address } = req.query;
+  if (!address) return res.status(400).json({ error: 'address required' });
+  try {
+    const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+    const ethBalance = await provider.getBalance(address);
+    const contract = new ethers.Contract(KLCC_CONTRACT, ERC20_ABI, provider);
+    let tokenInfo = {};
+    let tokenBalance = 0n;
+    try {
+      const [name, symbol, decimals, bal] = await Promise.all([
+        contract.name(),
+        contract.symbol(),
+        contract.decimals(),
+        contract.balanceOf(address)
+      ]);
+      tokenInfo = { name, symbol, decimals: Number(decimals) };
+      tokenBalance = bal;
+    } catch(e) {
+      // Token contract call failed — still return ETH balance
+    }
+    res.json({
+      address,
+      ethBalance: ethers.formatEther(ethBalance),
+      tokenBalance: tokenInfo.decimals
+        ? ethers.formatUnits(tokenBalance, tokenInfo.decimals)
+        : ethers.formatEther(tokenBalance),
+      token: tokenInfo
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Verify asset contract info (name, symbol, decimals)
+app.get('/api/wallet/asset-info', async (req, res) => {
+  const { contract: contractAddr } = req.query;
+  const addr = contractAddr || KLCC_CONTRACT;
+  try {
+    const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+    const contract = new ethers.Contract(addr, ERC20_ABI, provider);
+    const [name, symbol, decimals] = await Promise.all([
+      contract.name(),
+      contract.symbol(),
+      contract.decimals()
+    ]);
+    res.json({ contract: addr, name, symbol, decimals: Number(decimals) });
+  } catch(e) {
+    res.status(500).json({ error: e.message, contract: addr });
+  }
 });
 
 app.listen(8000, '0.0.0.0', () => {
