@@ -956,7 +956,13 @@ app.post('/api/websdk-link', async (req, res) => {
   const { levelName, externalUserId, email } = req.body;
 
   // Use server's known tunnel URL (not frontend's location.origin)
-  const baseUrl = (tunnelUrl || 'http://localhost:8000').replace(/\/+$/, '');
+  // Sumsub rejects localhost as successUrl — must be publicly reachable.
+  if (!tunnelUrl) {
+    return res.status(400).json({
+      error: 'Cloudflare tunnel is not running. Sumsub requires a public URL for successUrl/rejectUrl. Start the tunnel in Settings → Webhook first.'
+    });
+  }
+  const baseUrl = tunnelUrl.replace(/\/+$/, '');
 
   // Pass signKey so Sumsub signs the redirect JWT — our server verifies it on callback
   const linkPath = '/resources/sdkIntegrations/levels/-/websdkLink';
@@ -977,12 +983,28 @@ app.post('/api/websdk-link', async (req, res) => {
 
   const linkResult = await sumsubApi('POST', linkPath, linkBody);
 
+  // Log the raw Sumsub response for debugging
+  console.log(`[WebSDK Link] Sumsub raw response:`, JSON.stringify(linkResult).slice(0, 800));
+
   if (linkResult.error) {
     return res.status(500).json({ error: 'Failed to generate WebSDK link', detail: linkResult.error });
   }
 
-  console.log(`[WebSDK Link] Generated link for ${externalUserId}`);
-  res.json({ url: linkResult.url, externalUserId: externalUserId });
+  // Sumsub returns the URL in different fields depending on the API version.
+  // Prefer "url", but fall back to "link", "webSdkUrl", or nested in "data".
+  const linkUrl = linkResult.url || linkResult.link || linkResult.webSdkUrl ||
+                  (linkResult.data && (linkResult.data.url || linkResult.data.link)) ||
+                  null;
+
+  if (!linkUrl) {
+    return res.status(500).json({
+      error: 'Sumsub response did not contain a websdk URL',
+      raw: linkResult
+    });
+  }
+
+  console.log(`[WebSDK Link] Generated link for ${externalUserId}: ${linkUrl}`);
+  res.json({ url: linkUrl, externalUserId: externalUserId });
 });
 
 // Run AML check for applicant (POST /resources/applicants/{applicantId}/recheck/aml)

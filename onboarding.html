@@ -812,7 +812,7 @@ setStep('s', 3, 7);
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
         saveState();
       } else {
-        docLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        docLog('#ff7b72', 'Error: ' + (data.error || JSON.stringify(data)));
         btn.textContent = 'Retry'; btn.disabled = false;
       }
     } catch(e) {
@@ -1248,7 +1248,7 @@ async function nondocGenLink() {
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
         saveState();
       } else {
-        ndLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        ndLog('#ff7b72', 'Error: ' + (data.error || JSON.stringify(data)));
         btn.textContent = 'Retry'; btn.disabled = false;
       }
     } catch(e) {
@@ -1822,7 +1822,7 @@ async function kybGenLink() {
         document.getElementById('kyb-btn-check-exists-post').disabled = false;
         btn.textContent = 'Regenerate Link'; btn.disabled = false;
       } else {
-        kybLog('#ff7b72', 'Error: ' + JSON.stringify(data));
+        kybLog('#ff7b72', 'Error: ' + (data.error || JSON.stringify(data)));
         btn.textContent = 'Retry'; btn.disabled = false;
       }
     } catch(e) {
