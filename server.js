@@ -43,8 +43,8 @@ app.use(express.static(__dirname)); // Serve static files (HTML, CSS, JS)
 const SUMSUB_API_SECRET = process.env.SUMSUB_API_SECRET;
 const SUMSUB_WEBSDK_SECRET = process.env.SUMSUB_WEBSDK_SECRET;
 const SUMSUB_APP_TOKEN = process.env.SUMSUB_APP_TOKEN;
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'SukZpD1QZhvzyo5cAcWiROJJant';
-const NOTABENE_WEBHOOK_SECRET = process.env.NOTABENE_WEBHOOK_SECRET || 'whsec_bZTI8qRmPZMrwASEuAUTJDBnSJD8aPMM';
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
+const NOTABENE_WEBHOOK_SECRET = process.env.NOTABENE_WEBHOOK_SECRET || '';
 const NOTABENE_SECRETS_FILE = path.resolve(__dirname, '.notabene-secrets.json');
 
 // Per-role webhook secrets (each VASP workspace has its own).

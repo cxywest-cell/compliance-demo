@@ -415,7 +415,7 @@
           </div>
           <div class="field" style="margin-top:10px">
             <label>Webhook Secret (HMAC-SHA256)</label>
-            <input type="text" id="s-webhooksecret" placeholder="SukZpD1QZhvzyo5cAcWiROJJant">
+            <input type="text" id="s-webhooksecret" placeholder="Sumsub webhook secret">
             <div class="hint">Used to verify the X-Payload-HMAC-SHA256 header on incoming webhooks</div>
           </div>
           <div class="url-display show" id="tunnel-webhook-preview" style="display:none"></div>
@@ -590,7 +590,7 @@
 var defaults = {
   baseUrl: 'https://localhost:8000',
   webhookUrl: '',
-  webhookSecret: 'SukZpD1QZhvzyo5cAcWiROJJant',
+  webhookSecret: '',
   docLevel: 'kyc-test-daniel-260618',
   nonDocLevel: 'non-doc-kyc-level',
   kybLevel: 'kyb-test-daniel-0626',
@@ -610,10 +610,10 @@ var defaults = {
   assetContract: '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66',
   eaWalletAddr: '', eaWalletPk: '',
   ebWalletAddr: '', ebWalletPk: '',
-  eaDid: 'did:web:cregisio-8f89b.sandbox.notabene.id:am', eaApikey: '0pp2J90phLVT8LlLOHl75Vut7ORpTCn1', eaApisecret: 'yUWkQa8HfZ2qzTICGwFy89lpU-SxD7tXwsr6eF-ysoOvwb1lPm_3yIu2GQ6ErkYf',
-  caDid: 'did:web:cregisio-5a794.sandbox.notabene.id:am', caApikey: '6yUa15MlzHIoJ0Cm06OCt9WiFgiJqd6K', caApisecret: 'nuHNiAe2ADav61vJCn5lcdVFg2oIy3fRZzMblZ2Y1xlOzcw5EX0YFmP3RaBNvKlA',
-  ebDid: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae', ebApikey: 'kemMY9tFbzY2XXYAl4VmW97JUzzsIrYy', ebApisecret: 'UFvNYXyBvHstqRdjJ3tPj1a3cYmhO_yt2yZG2RlethRIO3CKeUE47fAU8rZtKHLy',
-  cbDid: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae', cbApikey: 'hXc7MF4W3xCGAoBLIXp5bEdHjMlXQId3', cbApisecret: 'tpYr-KmDVADagzYbsEBSzaMYK2NL9KXFJw8umkvWiLSITyim_amlVVpIKqK-c__g',
+  eaDid: '', eaApikey: '', eaApisecret: '',
+  caDid: '', caApikey: '', caApisecret: '',
+  ebDid: '', ebApikey: '', ebApisecret: '',
+  cbDid: '', cbApikey: '', cbApisecret: '',
   cbEntityName: "cregis counterparty's custodian", cbJurisdiction: 'AE', cbLegalStructure: 'CORPORATION', cbIsRegulated: 'YES', cbWebsite: 'https://www.cregis-counterparty-custodian.com', cbSandbox: true
 };
 
