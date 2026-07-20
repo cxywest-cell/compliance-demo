@@ -45,6 +45,16 @@ const SUMSUB_WEBSDK_SECRET = process.env.SUMSUB_WEBSDK_SECRET;
 const SUMSUB_APP_TOKEN = process.env.SUMSUB_APP_TOKEN;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'SukZpD1QZhvzyo5cAcWiROJJant';
 const NOTABENE_WEBHOOK_SECRET = process.env.NOTABENE_WEBHOOK_SECRET || 'whsec_bZTI8qRmPZMrwASEuAUTJDBnSJD8aPMM';
+const NOTABENE_SECRETS_FILE = path.resolve(__dirname, '.notabene-secrets.json');
+
+// Per-role webhook secrets (each VASP workspace has its own).
+// Updated from the settings page via POST /api/notabene/webhook-secrets.
+let notabeneSecrets = { ea: '', ca: '', eb: '', cb: '' };
+try {
+  if (fs.existsSync(NOTABENE_SECRETS_FILE)) {
+    notabeneSecrets = Object.assign(notabeneSecrets, JSON.parse(fs.readFileSync(NOTABENE_SECRETS_FILE, 'utf8')));
+  }
+} catch(e) { /* ignore */ }
 const BASE_URL = 'api.sumsub.com';
 const LEVEL_NAME = 'kyb-test-daniel-0626';
 
@@ -1167,6 +1177,32 @@ app.get('/sumsub/webhook', (req, res) => {
 });
 
 // ─── Notabene webhook receiver ───
+// Per-role webhook secrets management.
+// Frontend (settings page) calls this to update secrets after user enters them.
+app.post('/api/notabene/webhook-secrets', (req, res) => {
+  const { ea, ca, eb, cb } = req.body;
+  if (ea !== undefined) notabeneSecrets.ea = ea || '';
+  if (ca !== undefined) notabeneSecrets.ca = ca || '';
+  if (eb !== undefined) notabeneSecrets.eb = eb || '';
+  if (cb !== undefined) notabeneSecrets.cb = cb || '';
+  try {
+    fs.writeFileSync(NOTABENE_SECRETS_FILE, JSON.stringify(notabeneSecrets, null, 2));
+    res.json({ ok: true, saved: notabeneSecrets });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/notabene/webhook-secrets', (req, res) => {
+  // Mask secrets for security — return length and whether set, not the actual value
+  res.json({
+    ea: { set: !!notabeneSecrets.ea, length: notabeneSecrets.ea.length },
+    ca: { set: !!notabeneSecrets.ca, length: notabeneSecrets.ca.length },
+    eb: { set: !!notabeneSecrets.eb, length: notabeneSecrets.eb.length },
+    cb: { set: !!notabeneSecrets.cb, length: notabeneSecrets.cb.length }
+  });
+});
+
 // Logs incoming Notabene Travel Rule webhook events to the shared webhook log.
 // Payload structure is TBD — Notabene docs need to be consulted.
 // For now we capture everything: headers + body.
@@ -1176,10 +1212,16 @@ app.post('/notabene/webhook', (req, res) => {
   let parsedBody;
   try { parsedBody = JSON.parse(rawBody); } catch(e) { parsedBody = rawBody; }
 
-  // Attempt signature verification — Notabene's exact scheme is TBD.
-  // Check common header names; verify if any matches HMAC-SHA256(rawBody, secret).
+  // Attempt signature verification against EACH per-role secret.
+  // Notabene uses Svix for webhook delivery. Svix signs with:
+  //   HMAC-SHA256(secret, `${svix-id}.${svix-timestamp}.${rawBody}`)
+  //   header: svix-signature = "v1,<base64_hmac>"
+  //   header: svix-id = "msg_..."
+  //   header: svix-timestamp = "<unix_seconds>"
+  // We also keep fallbacks for legacy x-notabene-signature scheme.
   const candidateHeaders = [
-    'x-notabene-signature',
+    'svix-signature',           // Notabene's actual scheme (Svix)
+    'x-notabene-signature',     // legacy fallback
     'x-signature',
     'x-hub-signature',
     'x-payload-hmac-sha256',
@@ -1195,22 +1237,73 @@ app.post('/notabene/webhook', (req, res) => {
       break;
     }
   }
-  const computedHmac = crypto.createHmac('sha256', NOTABENE_WEBHOOK_SECRET).update(rawBody).digest('hex');
-  // Some schemes prefix with "sha256="
-  const computedHmacPrefixed = 'sha256=' + computedHmac;
+
+  const svixId = req.headers['svix-id'];
+  const svixTs = req.headers['svix-timestamp'];
+  const isSvix = sigHeader === 'svix-signature' && svixId && svixTs;
+
+  // Try each role's secret; record which one (if any) matched
   let verified = false;
+  let matchedRole = null;
+  let computedSig = null;
+  const allSecrets = [
+    { role: 'ea', secret: notabeneSecrets.ea },
+    { role: 'ca', secret: notabeneSecrets.ca },
+    { role: 'eb', secret: notabeneSecrets.eb },
+    { role: 'cb', secret: notabeneSecrets.cb },
+    { role: 'legacy', secret: NOTABENE_WEBHOOK_SECRET }
+  ];
   if (sigValue) {
-    const sv = sigValue.replace(/^sha256=/, '');
-    verified = (sv === computedHmac || sv === computedHmacPrefixed || sigValue === computedHmac);
+    for (const entry of allSecrets) {
+      if (!entry.secret) continue;
+      let expectedSig;
+      if (isSvix) {
+        // Svix scheme: HMAC-SHA256(secret, "id.timestamp.body") -> base64
+        const signedPayload = `${svixId}.${svixTs}.${rawBody}`;
+        expectedSig = crypto.createHmac('sha256', entry.secret).update(signedPayload, 'utf8').digest('base64');
+        // svix-signature format: "v1,<sig>" possibly multiple comma-separated
+        const provided = sigValue.split(',').map(s => s.replace(/^v1,/, '').trim());
+        if (provided.includes(expectedSig)) {
+          verified = true;
+          matchedRole = entry.role;
+          computedSig = expectedSig;
+          break;
+        }
+      } else {
+        // Legacy: raw HMAC hex of body
+        const hmac = crypto.createHmac('sha256', entry.secret).update(rawBody).digest('hex');
+        const hmacPrefixed = 'sha256=' + hmac;
+        const sv = sigValue.replace(/^sha256=/, '').replace(/^v1,/, '');
+        if (sv === hmac || sv === hmacPrefixed || sigValue === hmac) {
+          verified = true;
+          matchedRole = entry.role;
+          computedSig = hmac;
+          break;
+        }
+      }
+    }
+    // If no match, keep the first secret's computed sig for debugging
+    if (!verified && allSecrets[0].secret) {
+      if (isSvix) {
+        const signedPayload = `${svixId}.${svixTs}.${rawBody}`;
+        computedSig = crypto.createHmac('sha256', allSecrets[0].secret).update(signedPayload, 'utf8').digest('base64');
+      } else {
+        computedSig = crypto.createHmac('sha256', allSecrets[0].secret).update(rawBody).digest('hex');
+      }
+    }
   }
 
   const entry = {
     type: 'notabene',
     timestamp: new Date().toISOString(),
     verified: verified,
+    matchedRole: matchedRole,
+    signatureScheme: isSvix ? 'svix' : (sigHeader || 'none'),
     signatureHeader: sigHeader,
     signature: sigValue,
-    signatureMatch: sigValue ? computedHmac : null,
+    signatureMatch: sigValue ? computedSig : null,
+    svixId: svixId || null,
+    svixTimestamp: svixTs || null,
     allHeaders: req.headers,
     body: parsedBody,
     rawBody: rawBody.substring(0, 5000)

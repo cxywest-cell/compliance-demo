@@ -124,9 +124,16 @@
             <div class="hint">Notabene sends Travel Rule webhook events here. Set via tunnel (Generate URL below).</div>
           </div>
           <div class="field" style="margin-top:10px">
-            <label>Webhook Secret</label>
-            <input type="text" id="s-notabene-webhooksecret" placeholder="Optional — for signature verification">
-            <div class="hint">Shared secret for verifying incoming Notabene webhook payloads (if configured in dashboard).</div>
+            <label>Webhook Secrets (per role)</label>
+            <div style="font-size:10px;color:#888;margin-bottom:6px">Each VASP workspace signs its own webhooks. Paste each workspace's webhook secret here to verify incoming events.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <input type="text" id="s-ea-webhook-secret" placeholder="Entity A webhook secret" style="font-size:11px">
+              <input type="text" id="s-ca-webhook-secret" placeholder="Custodian A webhook secret" style="font-size:11px">
+              <input type="text" id="s-eb-webhook-secret" placeholder="Entity B webhook secret" style="font-size:11px">
+              <input type="text" id="s-cb-webhook-secret" placeholder="Custodian B webhook secret" style="font-size:11px">
+            </div>
+            <div id="wh-secret-status" style="font-size:10px;margin-top:4px"></div>
+            <div class="hint" style="margin-top:4px">Secrets are saved to <code>.notabene-secrets.json</code> on the server (gitignored).</div>
           </div>
           <div class="url-display show" id="notabene-webhook-preview" style="display:none"></div>
           <div class="field" style="display:flex;align-items:flex-end;gap:8px;margin-top:12px">
@@ -598,7 +605,8 @@ var defaults = {
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.eu1.notabene.id',
   notabeneWebhookUrl: '',
-  notabeneWebhookSecret: 'whsec_bZTI8qRmPZMrwASEuAUTJDBnSJD8aPMM',
+  eaWebhookSecret: '', caWebhookSecret: '',
+  ebWebhookSecret: '', cbWebhookSecret: '',
   assetContract: '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66',
   eaWalletAddr: '', eaWalletPk: '',
   ebWalletAddr: '', ebWalletPk: '',
@@ -636,7 +644,10 @@ function saveAll() {
     ellipticSign: document.getElementById('s-ellipticsign').value,
     notabeneBaseUrl: document.getElementById('s-notabene-baseurl').value,
     notabeneWebhookUrl: document.getElementById('s-notabene-webhookurl').value,
-    notabeneWebhookSecret: document.getElementById('s-notabene-webhooksecret').value,
+    eaWebhookSecret: document.getElementById('s-ea-webhook-secret').value,
+    caWebhookSecret: document.getElementById('s-ca-webhook-secret').value,
+    ebWebhookSecret: document.getElementById('s-eb-webhook-secret').value,
+    cbWebhookSecret: document.getElementById('s-cb-webhook-secret').value,
     assetContract: document.getElementById('s-asset-contract').value,
     eaWalletAddr: document.getElementById('s-ea-wallet-addr').value,
     eaWalletPk: document.getElementById('s-ea-wallet-pk').value,
@@ -656,15 +667,47 @@ function saveAll() {
     cbApisecret: document.getElementById('s-cb-apisecret').value
   };
   storeSettings(s);
+  // Push webhook secrets to server (server uses these to verify incoming webhooks)
+  syncWebhookSecrets();
   updatePreviews();
   showGlobalStatus('Settings saved to localStorage', 'ok');
+}
+
+// Sync per-role webhook secrets to server-side file
+async function syncWebhookSecrets() {
+  var body = {
+    ea: document.getElementById('s-ea-webhook-secret').value,
+    ca: document.getElementById('s-ca-webhook-secret').value,
+    eb: document.getElementById('s-eb-webhook-secret').value,
+    cb: document.getElementById('s-cb-webhook-secret').value
+  };
+  var status = document.getElementById('wh-secret-status');
+  if (status) status.innerHTML = '<span style="color:#888">syncing...</span>';
+  try {
+    var res = await fetch('/api/notabene/webhook-secrets', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (status) {
+      // Recount after server confirms
+      var set = Object.keys(body).filter(function(k){ return body[k]; }).length;
+      status.innerHTML = '<span style="color:#059669">✓ ' + set + '/4 secrets synced to server</span>';
+    }
+  } catch(e) {
+    if (status) status.innerHTML = '<span style="color:#dc2626">✗ ' + e.message + '</span>';
+  }
 }
 function resetDefaults() {
   var ids = ['s-baseurl','s-webhookurl','s-webhooksecret','s-doclevel','s-nondoclevel','s-kyblevel',
     's-apptoken','s-apisecret','s-websdksecret','s-sumsubbaseurl','s-websdkdomains',
     's-elliptickey','s-ellipticsecret','s-ellipticendpoint','s-ellipticsign',
     's-notabene-baseurl',
-    's-notabene-webhookurl', 's-notabene-webhooksecret',
+    's-notabene-webhookurl',
+    's-ea-webhook-secret', 's-ca-webhook-secret',
+    's-eb-webhook-secret', 's-cb-webhook-secret',
     's-asset-contract',
     's-ea-wallet-addr', 's-ea-wallet-pk',
     's-eb-wallet-addr', 's-eb-wallet-pk',
@@ -676,7 +719,9 @@ function resetDefaults() {
     'appToken','apiSecret','websdkSecret','sumsubBaseUrl','websdkDomains',
     'ellipticKey','ellipticSecret','ellipticEndpoint','ellipticSign',
     'notabeneBaseUrl',
-    'notabeneWebhookUrl', 'notabeneWebhookSecret',
+    'notabeneWebhookUrl',
+    'eaWebhookSecret', 'caWebhookSecret',
+    'ebWebhookSecret', 'cbWebhookSecret',
     'assetContract',
     'eaWalletAddr', 'eaWalletPk',
     'ebWalletAddr', 'ebWalletPk',
@@ -800,6 +845,25 @@ async function loadPersistedWallets() {
     if (ebTo && !ebTo.value && eaAddr) ebTo.value = eaAddr;
   } catch(e) {
     console.warn('Could not load persisted wallets:', e);
+  }
+}
+
+// Show which secrets are set on server (without revealing values)
+async function loadWebhookSecretStatus() {
+  var status = document.getElementById('wh-secret-status');
+  if (!status) return;
+  try {
+    var res = await fetch('/api/notabene/webhook-secrets');
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    var set = ['ea','ca','eb','cb'].filter(function(r){ return data[r] && data[r].set; }).length;
+    if (set === 0) {
+      status.innerHTML = '<span style="color:#888">○ No secrets on server yet</span>';
+    } else {
+      status.innerHTML = '<span style="color:#059669">● ' + set + '/4 secrets on server</span>';
+    }
+  } catch(e) {
+    status.innerHTML = '<span style="color:#dc2626">✗ ' + e.message + '</span>';
   }
 }
 
@@ -929,6 +993,8 @@ window.addEventListener('load', function() {
   if (contract && contract.value) {
     setTimeout(verifyAsset, 500);
   }
+  // Show which webhook secrets are already set on the server
+  loadWebhookSecretStatus();
   // Load persisted wallets from server FIRST (restores if localStorage cleared)
   loadPersistedWallets().then(function() {
     // After restore, auto-refresh balances if wallets exist
@@ -1189,7 +1255,11 @@ var fieldMap = {
   's-elliptickey': saved.ellipticKey, 's-ellipticsecret': saved.ellipticSecret,
   's-ellipticendpoint': saved.ellipticEndpoint, 's-ellipticsign': saved.ellipticSign,
   's-notabene-baseurl': saved.notabeneBaseUrl,
-  's-notabene-webhookurl': saved.notabeneWebhookUrl, 's-notabene-webhooksecret': saved.notabeneWebhookSecret,
+  's-notabene-webhookurl': saved.notabeneWebhookUrl,
+  's-ea-webhook-secret': saved.eaWebhookSecret,
+  's-ca-webhook-secret': saved.caWebhookSecret,
+  's-eb-webhook-secret': saved.ebWebhookSecret,
+  's-cb-webhook-secret': saved.cbWebhookSecret,
   's-asset-contract': saved.assetContract,
   's-ea-wallet-addr': saved.eaWalletAddr, 's-ea-wallet-pk': saved.eaWalletPk,
   's-eb-wallet-addr': saved.ebWalletAddr, 's-eb-wallet-pk': saved.ebWalletPk,
@@ -1374,9 +1444,12 @@ function renderWebhooks(entries) {
         : ev.verified === false
         ? '<span style="color:#ff7b72">\u2717</span>'
         : '<span style="color:#ffa657">?</span>';
+      var roleTag = ev.matchedRole && ev.matchedRole !== 'legacy'
+        ? ' <span style="color:#bb6700;background:#fff8e1;padding:1px 4px;border-radius:2px;font-size:9px">' + ev.matchedRole.toUpperCase() + '</span>'
+        : '';
       htmlN += '<div style="padding:4px 0;border-bottom:1px solid #161b22;' + bgN + '">' +
         '<span style="color:#6e7681">' + (ev.timestamp || '').slice(11, 19) + '</span> ' +
-        vTagN + ' ' +
+        vTagN + roleTag + ' ' +
         '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + catColor + ';color:#0d1117;text-align:center;font-weight:600;font-size:9px;line-height:14px">' + catBadge + '</span> ' +
         '<span style="color:' + catColor + '">' + msgType + '</span>' +
         extra +
