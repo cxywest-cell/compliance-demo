@@ -23,7 +23,8 @@
 ### 集成的外部服务
 
 - **Notabene** — Travel Rule 消息网络（转账创建 / 授权 / 拒绝 / 结算 / Webhook）
-- **Sumsub** — KYC / KYB 准入与 WebSDK、AML 筛查
+- **Sumsub** — KYC / KYB 准入与 WebSDK、AML 名单筛查
+- **Elliptic** — 链上地址 / 交易 AML 筛查与风险评分（0–10 risk scale）
 - **Sepolia 测试网** — 真实链上 ERC-20 转账（KLCC 测试代币）
 - **Cloudflare Tunnel** — 将本地服务暴露到公网，供 Webhook 回调
 
@@ -154,7 +155,15 @@ Settings 包含三个标签页：
 
 > **保存**后配置会同步写入服务端：钱包 → `.wallets.json`，webhook secrets → `.notabene-secrets.json`。
 
-#### ③ 其它（如需）
+#### ③ Elliptic AML 标签页
+
+配置链上地址 / 交易的 AML 筛查服务：
+
+- **API Key** / **API Secret** — Elliptic 控制台获取
+- **API Endpoint** — 默认 `aml-api.elliptic.co`（AML v2）
+- **Sign Method** — 默认 `HMAC-SHA256`
+- **Risk Scale** — 风险评分图例：0–3 Low（绿）、4–7 Medium（橙）、8–10 High（红）
+- **Test Elliptic Connection** 按钮 — 验证凭证是否可用
 
 ---
 
