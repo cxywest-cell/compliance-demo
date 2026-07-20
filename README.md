@@ -35,9 +35,13 @@
 |------|------|------|
 | Node.js | ≥ 18 | 服务端运行时 |
 | npm | ≥ 9 | 包管理 |
-| cloudflared | 任意（可选） | 公网隧道，Webhook 回调必需 |
+| cloudflared | 仅本地开发需要 | 临时公网隧道；若已有公网域名则无需安装 |
 
 无需数据库 —— 所有状态保存在本地 JSON 文件（已被 `.gitignore` 忽略）。
+
+> **关于公网可达性**：Webhook 回调要求服务可被外网访问。两种方式任选其一：
+> - **本地开发** → 使用内置 cloudflared 隧道（临时域名，每次重启会变）
+> - **生产 / 有公网域名** → 直接用你的域名（`https://your-domain/notabene/webhook`），**无需 cloudflared**
 
 ---
 
@@ -154,18 +158,27 @@ Settings 包含三个标签页：
 
 ---
 
-### 4.3 Cloudflare 隧道（Webhook 必需）
+### 4.3 公网可达性（Webhook 必需）
 
-Webhook 回调要求**公网可达的 HTTPS 地址**。本项目内置 cloudflared 隧道管理：
+Webhook 回调要求**公网可达的 HTTPS 地址**。根据你的部署方式选择：
+
+#### 方式一：本地开发 → cloudflared 隧道（内置）
 
 1. 在 **Settings → Notabene 标签页 → Webhook 卡片** 点击 **Generate URL**
 2. 等待 5–10 秒，会生成形如 `https://xxx.trycloudflare.com` 的临时公网地址
-3. 把该地址拼接 `/notabene/webhook` 与 `/sumsub/webhook`，分别填入：
-   - Notabene 各 workspace 后台的 Webhook URL
-   - Sumsub 后台的 Webhook URL
+3. 拼接 `/notabene/webhook` 与 `/sumsub/webhook`，填入各后台
 
 > 一条隧道同时服务两个路径：`/sumsub/webhook` 和 `/notabene/webhook`。
 > trycloudflare 临时域名每次重启会变，需同步更新后台配置。
+
+#### 方式二：已有公网域名 → 无需隧道
+
+若服务部署在公网服务器（如 `https://compliance.example.com`），直接使用：
+
+- Notabene webhook：`https://your-domain/notabene/webhook`
+- Sumsub webhook：`https://your-domain/sumsub/webhook`
+
+**无需安装或启动 cloudflared**。此方式更稳定，域名不随重启变化。
 
 ---
 
@@ -215,7 +228,7 @@ Step 4  链上结算       Custodian 广播 ERC-20 转账，回填 txHash 完成
 ## 七、常见问题
 
 **Q: WebSDK 链接打开报错 "Invalid successUrl"？**
-A: Sumsub 拒绝 `localhost` 作为回调地址。请先在 Settings 生成 cloudflare 隧道，再创建 WebSDK 链接。
+A: Sumsub 拒绝 `localhost` 作为回调地址。请先用任意方式获得公网 HTTPS 地址（cloudflared 隧道或你自己的公网域名），再创建 WebSDK 链接。
 
 **Q: Notabene Webhook 显示 `verified: false`？**
 A: 每个工作区使用各自的 webhook secret。请在 Settings → Notabene → Webhook 卡片填入 4 个真实 secret 并保存。
