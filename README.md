@@ -71,6 +71,8 @@ bash start.sh
 
 ## 四、配置指南（重要）
 
+> ⚠️ **关键提醒**：Webhook 配置是整个演示能否跑通的核心。Notabene 和 Sumsub 的状态变更（转账创建 / 授权 / KYC 完成 / AML 命中等）都通过 webhook 实时推送。**不配置 webhook = 演示只能手动轮询，失去实时合规闭环效果。**
+
 本演示需要配置三类内容，**请按顺序完成**：
 
 ### 4.1 `.env` 文件（服务端凭证）
@@ -134,14 +136,14 @@ Settings 包含三个标签页：
 
 #### ① Sumsub 标签页
 - 填入 App Token / API Secret / WebSDK Secret
-- 设置 Webhook 回调 URL（使用 4.4 的隧道地址）
+- Webhook URL（**无需手动填**，生成隧道后自动填充，见 4.3）
 
 #### ② Notabene 标签页
 这是配置的核心，包含：
 
 - **Base URL**：默认 `https://api.eu1.notabene.id`（沙箱）
 - **Webhook 卡片**：
-  - 回调 URL（填隧道地址 + `/notabene/webhook`）
+  - 回调 URL（**无需手动填**，生成隧道后自动填充，见 4.3）
   - **4 个 per-role webhook secret 输入框**（每个 workspace 一个）
   - 实时 webhook 事件控制台
 - **托管钱包（Custody Wallets）**：
@@ -169,20 +171,28 @@ Settings 包含三个标签页：
 
 ### 4.3 公网可达性（Webhook 必需）
 
-Webhook 回调要求**公网可达的 HTTPS 地址**。根据你的部署方式选择：
+Webhook 回调要求**公网可达的 HTTPS 地址**。
+
+> **重要：只需操作一次。** 隧道是全局共享的 —— 无论你从 Sumsub 标签页还是 Notabene 标签页点击 **Generate URL**，生成后**两个 webhook 地址会同时自动填充**：
+> - Sumsub Webhook URL → `https://<tunnel>/sumsub/webhook`
+> - Notabene Webhook URL → `https://<tunnel>/notabene/webhook`
+>
+> 一条隧道通过路径路由同时服务两个回调，**不要生成两次**。
 
 #### 方式一：本地开发 → cloudflared 隧道（内置）
 
-1. 在 **Settings → Notabene 标签页 → Webhook 卡片** 点击 **Generate URL**
-2. 等待 5–10 秒，会生成形如 `https://xxx.trycloudflare.com` 的临时公网地址
-3. 拼接 `/notabene/webhook` 与 `/sumsub/webhook`，填入各后台
+1. 打开 **Settings**（Sumsub 或 Notabene 任意标签页均可）
+2. 点击 **Generate URL**，等待 5–10 秒
+3. 生成后，两个 webhook URL 字段自动填充（无需手动复制）
+4. 把这两个地址分别粘贴到外部后台：
+   - `https://<tunnel>/notabene/webhook` → Notabene 各 workspace 后台
+   - `https://<tunnel>/sumsub/webhook` → Sumsub 后台
 
-> 一条隧道同时服务两个路径：`/sumsub/webhook` 和 `/notabene/webhook`。
-> trycloudflare 临时域名每次重启会变，需同步更新后台配置。
+> ⚠️ trycloudflare 临时域名**每次重启都会变**，重启后需重新生成并更新后台配置。
 
 #### 方式二：已有公网域名 → 无需隧道
 
-若服务部署在公网服务器（如 `https://compliance.example.com`），直接使用：
+若服务部署在公网服务器（如 `https://compliance.example.com`），直接在 Settings 的 webhook URL 字段手动填入：
 
 - Notabene webhook：`https://your-domain/notabene/webhook`
 - Sumsub webhook：`https://your-domain/sumsub/webhook`
