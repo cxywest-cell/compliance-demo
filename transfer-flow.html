@@ -985,7 +985,7 @@ function whRender(entries) {
     var e = entries[i];
     var info = whExtractBody(e);
     var cls = whSelected === i ? 'wh-item selected' : 'wh-item';
-    var time = (e.timestamp || '').slice(11, 19);
+    var time = e.timestamp ? new Date(e.timestamp).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
     var vIcon = e.verified === true ? '<span class="wh-verify-yes">✓</span>'
               : e.verified === false ? '<span class="wh-verify-no">✗</span>'
               : '<span style="color:#f59e0b">?</span>';
