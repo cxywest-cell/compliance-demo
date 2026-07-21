@@ -785,6 +785,18 @@ app.post('/api/notabene/transfer/reject', async (req, res) => {
   }
 });
 
+// Get TAP policies for a transfer
+app.get('/api/notabene/transfer/tap-policies', async (req, res) => {
+  const { clientId, clientSecret, did, txId } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('GET', '/entity/' + did + '/tx/' + txId + '/tap-policies', token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Settle transfer
 app.post('/api/notabene/transfer/settle', async (req, res) => {
   const { clientId, clientSecret, did, txId, settlementId } = req.body;

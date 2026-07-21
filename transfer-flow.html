@@ -324,11 +324,39 @@
         </div>
       </div>
 
-      <!-- Step 3: Compliance Decision -->
-      <div id="eb-review-section" style="display:none">
-        <div class="section-title">Step 3 · Compliance Decision</div>
+      <!-- Step 3: Transfer Details -->
+      <div id="eb-details-section" style="display:none">
+        <div class="section-title">Step 3 · Transfer Details</div>
         <div class="card">
-          <div class="card-header">Transfer Review</div>
+          <div class="card-header">
+            GET /entity/:did/tx/:tx
+            <button class="btn btn-outline btn-sm" onclick="fetchTransferDetails()">↻ Fetch</button>
+          </div>
+          <div class="card-body" id="eb-details-body" style="min-height:40px">
+            <p class="hint">Select a transfer above to fetch its details.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: TAP Policies -->
+      <div id="eb-tap-section" style="display:none">
+        <div class="section-title">Step 4 · Authorization Requirements (TAP)</div>
+        <div class="card">
+          <div class="card-header">
+            GET /entity/:did/tx/:tx/tap-policies
+            <button class="btn btn-outline btn-sm" onclick="fetchTapPolicies()">↻ Fetch</button>
+          </div>
+          <div class="card-body" id="eb-tap-body" style="min-height:40px">
+            <p class="hint">Check what authorization policies are required and their status.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Compliance Decision -->
+      <div id="eb-review-section" style="display:none">
+        <div class="section-title">Step 5 · Compliance Decision</div>
+        <div class="card">
+          <div class="card-header">Travel Rule PII Review</div>
           <div class="card-body" id="eb-review-body"></div>
           <div class="role-actions" id="eb-action-bar">
             <button class="btn btn-success" onclick="authorizeTransfer()">✓ Authorize</button>
@@ -337,9 +365,9 @@
         </div>
       </div>
 
-      <!-- Step 4: Settle -->
+      <!-- Step 6: Settle -->
       <div id="eb-settle-section" style="display:none">
-        <div class="section-title">Step 4 · On-Chain Settlement</div>
+        <div class="section-title">Step 6 · On-Chain Settlement</div>
         <div class="card">
           <div class="card-header">Settle Transfer</div>
           <div class="card-body">
@@ -787,21 +815,29 @@ async function fetchIncomingTransfers() {
 
 // Select and review a specific transfer
 async function selectIncomingTransfer(txId) {
-  var s = loadSettings();
   selectedTxId = txId;
-  var reviewSection = document.getElementById('eb-review-section');
-  var reviewBody = document.getElementById('eb-review-body');
-  var actionBar = document.getElementById('eb-action-bar');
-  var settleSection = document.getElementById('eb-settle-section');
 
-  reviewSection.style.display = 'block';
-  reviewBody.innerHTML = '<div style="color:#888;padding:8px">Loading transfer details...</div>';
-  actionBar.style.display = 'none';
+  // Reveal Steps 3-6, auto-fetch details
+  document.getElementById('eb-details-section').style.display = 'block';
+  document.getElementById('eb-tap-section').style.display = 'block';
+  document.getElementById('eb-review-section').style.display = 'block';
+
+  // Auto-fetch details and policies
+  await fetchTransferDetails();
+  await fetchTapPolicies();
+}
+
+// Fetch full transfer details
+async function fetchTransferDetails() {
+  if (!selectedTxId) return;
+  var s = loadSettings();
+  var body = document.getElementById('eb-details-body');
+  body.innerHTML = '<div style="color:#888;padding:8px">Fetching transfer details...</div>';
 
   try {
     var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(s.ebApikey) +
       '&clientSecret=' + encodeURIComponent(s.ebApisecret) +
-      '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(txId));
+      '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(selectedTxId));
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
@@ -823,7 +859,7 @@ async function selectIncomingTransfer(txId) {
 
     var summaryHtml =
       '<div class="tx-summary">' +
-        '<div class="tx-id mono">' + esc(txId) + '</div>' +
+        '<div class="tx-id mono">' + esc(selectedTxId) + '</div>' +
         '<div class="tx-amount">' + esc(amount) + ' <span style="font-size:14px;color:#888">' + esc(asset) + '</span></div>' +
         '<div class="tx-route">From <span>' + esc(initiator.split(':').slice(-2)[0]) + '</span></div>' +
         '<div style="margin-top:8px"><span class="transfer-status ts-' + status.toLowerCase() + '">' + esc(status) + '</span></div>' +
@@ -842,10 +878,13 @@ async function selectIncomingTransfer(txId) {
     }
     detailHtml += '</div>';
 
-    // Extract and display Travel Rule PII
+    body.innerHTML = summaryHtml + detailHtml;
+
+    // Populate PII panel in Step 5 (Compliance Decision)
     var orig = t.originator || {};
     var bene = t.beneficiary || {};
-    var piiHtml = '<div style="margin-top:10px;padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
+    var reviewBody = document.getElementById('eb-review-body');
+    reviewBody.innerHTML = '<div style="padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
       '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
         '<div>' +
@@ -863,18 +902,67 @@ async function selectIncomingTransfer(txId) {
       '</div>' +
     '</div>';
 
-    reviewBody.innerHTML = summaryHtml + detailHtml + piiHtml;
-
-    // Show action buttons based on status
+    // Update action bar visibility based on status
+    var actionBar = document.getElementById('eb-action-bar');
+    var settleSection = document.getElementById('eb-settle-section');
     if (status === 'INCOMING' || status === 'OUTGOING') {
       actionBar.style.display = 'flex';
     } else if (status === 'AUTHORIZED') {
+      actionBar.style.display = 'none';
       settleSection.style.display = 'block';
     } else {
       actionBar.style.display = 'none';
     }
   } catch(e) {
-    reviewBody.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
+    body.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Fetch TAP policies
+async function fetchTapPolicies() {
+  if (!selectedTxId) return;
+  var s = loadSettings();
+  var body = document.getElementById('eb-tap-body');
+  body.innerHTML = '<div style="color:#888;padding:8px">Fetching TAP policies...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfer/tap-policies?clientId=' + encodeURIComponent(s.ebApikey) +
+      '&clientSecret=' + encodeURIComponent(s.ebApisecret) +
+      '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(selectedTxId));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var policies = data.policies || [];
+    if (policies.length === 0) {
+      body.innerHTML = '<div class="hint">No TAP policies for this transfer.</div>';
+      return;
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:6px">';
+    for (var i = 0; i < policies.length; i++) {
+      var p = policies[i];
+      var pType = (p['@type'] || '—').replace('REQUIRE_', '').replace(/_/g, ' ');
+      var pStatus = p.status || '—';
+      var statusColor = pStatus === 'COMPLETED' ? '#059669' : (pStatus === 'PENDING' ? '#d97706' : '#888');
+      var fromName = String(p.from || '—').split(':').slice(-2)[0];
+      var forName = String(p.for || '—').split(':').slice(-2)[0];
+
+      html += '<div style="padding:8px 10px;background:#f8f9fa;border-radius:5px;border:1px solid #e8e8e8">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<span style="font-size:11px;font-weight:600;color:#1a1a1a">' + esc(pType) + '</span>' +
+          '<span style="font-size:10px;font-weight:600;color:' + statusColor + '">' + esc(pStatus) + '</span>' +
+        '</div>' +
+        '<div style="font-size:10px;color:#888;margin-top:2px">' +
+          'from <span style="color:#5b4cdb">' + esc(fromName) + '</span>' +
+          ' → for <span style="color:#06b6d4">' + esc(forName) + '</span>' +
+          (p.fromRole ? ' (' + esc(p.fromRole) + ')' : '') +
+        '</div>' +
+      '</div>';
+    }
+    html += '</div>';
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
   }
 }
 
