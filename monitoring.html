@@ -530,13 +530,14 @@ async function runScenario(n) {
 
     // Build results table
     var table = document.getElementById('table-s1');
-    table.innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Status</th></tr>';
+    table.innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Categories</th><th>Status</th></tr>';
     for (var i = 0; i < analyses.length; i++) {
       var hashShort = txs[i].hash.substring(0, 10) + '...' + txs[i].hash.slice(-4);
       table.innerHTML += '<tr><td>' + (i+1) + '</td>' +
         '<td class="mono" style="font-size:11px">' + hashShort + '</td>' +
         '<td><span class="badge badge-blue">' + (txs[i].owner || 'Entity') + '</span><br><span style="font-size:9px;color:#888">' + txs[i].cust + '</span></td>' +
         '<td id="score-s1' + i + '">—</td>' +
+        '<td id="cat-s1' + i + '">—</td>' +
         '<td id="status-s1' + i + '"><span class="badge badge-gray">pending</span></td></tr>';
     }
 
@@ -562,6 +563,7 @@ async function runScenario(n) {
         var score = getRiskScore(d);
         var st = document.getElementById('status-s1' + i);
         var sc = document.getElementById('score-s1' + i);
+        var catEl = document.getElementById('cat-s1' + i);
         var status = d.process_status || 'unknown';
         if (score !== null) {
           sc.innerHTML = scoreHTML(score);
@@ -571,6 +573,26 @@ async function runScenario(n) {
         } else {
           sc.innerHTML = scoreHTML(null);
           st.innerHTML = '<span class="badge badge-green">Clean</span>';
+        }
+        // Populate categories from triggered rules + entity categories
+        var cats = [];
+        var rules = getRules(d);
+        rules.forEach(function(entry) {
+          var r = entry.rule || entry;
+          if (r.rule_name) cats.push(r.rule_name);
+        });
+        var contribs = d.contributions || [];
+        if (!Array.isArray(contribs)) contribs = (contribs.source || []).concat(contribs.destination || []);
+        contribs.forEach(function(c) {
+          if (c.entities) c.entities.forEach(function(e) {
+            if (e.category && e.category !== 'Unknown' && e.category !== 'N/A' && cats.indexOf(e.category) < 0) cats.push(e.category);
+          });
+        });
+        if (cats.length > 0) {
+          catEl.innerHTML = '';
+          cats.slice(0, 3).forEach(function(c) { catEl.innerHTML += '<span class="cat-tag">' + c + '</span>'; });
+        } else {
+          catEl.innerHTML = '<span class="cat-tag">None</span>';
         }
         results.push(d);
         log('s1', 'log-ok', 'Analysis ' + (i+1) + ': ' + (score !== null ? 'score ' + score.toFixed(2) : 'CLEAN') + ' (' + status + ')');
@@ -913,7 +935,7 @@ function resetScenario(n) {
     document.getElementById('fill-s1').style.width = '0%';
     document.getElementById('fill-s1').style.background = '#2563eb';
     document.getElementById('label-s1').textContent = '';
-    document.getElementById('table-s1').innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Status</th></tr>';
+    document.getElementById('table-s1').innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Categories</th><th>Status</th></tr>';
   } else if (n === 2) {
     document.getElementById('bar-s2').style.display = 'none';
     document.getElementById('fill-s2').style.width = '0%';
