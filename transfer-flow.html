@@ -658,10 +658,32 @@ async function createTransfer() {
   var beneId = 'urn:uuid:' + crypto.randomUUID();
   var KLCC = 'eip155:11155111/erc20:0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66';
 
+  // Read customer PII from selectors
+  var eaCustIdx = document.getElementById('ea-customer-select').value;
+  var ebCustIdx = document.getElementById('eb-customer-select').value;
+  var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+  var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
+
+  // Build originator with PII (Travel Rule requires originator info)
+  var originator = { '@id': origId };
+  if (eaCust) {
+    originator.name = eaCust.firstName + ' ' + eaCust.lastName;
+    originator.account = ['did:pkh:eip155:11155111:' + eaWallet];
+    if (eaCust.dob) originator.dateOfBirth = eaCust.dob;
+  }
+
+  // Build beneficiary with PII
+  var beneficiary = { '@id': beneId };
+  if (ebCust) {
+    beneficiary.name = ebCust.firstName + ' ' + ebCust.lastName;
+    beneficiary.account = ['did:pkh:eip155:11155111:' + ebWallet];
+    if (ebCust.dob) beneficiary.dateOfBirth = ebCust.dob;
+  }
+
   var transferBody = {
     ref: ref,
-    originator: { '@id': origId },
-    beneficiary: { '@id': beneId },
+    originator: originator,
+    beneficiary: beneficiary,
     asset: KLCC,
     amount: String(amount),
     transactionValue: { amount: String(amount), currency: 'USD' },
@@ -699,7 +721,20 @@ async function createTransfer() {
           '<div class="cred-row"><span class="k">Reference</span><span class="v mono">' + esc(ref) + '</span></div>' +
           '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' KLCC</span></div>' +
           '<div class="cred-row"><span class="k">Route</span><span class="v">Entity A <span class="hl">→</span> Entity B</span></div>' +
-          '<div class="hint" style="margin-top:8px">Switch to Entity B tab → Refresh to review this transfer.</div>' +
+        '</div>' +
+        '<div class="card-header" style="border-top:1px solid #e0e0e0;background:#f8f9fa;font-size:10px">Travel Rule PII Transmitted</div>' +
+        '<div class="card-body">' +
+          '<div style="font-size:10px;font-weight:600;color:#5b4cdb;margin-bottom:4px">ORIGINATOR</div>' +
+          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(originator.name || '—') + '</span></div>' +
+          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">' + esc((originator.account || ['—'])[0]) + '</span></div>' +
+          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(originator.dateOfBirth || '—') + '</span></div>' +
+          '<div style="font-size:10px;font-weight:600;color:#06b6d4;margin:8px 0 4px">BENEFICIARY</div>' +
+          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(beneficiary.name || '—') + '</span></div>' +
+          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">' + esc((beneficiary.account || ['—'])[0]) + '</span></div>' +
+          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(beneficiary.dateOfBirth || '—') + '</span></div>' +
+        '</div>' +
+        '<div class="card-body" style="border-top:1px solid #e0e0e0">' +
+          '<div class="hint">Switch to Entity B tab → Refresh to review this transfer.</div>' +
         '</div>' +
       '</div>';
     btn.textContent = '✓ Created'; btn.className = 'btn btn-success btn-sm';
@@ -809,7 +844,28 @@ async function selectIncomingTransfer(txId) {
     }
     detailHtml += '</div>';
 
-    reviewBody.innerHTML = summaryHtml + detailHtml;
+    // Extract and display Travel Rule PII
+    var orig = t.originator || {};
+    var bene = t.beneficiary || {};
+    var piiHtml = '<div style="margin-top:10px;padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
+      '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        '<div>' +
+          '<div style="font-size:9px;font-weight:600;color:#5b4cdb;margin-bottom:2px">ORIGINATOR</div>' +
+          '<div style="font-size:11px">' + esc(orig.name || orig.legalName || '—') + '</div>' +
+          '<div class="mono" style="font-size:9px;color:#888">' + esc((orig.account && orig.account[0]) || '—') + '</div>' +
+          (orig.dateOfBirth ? '<div style="font-size:10px;color:#888">DOB: ' + esc(orig.dateOfBirth) + '</div>' : '') +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:9px;font-weight:600;color:#06b6d4;margin-bottom:2px">BENEFICIARY</div>' +
+          '<div style="font-size:11px">' + esc(bene.name || bene.legalName || '—') + '</div>' +
+          '<div class="mono" style="font-size:9px;color:#888">' + esc((bene.account && bene.account[0]) || '—') + '</div>' +
+          (bene.dateOfBirth ? '<div style="font-size:10px;color:#888">DOB: ' + esc(bene.dateOfBirth) + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    reviewBody.innerHTML = summaryHtml + detailHtml + piiHtml;
 
     // Show action buttons based on status
     if (status === 'INCOMING' || status === 'OUTGOING') {
