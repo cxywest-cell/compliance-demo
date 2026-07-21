@@ -221,16 +221,35 @@
 
       <div class="section-title">Customer</div>
       <div class="card"><div class="card-body">
-        <div class="cred-row" style="margin-bottom:6px">
-          <span class="k">Select Individual</span>
-          <select id="ea-customer-select" onchange="updateEaCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
-            <option value="">— choose —</option>
-          </select>
-        </div>
-        <div id="ea-customer-detail" style="display:none">
-          <div class="cred-row"><span class="k">Name</span><span class="v" id="ea-customer-name">—</span></div>
-          <div class="cred-row"><span class="k">DOB</span><span class="v" id="ea-customer-dob">—</span></div>
-          <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator (Entity A's customer)</div>
+            <div class="cred-row" style="margin-bottom:6px">
+              <span class="k">Select</span>
+              <select id="ea-customer-select" onchange="updateEaCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
+                <option value="">— choose —</option>
+              </select>
+            </div>
+            <div id="ea-customer-detail" style="display:none">
+              <div class="cred-row"><span class="k">Name</span><span class="v" id="ea-customer-name">—</span></div>
+              <div class="cred-row"><span class="k">DOB</span><span class="v" id="ea-customer-dob">—</span></div>
+              <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#06b6d4;text-transform:uppercase;margin-bottom:6px">Beneficiary (Entity B's customer)</div>
+            <div class="cred-row" style="margin-bottom:6px">
+              <span class="k">Select</span>
+              <select id="eb-customer-select-ea" onchange="updateEbCustomerEA()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
+                <option value="">— choose —</option>
+              </select>
+            </div>
+            <div id="eb-customer-detail-ea" style="display:none">
+              <div class="cred-row"><span class="k">Name</span><span class="v" id="eb-customer-name-ea">—</span></div>
+              <div class="cred-row"><span class="k">DOB</span><span class="v" id="eb-customer-dob-ea">—</span></div>
+              <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="eb-customer-hit-ea">—</span></div>
+            </div>
+          </div>
         </div>
       </div></div>
 
@@ -438,8 +457,9 @@ var IND_CASES = [
 ];
 
 function populateCustomerSelects() {
-  ['ea', 'eb'].forEach(function(role) {
-    var sel = document.getElementById(role + '-customer-select');
+  ['ea', 'eb', 'eb-ea'].forEach(function(key) {
+    var selId = key === 'eb-ea' ? 'eb-customer-select-ea' : key + '-customer-select';
+    var sel = document.getElementById(selId);
     if (!sel) return;
     sel.innerHTML = '<option value="">— choose —</option>';
     IND_CASES.forEach(function(c, i) {
@@ -460,6 +480,17 @@ function updateEaCustomer() {
   fill('ea-customer-name', c.firstName + ' ' + c.lastName);
   fill('ea-customer-dob', c.dob || '—');
   fill('ea-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
+}
+
+function updateEbCustomerEA() {
+  var idx = document.getElementById('eb-customer-select-ea').value;
+  var detail = document.getElementById('eb-customer-detail-ea');
+  if (idx === '') { detail.style.display = 'none'; return; }
+  detail.style.display = 'block';
+  var c = IND_CASES[parseInt(idx)];
+  fill('eb-customer-name-ea', c.firstName + ' ' + c.lastName);
+  fill('eb-customer-dob-ea', c.dob || '—');
+  fill('eb-customer-hit-ea', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
 }
 
 function updateEbCustomer() {
@@ -688,7 +719,7 @@ async function createTransfer() {
 
   // Read customer PII from selectors
   var eaCustIdx = document.getElementById('ea-customer-select').value;
-  var ebCustIdx = document.getElementById('eb-customer-select').value;
+  var ebCustIdx = document.getElementById('eb-customer-select-ea').value;
   var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
   var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
 
