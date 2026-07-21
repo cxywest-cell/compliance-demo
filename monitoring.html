@@ -242,13 +242,33 @@ function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 // Elliptic API integration (real calls via server proxy)
 // ═══════════════════════════════════════════════════════════════
 
-// Default test values from Elliptic API docs examples
+// Default test values from Elliptic testing prototype (elliptic/server.py)
+// Each set contains a curated low(0-3), medium(4-7), high(8-10) risk sample
 var DEFAULTS = {
-  // Holistic TX analysis defaults (from docs)
-  txHash: '24220e9cb717276300e17863c28f44787773c1ce156214594f36dc2a7a59f42d',
-  txOutputAddress: '35dRfg3bWZXdGjW1vKLMu28AmRSWvSid9o',
-  // Holistic Wallet analysis defaults (from docs)
-  walletAddress: '0x8589427373d6d84e98730d7795d8f6f8731fda16'
+  // Sync TX samples (tx_hash + output_address)
+  syncTx: {
+    low:  { hash: '0xd8537c5b6b3737c1c3163f162f02c8bcb6d0014b1255924ee7534ac2825d41c9', addr: '0x0a5984f86200415894821bfefc1c1de036dbf9e7', cust: 'acme-treasury',    expect: '0-3' },
+    mid:  { hash: '0x19667043e1679773ff6a50e7b477b2540b041a6117cd1561d1038564bb347a6f', addr: '0x837aef7f8d7c0388d974d3e6978d9df77847f00b', cust: 'retail-user-001', expect: '4-7' },
+    high: { hash: '871a8631f8bc99be86dfd176202d6cd28242e4b71720d776662693d0f86a9e48',   addr: '1DRnvydnCL6cjE65L3SvR23ADKj5o1RAAM',               cust: 'retail-user-001', expect: '8-10' }
+  },
+  // Sync Wallet samples (address only)
+  syncWallet: {
+    low:  { addr: '0x14715012513f0ec0a55f94585e2bc0f71bec296f', cust: 'acme-treasury',    expect: '0-3' },
+    mid:  { addr: '3QbCmPbQN3EEFp7oQLTwcgmPCunmKH5CWu',         cust: 'retail-user-001', expect: '4-7' },
+    high: { addr: '0xFA7093CDD9EE6932B4eb2c9e1cde7CE00B1FA4b9', cust: 'retail-user-001', expect: '8-10' }
+  },
+  // Batch TX samples
+  batchTx: [
+    { hash: '0x2c92fac8088c5549b94a687308c4f03aedadfd9edbfa566c49c4ac20e07d8dcb', addr: '0xed73e9c34184c3c04bce832683dd18e0c2ac8b1a', cust: 'acme-treasury',    owner: 'Entity A' },
+    { hash: '0x5dbd125442f1e24eae6229a33565de5c905d3f5c842ec36aad4c25f4d9cd7584', addr: '0xb70137c0e4099de9e49d1930647c0ec66125b761', cust: 'retail-user-001', owner: 'Entity A' },
+    { hash: '761aa7be7fde1d741ef14b9436db27174349e7887c1d09a48435bbb8fdc99424',   addr: '32we46yVNJzff8SvRnWdPpE4Hb4LQZPJxJ',           cust: 'retail-user-001', owner: 'Entity B' }
+  ],
+  // Batch Wallet samples
+  batchWallet: [
+    { addr: '0xe29d01e3e4746d40cccd8905deb8cee0b199f604',        owner: 'Entity A',    cust: 'acme-treasury' },
+    { addr: 'bc1q68xgzaamwyd7ty283pcnen95f4f3rm9g68hz9t',          owner: 'Entity B',    cust: 'retail-user-001' },
+    { addr: 'rG44SEnr3cxB8wvFEcqMwdTzh8wP8WS6mL',                 owner: 'Custodian A', cust: 'retail-user-001' }
+  ]
 };
 
 function getSettings() {
@@ -380,46 +400,44 @@ function renderInputRow(id, label, value, placeholder) {
 
 function renderS1Inputs() {
   var el = document.getElementById('inputs-s1');
-  el.innerHTML =
-    '<div class="input-group"><div class="input-group-title">TX 1 (Entity A — pay-in)</div>' +
-    renderInputRow('s1-tx1', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
-    renderInputRow('s1-addr1', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') + '</div>' +
-    '<div class="input-group"><div class="input-group-title">TX 2 (Entity A — pay-in)</div>' +
-    renderInputRow('s1-tx2', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
-    renderInputRow('s1-addr2', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') + '</div>' +
-    '<div class="input-group"><div class="input-group-title">TX 3 (Entity B — pay-in)</div>' +
-    renderInputRow('s1-tx3', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
-    renderInputRow('s1-addr3', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') + '</div>';
+  var html = '';
+  DEFAULTS.batchTx.forEach(function(t, i) {
+    html += '<div class="input-group"><div class="input-group-title">TX ' + (i+1) + ' (' + t.owner + ' — ' + t.cust + ')</div>' +
+      '<div class="input-row"><label>TX Hash</label><input type="text" id="s1-tx' + i + '" value="' + t.hash + '" placeholder="transaction hash" /></div>' +
+      '<div class="input-row"><label>Output Addr</label><input type="text" id="s1-addr' + i + '" value="' + t.addr + '" placeholder="output address" /></div>' +
+      '<div class="input-row"><label>Customer</label><input type="text" id="s1-cust' + i + '" value="' + t.cust + '" placeholder="acme-treasury" /></div></div>';
+  });
+  el.innerHTML = html;
 }
 
 function renderS2Inputs() {
   var el = document.getElementById('inputs-s2');
-  el.innerHTML =
-    '<div class="input-group"><div class="input-group-title">Address 1 (Entity A)</div>' +
-    renderInputRow('s2-addr1', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>' +
-    '<div class="input-group"><div class="input-group-title">Address 2 (Entity B)</div>' +
-    renderInputRow('s2-addr2', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>' +
-    '<div class="input-group"><div class="input-group-title">Address 3 (Custodian A Hot)</div>' +
-    renderInputRow('s2-addr3', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>' +
-    '<div class="input-group"><div class="input-group-title">Address 4 (Custodian B Hot)</div>' +
-    renderInputRow('s2-addr4', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>';
+  var html = '';
+  DEFAULTS.batchWallet.forEach(function(w, i) {
+    html += '<div class="input-group"><div class="input-group-title">Address ' + (i+1) + ' (' + w.owner + ')</div>' +
+      '<div class="input-row"><label>Address</label><input type="text" id="s2-addr' + i + '" value="' + w.addr + '" placeholder="wallet address" /></div>' +
+      '<div class="input-row"><label>Customer</label><input type="text" id="s2-cust' + i + '" value="' + w.cust + '" placeholder="acme-treasury" /></div></div>';
+  });
+  el.innerHTML = html;
 }
 
 function renderS3Inputs() {
+  var d = DEFAULTS.syncTx.mid; // 4-7 risk level
   var el = document.getElementById('inputs-s3');
   el.innerHTML =
-    '<div class="input-group"><div class="input-group-title">Withdraw Transaction</div>' +
-    renderInputRow('s3-tx', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
-    renderInputRow('s3-addr', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') +
-    '<div class="input-row"><label>Customer Ref</label><input type="text" id="s3-cust" value="entity_b" /></div></div>';
+    '<div class="input-group"><div class="input-group-title">Withdraw — Source of Funds (' + d.expect + ' expected risk)</div>' +
+    '<div class="input-row"><label>TX Hash</label><input type="text" id="s3-tx" value="' + d.hash + '" placeholder="0x..." /></div>' +
+    '<div class="input-row"><label>Output Addr</label><input type="text" id="s3-addr" value="' + d.addr + '" placeholder="0x..." /></div>' +
+    '<div class="input-row"><label>Customer</label><input type="text" id="s3-cust" value="' + d.cust + '" /></div></div>';
 }
 
 function renderS4Inputs() {
+  var d = DEFAULTS.syncWallet.high; // 8-10 risk level
   var el = document.getElementById('inputs-s4');
   el.innerHTML =
-    '<div class="input-group"><div class="input-group-title">Deposit Source Address</div>' +
-    renderInputRow('s4-addr', 'Address', DEFAULTS.walletAddress, 'wallet address') +
-    '<div class="input-row"><label>Customer Ref</label><input type="text" id="s4-cust" value="entity_a" /></div></div>';
+    '<div class="input-group"><div class="input-group-title">Deposit — Wallet Exposure (' + d.expect + ' expected risk)</div>' +
+    '<div class="input-row"><label>Address</label><input type="text" id="s4-addr" value="' + d.addr + '" placeholder="0x..." /></div>' +
+    '<div class="input-row"><label>Customer</label><input type="text" id="s4-cust" value="' + d.cust + '" /></div></div>';
 }
 
 // ═══ Scenario runners ═══
@@ -464,11 +482,15 @@ async function runScenario(n) {
     logClear('s1');
     if (!checkCreds('s1')) { resetBtn(n); return; }
 
-    var txs = [
-      { hash: document.getElementById('s1-tx1').value, addr: document.getElementById('s1-addr1').value, cust: 'entity_a' },
-      { hash: document.getElementById('s1-tx2').value, addr: document.getElementById('s1-addr2').value, cust: 'entity_a' },
-      { hash: document.getElementById('s1-tx3').value, addr: document.getElementById('s1-addr3').value, cust: 'entity_b' }
-    ].filter(function(t) { return t.hash && t.addr; });
+    var txs = [];
+    for (var i = 0; i < DEFAULTS.batchTx.length; i++) {
+      var h = document.getElementById('s1-tx' + i);
+      var a = document.getElementById('s1-addr' + i);
+      var c = document.getElementById('s1-cust' + i);
+      if (h && a && h.value && a.value) {
+        txs.push({ hash: h.value, addr: a.value, cust: c ? c.value : 'default', owner: DEFAULTS.batchTx[i].owner });
+      }
+    }
 
     if (txs.length === 0) { log('s1', 'log-err', 'No TX hashes provided'); resetBtn(n); return; }
 
@@ -507,14 +529,13 @@ async function runScenario(n) {
     fill.style.width = '40%';
 
     // Build results table
-    var owners = ['Entity A', 'Entity A', 'Entity B'];
     var table = document.getElementById('table-s1');
     table.innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Status</th></tr>';
     for (var i = 0; i < analyses.length; i++) {
       var hashShort = txs[i].hash.substring(0, 10) + '...' + txs[i].hash.slice(-4);
       table.innerHTML += '<tr><td>' + (i+1) + '</td>' +
         '<td class="mono" style="font-size:11px">' + hashShort + '</td>' +
-        '<td><span class="badge badge-blue">' + owners[i] + '</span></td>' +
+        '<td><span class="badge badge-blue">' + (txs[i].owner || 'Entity') + '</span><br><span style="font-size:9px;color:#888">' + txs[i].cust + '</span></td>' +
         '<td id="score-s1' + i + '">—</td>' +
         '<td id="status-s1' + i + '"><span class="badge badge-gray">pending</span></td></tr>';
     }
@@ -572,12 +593,14 @@ async function runScenario(n) {
     logClear('s2');
     if (!checkCreds('s2')) { resetBtn(n); return; }
 
-    var addrs = [
-      { addr: document.getElementById('s2-addr1').value, owner: 'Entity A' },
-      { addr: document.getElementById('s2-addr2').value, owner: 'Entity B' },
-      { addr: document.getElementById('s2-addr3').value, owner: 'Custodian A' },
-      { addr: document.getElementById('s2-addr4').value, owner: 'Custodian B' }
-    ].filter(function(a) { return a.addr; });
+    var addrs = [];
+    for (var i = 0; i < DEFAULTS.batchWallet.length; i++) {
+      var a = document.getElementById('s2-addr' + i);
+      var c = document.getElementById('s2-cust' + i);
+      if (a && a.value) {
+        addrs.push({ addr: a.value, owner: DEFAULTS.batchWallet[i].owner, cust: c ? c.value : 'default' });
+      }
+    }
 
     if (addrs.length === 0) { log('s2', 'log-err', 'No addresses provided'); resetBtn(n); return; }
 
@@ -591,7 +614,7 @@ async function runScenario(n) {
     label.textContent = 'Submitting ' + addrs.length + ' addresses...';
     raw.textContent = '';
 
-    var batchBody = addrs.map(function(a) { return buildWalletRequest(a.addr, a.owner.toLowerCase().replace(/\s/g,'_')); });
+    var batchBody = addrs.map(function(a) { return buildWalletRequest(a.addr, a.cust); });
     log('s2', 'log-action', 'Signing HMAC-SHA256 headers');
 
     var submitResult;
@@ -622,7 +645,7 @@ async function runScenario(n) {
       var addrShort = addrs[i].addr.substring(0, 10) + '...' + addrs[i].addr.slice(-4);
       table.innerHTML += '<tr><td>' + (i+1) + '</td>' +
         '<td class="mono" style="font-size:11px">' + addrShort + '</td>' +
-        '<td><span class="badge badge-blue">' + addrs[i].owner + '</span></td>' +
+        '<td><span class="badge badge-blue">' + (addrs[i].owner || 'Entity') + '</span><br><span style="font-size:9px;color:#888">' + addrs[i].cust + '</span></td>' +
         '<td id="score-s2' + i + '">—</td>' +
         '<td id="cat-s2' + i + '">—</td>' +
         '<td id="status-s2' + i + '"><span class="badge badge-gray">pending</span></td></tr>';
