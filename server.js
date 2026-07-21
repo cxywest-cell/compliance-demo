@@ -1155,7 +1155,7 @@ function logWebhook(entry) {
       log = JSON.parse(fs.readFileSync(WEBHOOK_LOG_PATH, 'utf8'));
     }
     log.push(entry);
-    if (log.length > 100) log = log.slice(-100);
+    if (log.length > 500) log = log.slice(-500);
     fs.writeFileSync(WEBHOOK_LOG_PATH, JSON.stringify(log, null, 2));
   } catch(e) {
     console.error('[Webhook] Failed to save log:', e.message);
@@ -1203,10 +1203,11 @@ app.get('/sumsub/webhook', (req, res) => {
 // Frontend (settings page) calls this to update secrets after user enters them.
 app.post('/api/notabene/webhook-secrets', (req, res) => {
   const { ea, ca, eb, cb } = req.body;
-  if (ea !== undefined) notabeneSecrets.ea = ea || '';
-  if (ca !== undefined) notabeneSecrets.ca = ca || '';
-  if (eb !== undefined) notabeneSecrets.eb = eb || '';
-  if (cb !== undefined) notabeneSecrets.cb = cb || '';
+  // Never overwrite an existing secret with an empty string — prevents accidental wipes
+  if (ea) notabeneSecrets.ea = ea;
+  if (ca) notabeneSecrets.ca = ca;
+  if (eb) notabeneSecrets.eb = eb;
+  if (cb) notabeneSecrets.cb = cb;
   try {
     fs.writeFileSync(NOTABENE_SECRETS_FILE, JSON.stringify(notabeneSecrets, null, 2));
     res.json({ ok: true, saved: notabeneSecrets });
@@ -1280,9 +1281,14 @@ app.post('/notabene/webhook', (req, res) => {
       if (!entry.secret) continue;
       let expectedSig;
       if (isSvix) {
-        // Svix scheme: HMAC-SHA256(secret, "id.timestamp.body") -> base64
+        // Svix scheme: HMAC-SHA256(key, "id.timestamp.body") -> base64
+        // Svix secrets use "whsec_" prefix; the rest is base64-encoded key bytes
         const signedPayload = `${svixId}.${svixTs}.${rawBody}`;
-        expectedSig = crypto.createHmac('sha256', entry.secret).update(signedPayload, 'utf8').digest('base64');
+        let keyBytes = entry.secret;
+        if (keyBytes.startsWith('whsec_')) {
+          keyBytes = Buffer.from(keyBytes.slice(6), 'base64');
+        }
+        expectedSig = crypto.createHmac('sha256', keyBytes).update(signedPayload, 'utf8').digest('base64');
         // svix-signature format: "v1,<sig>" possibly multiple comma-separated
         const provided = sigValue.split(',').map(s => s.replace(/^v1,/, '').trim());
         if (provided.includes(expectedSig)) {
