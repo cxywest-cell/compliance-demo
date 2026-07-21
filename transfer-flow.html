@@ -25,6 +25,16 @@
   .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
   .role-tab:hover { color: #1a1a1a; }
   .role-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .role-tab.passive { color: #ccc; cursor: not-allowed; }
+  .role-tab.passive:hover { color: #ccc; }
+  .role-tab.passive .lock { font-size: 9px; margin-left: 3px; }
+
+  /* Case selector */
+  .case-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+  .case-bar .case-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
+  .case-select { padding: 5px 10px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 12px; font-weight: 500; color: #1a1a1a; background: #fff; cursor: pointer; }
+  .case-select:focus { outline: none; border-color: #5b4cdb; }
+  .case-desc { font-size: 11px; color: #666; margin-left: 8px; }
   .role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
   .role-header .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
   .role-header h2 { font-size: 14px; font-weight: 600; }
@@ -179,8 +189,17 @@
   </div>
   <div class="content">
 
+    <div class="case-bar">
+      <span class="case-label">📋 Case</span>
+      <select class="case-select" id="case-selector" onchange="switchCase()">
+        <option value="">— Select a test case —</option>
+        <option value="case1">Case 1: Happy Path — Successful Transfer</option>
+      </select>
+      <span class="case-desc" id="case-desc">Choose a scenario to begin.</span>
+    </div>
+
     <div class="role-tabs">
-      <div class="role-tab active" data-tab="entity-a">Entity A</div>
+      <div class="role-tab" data-tab="entity-a">Entity A</div>
       <div class="role-tab" data-tab="custodian-a">Custodian A</div>
       <div class="role-tab" data-tab="entity-b">Entity B</div>
       <div class="role-tab" data-tab="custodian-b">Custodian B</div>
@@ -501,13 +520,86 @@ function esc(s) {
   });
 }
 
-// ─── Tab Switching ───
-document.querySelectorAll('.role-tab').forEach(function(tab) {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.role-tab').forEach(function(t) { t.classList.remove('active'); });
+// ─── Case Selector + Tab Switching ───
+var CASES = {
+  case1: {
+    name: 'Happy Path — Successful Transfer',
+    desc: 'Entity A sends 1 KLCC → Entity B authorizes → settles. Standard compliant flow.',
+    activeRoles: ['entity-a', 'entity-b'],
+    passiveRoles: ['custodian-a', 'custodian-b'],
+    passiveNote: 'Passive role in agent chain — no action needed.'
+  }
+};
+
+function switchCase() {
+  var caseId = document.getElementById('case-selector').value;
+  var descEl = document.getElementById('case-desc');
+  var tabs = document.querySelectorAll('.role-tab');
+
+  if (!caseId || !CASES[caseId]) {
+    // No case selected — reset all tabs to neutral
+    descEl.textContent = 'Choose a scenario to begin.';
+    tabs.forEach(function(t) {
+      t.classList.remove('active', 'passive');
+      t.style.pointerEvents = '';
+      var lock = t.querySelector('.lock');
+      if (lock) lock.remove();
+    });
     document.querySelectorAll('.role-page').forEach(function(p) { p.classList.remove('active'); });
+    return;
+  }
+
+  var c = CASES[caseId];
+  descEl.textContent = c.desc;
+
+  tabs.forEach(function(t) {
+    var tabName = t.dataset.tab;
+    t.classList.remove('active', 'passive');
+    var lock = t.querySelector('.lock');
+    if (lock) lock.remove();
+
+    if (c.passiveRoles.indexOf(tabName) >= 0) {
+      // Grey out passive roles
+      t.classList.add('passive');
+      t.style.pointerEvents = 'none';
+      t.innerHTML = t.textContent.trim() + ' <span class="lock">🔒</span>';
+    } else {
+      // Active role
+      t.style.pointerEvents = '';
+    }
+  });
+
+  // Auto-switch to first active role
+  var firstActive = c.activeRoles[0];
+  activateTab(firstActive);
+}
+
+function activateTab(tabName) {
+  document.querySelectorAll('.role-tab').forEach(function(t) {
+    t.classList.remove('active');
+    // Keep passive class if it was there
+    if (!t.classList.contains('passive')) {
+      t.style.pointerEvents = '';
+    }
+  });
+  document.querySelectorAll('.role-page').forEach(function(p) { p.classList.remove('active'); });
+
+  var tab = document.querySelector('.role-tab[data-tab="' + tabName + '"]');
+  if (tab && !tab.classList.contains('passive')) {
     tab.classList.add('active');
-    document.getElementById('role-' + tab.dataset.tab).classList.add('active');
+    document.getElementById('role-' + tabName).classList.add('active');
+  }
+}
+
+// Click handlers on tabs — block if passive
+document.querySelectorAll('.role-tab').forEach(function(tab) {
+  tab.addEventListener('click', function(e) {
+    if (tab.classList.contains('passive')) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    activateTab(tab.dataset.tab);
   });
 });
 
