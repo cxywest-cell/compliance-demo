@@ -325,8 +325,8 @@
       </div>
 
       <!-- Step 3: Transfer Details -->
+      <div class="section-title" id="eb-details-title" style="opacity:0.4">Step 3 · Transfer Details <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
       <div id="eb-details-section" style="display:none">
-        <div class="section-title">Step 3 · Transfer Details</div>
         <div class="card">
           <div class="card-header">
             GET /entity/:did/tx/:tx
@@ -339,8 +339,8 @@
       </div>
 
       <!-- Step 4: TAP Policies -->
+      <div class="section-title" id="eb-tap-title" style="opacity:0.4">Step 4 · Authorization Requirements (TAP) <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
       <div id="eb-tap-section" style="display:none">
-        <div class="section-title">Step 4 · Authorization Requirements (TAP)</div>
         <div class="card">
           <div class="card-header">
             GET /entity/:did/tx/:tx/tap-policies
@@ -353,8 +353,8 @@
       </div>
 
       <!-- Step 5: Compliance Decision -->
+      <div class="section-title" id="eb-review-title" style="opacity:0.4">Step 5 · Compliance Decision <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
       <div id="eb-review-section" style="display:none">
-        <div class="section-title">Step 5 · Compliance Decision</div>
         <div class="card">
           <div class="card-header">Travel Rule PII Review</div>
           <div class="card-body" id="eb-review-body"></div>
@@ -366,8 +366,8 @@
       </div>
 
       <!-- Step 6: Settle -->
+      <div class="section-title" id="eb-settle-title" style="opacity:0.4">Step 6 · On-Chain Settlement <span style="font-size:10px;font-weight:400;color:#888">🔒 Authorize to unlock</span></div>
       <div id="eb-settle-section" style="display:none">
-        <div class="section-title">Step 6 · On-Chain Settlement</div>
         <div class="card">
           <div class="card-header">Settle Transfer</div>
           <div class="card-body">
@@ -817,10 +817,12 @@ async function fetchIncomingTransfers() {
 async function selectIncomingTransfer(txId) {
   selectedTxId = txId;
 
-  // Reveal Steps 3-6, auto-fetch details
-  document.getElementById('eb-details-section').style.display = 'block';
-  document.getElementById('eb-tap-section').style.display = 'block';
-  document.getElementById('eb-review-section').style.display = 'block';
+  // Reveal Steps 3-5, activate titles
+  ['eb-details', 'eb-tap', 'eb-review'].forEach(function(prefix) {
+    document.getElementById(prefix + '-section').style.display = 'block';
+    var title = document.getElementById(prefix + '-title');
+    if (title) { title.style.opacity = '1'; title.innerHTML = title.innerHTML.replace(/ <span.*<\/span>/, ''); }
+  });
 
   // Auto-fetch details and policies
   await fetchTransferDetails();
@@ -905,11 +907,13 @@ async function fetchTransferDetails() {
     // Update action bar visibility based on status
     var actionBar = document.getElementById('eb-action-bar');
     var settleSection = document.getElementById('eb-settle-section');
+    var settleTitle = document.getElementById('eb-settle-title');
     if (status === 'INCOMING' || status === 'OUTGOING') {
       actionBar.style.display = 'flex';
     } else if (status === 'AUTHORIZED') {
       actionBar.style.display = 'none';
       settleSection.style.display = 'block';
+      if (settleTitle) { settleTitle.style.opacity = '1'; settleTitle.innerHTML = settleTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
     } else {
       actionBar.style.display = 'none';
     }
@@ -982,6 +986,8 @@ async function authorizeTransfer() {
     if (data.error) throw new Error(data.error);
 
     document.getElementById('eb-settle-section').style.display = 'block';
+    var settleTitle = document.getElementById('eb-settle-title');
+    if (settleTitle) { settleTitle.style.opacity = '1'; settleTitle.innerHTML = settleTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
     document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
       '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✓ Authorized — ready for settlement</div>');
     // Refresh the transfer detail
