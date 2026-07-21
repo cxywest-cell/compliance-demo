@@ -214,6 +214,37 @@
           <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
         </div>
       </div></div>
+
+      <!-- Step 2: Create Transfer -->
+      <div class="section-title">Step 2 · Create Travel Rule Transfer</div>
+      <div class="card">
+        <div class="card-header">
+          Transfer Details
+          <button class="btn btn-primary btn-sm" id="ea-create-btn" onclick="createTransfer()">Create Transfer</button>
+        </div>
+        <div class="card-body">
+          <div class="transfer-form">
+            <div class="form-group">
+              <label>Beneficiary VASP (Entity B)</label>
+              <input type="text" id="ea-tx-beneficiary" readonly style="background:#f8f8f8;font-size:11px">
+            </div>
+            <div class="form-group">
+              <label>Destination Wallet</label>
+              <input type="text" id="ea-tx-destaddr" readonly style="background:#f8f8f8;font-size:11px">
+            </div>
+            <div class="form-group">
+              <label>Amount (KLCC)</label>
+              <input type="text" id="ea-tx-amount" value="1">
+            </div>
+            <div class="form-group">
+              <label>Asset</label>
+              <input type="text" value="KLCC · Sepolia Testnet" readonly style="background:#f8f8f8;font-size:12px">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:8px">Agent chain (6 hops) and custody wallets are auto-constructed from Settings.</div>
+        </div>
+      </div>
+      <div id="ea-tx-result" style="display:none"></div>
     </div>
 
     <!-- ═══ Custodian A ═══ -->
@@ -259,6 +290,46 @@
           <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="eb-customer-hit">—</span></div>
         </div>
       </div></div>
+
+      <!-- Step 2: Review Incoming -->
+      <div class="section-title">Step 2 · Review Incoming Transfer</div>
+      <div class="card">
+        <div class="card-header">
+          Incoming Transfers
+          <button class="btn btn-outline btn-sm" onclick="fetchIncomingTransfers()">↻ Refresh</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div id="eb-incoming-list" style="max-height:300px;overflow-y:auto">
+            <div class="placeholder" style="padding:20px"><p>Click Refresh to fetch incoming transfers</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Compliance Decision -->
+      <div id="eb-review-section" style="display:none">
+        <div class="section-title">Step 3 · Compliance Decision</div>
+        <div class="card">
+          <div class="card-header">Transfer Review</div>
+          <div class="card-body" id="eb-review-body"></div>
+          <div class="role-actions" id="eb-action-bar">
+            <button class="btn btn-success" onclick="authorizeTransfer()">✓ Authorize</button>
+            <button class="btn btn-danger" onclick="rejectTransfer()">✗ Reject</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Settle -->
+      <div id="eb-settle-section" style="display:none">
+        <div class="section-title">Step 4 · On-Chain Settlement</div>
+        <div class="card">
+          <div class="card-header">Settle Transfer</div>
+          <div class="card-body">
+            <p class="hint" style="margin-bottom:8px">Confirm the on-chain transaction has been broadcast, then settle.</p>
+            <button class="btn btn-primary" id="eb-settle-btn" onclick="settleTransfer()">Settle Transfer</button>
+            <div id="eb-settle-result" style="display:none;margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ Custodian B ═══ -->
@@ -439,6 +510,315 @@ document.querySelectorAll('.role-tab').forEach(function(tab) {
     document.getElementById('role-' + tab.dataset.tab).classList.add('active');
   });
 });
+
+// ─── Transfer Flow Logic ───
+var selectedTxId = null;
+var selectedTxData = null;
+
+// Auto-fill transfer form from settings + persisted wallets
+function autoFillTransferForm() {
+  var s = loadSettings();
+  var benEl = document.getElementById('ea-tx-beneficiary');
+  if (benEl) benEl.value = s.ebDid || '';
+
+  // Fetch persisted wallets for destination address
+  fetch('/api/wallet/persisted').then(function(r) { return r.json(); }).then(function(data) {
+    var destEl = document.getElementById('ea-tx-destaddr');
+    if (destEl && data.eb && data.eb.address) destEl.value = data.eb.address;
+  }).catch(function() {});
+}
+
+// Create Travel Rule transfer
+async function createTransfer() {
+  var s = loadSettings();
+  var amount = document.getElementById('ea-tx-amount').value || '1';
+  var btn = document.getElementById('ea-create-btn');
+  var result = document.getElementById('ea-tx-result');
+
+  // Read persisted wallets for source address
+  var wallets = {};
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
+  } catch(e) {}
+
+  var eaWallet = wallets.ea ? wallets.ea.address : '';
+  var ebWallet = wallets.eb ? wallets.eb.address : '';
+
+  if (!s.eaDid || !s.eaApikey || !s.eaApisecret) {
+    result.style.display = 'block';
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ Missing Entity A credentials. Configure in Settings first.</div></div>';
+    return;
+  }
+  if (!s.ebDid) {
+    result.style.display = 'block';
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ Missing Entity B DID. Configure in Settings first.</div></div>';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Creating...';
+  result.style.display = 'block';
+  result.innerHTML = '<div class="card"><div class="card-body" style="color:#888">Creating transfer on Notabene network...</div></div>';
+
+  // Generate unique ref + originator/beneficiary IRIs
+  var ref = 'TR-' + Date.now().toString(36).toUpperCase();
+  var origId = 'urn:uuid:' + crypto.randomUUID();
+  var beneId = 'urn:uuid:' + crypto.randomUUID();
+  var KLCC = 'eip155:11155111/erc20:0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66';
+
+  var transferBody = {
+    ref: ref,
+    originator: { '@id': origId },
+    beneficiary: { '@id': beneId },
+    asset: KLCC,
+    amount: String(amount),
+    transactionValue: { amount: String(amount), currency: 'USD' },
+    agents: [
+      { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': s.caDid, role: 'SourceAddress' },
+      { '@id': s.caDid, 'for': s.eaDid, role: 'Custodian' },
+      { '@id': s.eaDid, 'for': origId, role: 'VASP' },
+      { '@id': s.cbDid, 'for': s.ebDid, role: 'Custodian' },
+      { '@id': s.ebDid, 'for': beneId, role: 'VASP' },
+      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': s.cbDid, role: 'SettlementAddress' }
+    ]
+  };
+
+  try {
+    var res2 = await fetch('/api/notabene/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: s.eaApikey, clientSecret: s.eaApisecret,
+        entityDid: s.eaDid, transferBody: transferBody
+      })
+    });
+    var data = await res2.json();
+    if (!res2.ok || data.error) throw new Error(data.error || ('HTTP ' + res2.status));
+
+    var txId = data.transfer ? data.transfer['@id'] : data.id;
+    var status = data.transfer ? data.transfer.status : data.status;
+    selectedTxId = txId;
+
+    result.innerHTML =
+      '<div class="card">' +
+        '<div class="card-header">Transfer Created <span class="tag" style="background:#d1fae5;color:#065f46">' + esc(status) + '</span></div>' +
+        '<div class="card-body">' +
+          '<div class="cred-row"><span class="k">Transfer ID</span><span class="v mono">' + esc(txId) + '</span></div>' +
+          '<div class="cred-row"><span class="k">Reference</span><span class="v mono">' + esc(ref) + '</span></div>' +
+          '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' KLCC</span></div>' +
+          '<div class="cred-row"><span class="k">Route</span><span class="v">Entity A <span class="hl">→</span> Entity B</span></div>' +
+          '<div class="hint" style="margin-top:8px">Switch to Entity B tab → Refresh to review this transfer.</div>' +
+        '</div>' +
+      '</div>';
+    btn.textContent = '✓ Created'; btn.className = 'btn btn-success btn-sm';
+  } catch(e) {
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ ' + esc(e.message) + '</div></div>';
+    btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+// Fetch incoming transfers for Entity B
+async function fetchIncomingTransfers() {
+  var s = loadSettings();
+  var listEl = document.getElementById('eb-incoming-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>Loading...</p></div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfers?clientId=' + encodeURIComponent(s.ebApikey) +
+      '&clientSecret=' + encodeURIComponent(s.ebApisecret) + '&did=' + encodeURIComponent(s.ebDid));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var txs = data.transfers || data || [];
+    if (!Array.isArray(txs)) txs = [txs];
+    if (txs.length === 0) {
+      listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>No incoming transfers.</p></div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < txs.length; i++) {
+      var t = txs[i];
+      var txId = t['@id'] || t.id;
+      var status = t.status || '—';
+      var amount = t.amount || '—';
+      var initiator = t.initiator ? String(t.initiator).split(':').slice(-2)[0] : '—';
+      var statusColor = status === 'SETTLED' ? '#059669' : status === 'AUTHORIZED' ? '#2563eb' : status === 'OUTGOING' || status === 'INCOMING' ? '#d97706' : '#666';
+      var cls = selectedTxId === txId ? 'wh-item selected' : 'wh-item';
+      html += '<div class="' + cls + '" style="padding:8px 10px" onclick="selectIncomingTransfer(\'' + txId + '\')">' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600;font-size:12px">' + esc(amount) + ' KLCC <span style="font-size:10px;color:#888">from ' + esc(initiator) + '</span></div>' +
+          '<div style="font-size:10px;color:#888;margin-top:2px">' + esc(String(txId).slice(0, 20)) + '...</div>' +
+        '</div>' +
+        '<span class="transfer-status ts-' + status.toLowerCase() + '" style="font-size:10px">' + esc(status) + '</span>' +
+      '</div>';
+    }
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p style="color:#dc2626">✗ ' + esc(e.message) + '</p></div>';
+  }
+}
+
+// Select and review a specific transfer
+async function selectIncomingTransfer(txId) {
+  var s = loadSettings();
+  selectedTxId = txId;
+  var reviewSection = document.getElementById('eb-review-section');
+  var reviewBody = document.getElementById('eb-review-body');
+  var actionBar = document.getElementById('eb-action-bar');
+  var settleSection = document.getElementById('eb-settle-section');
+
+  reviewSection.style.display = 'block';
+  reviewBody.innerHTML = '<div style="color:#888;padding:8px">Loading transfer details...</div>';
+  actionBar.style.display = 'none';
+
+  try {
+    var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(s.ebApikey) +
+      '&clientSecret=' + encodeURIComponent(s.ebApisecret) +
+      '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(txId));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var t = data.transfer || data;
+    selectedTxData = t;
+    var status = t.status || '—';
+    var amount = t.amount || '—';
+    var asset = t.asset ? String(t.asset).split(':').pop() : 'KLCC';
+    var initiator = t.initiator || '—';
+
+    // Extract agent names for route display
+    var agents = t.agents || [];
+    var originatorName = '—', beneficiaryName = '—';
+    for (var i = 0; i < agents.length; i++) {
+      if (agents[i].role === 'VASP' && !originatorName || agents[i].role === 'VASP' && originatorName === '—') {
+        if (agents[i].name) originatorName = agents[i].name;
+      }
+    }
+
+    var summaryHtml =
+      '<div class="tx-summary">' +
+        '<div class="tx-id mono">' + esc(txId) + '</div>' +
+        '<div class="tx-amount">' + esc(amount) + ' <span style="font-size:14px;color:#888">' + esc(asset) + '</span></div>' +
+        '<div class="tx-route">From <span>' + esc(initiator.split(':').slice(-2)[0]) + '</span></div>' +
+        '<div style="margin-top:8px"><span class="transfer-status ts-' + status.toLowerCase() + '">' + esc(status) + '</span></div>' +
+      '</div>';
+
+    var detailHtml = '<div style="margin-top:10px">';
+    for (var j = 0; j < agents.length; j++) {
+      var a = agents[j];
+      var aName = a.name || String(a.agent && a.agent['@id'] || '—').split(':').slice(-2)[0];
+      var aRole = a.role || '—';
+      var aStatus = a.status || '—';
+      detailHtml += '<div class="cred-row">' +
+        '<span class="k">' + esc(aRole) + '</span>' +
+        '<span class="v">' + esc(aName) + ' <span style="font-size:10px;color:#888">(' + esc(aStatus) + ')</span></span>' +
+      '</div>';
+    }
+    detailHtml += '</div>';
+
+    reviewBody.innerHTML = summaryHtml + detailHtml;
+
+    // Show action buttons based on status
+    if (status === 'INCOMING' || status === 'OUTGOING') {
+      actionBar.style.display = 'flex';
+    } else if (status === 'AUTHORIZED') {
+      settleSection.style.display = 'block';
+    } else {
+      actionBar.style.display = 'none';
+    }
+  } catch(e) {
+    reviewBody.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Authorize transfer
+async function authorizeTransfer() {
+  var s = loadSettings();
+  if (!selectedTxId) return;
+  var actionBar = document.getElementById('eb-action-bar');
+  actionBar.style.display = 'none';
+
+  try {
+    var res = await fetch('/api/notabene/transfer/authorize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    document.getElementById('eb-settle-section').style.display = 'block';
+    document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
+      '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✓ Authorized — ready for settlement</div>');
+    // Refresh the transfer detail
+    selectIncomingTransfer(selectedTxId);
+  } catch(e) {
+    actionBar.style.display = 'flex';
+    alert('Authorize failed: ' + e.message);
+  }
+}
+
+// Reject transfer
+async function rejectTransfer() {
+  var s = loadSettings();
+  if (!selectedTxId) return;
+  var reason = prompt('Rejection reason:', 'COMPLIANCE_CONCERN');
+  if (!reason) return;
+
+  try {
+    var res = await fetch('/api/notabene/transfer/reject', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, reason: reason })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    document.getElementById('eb-action-bar').style.display = 'none';
+    document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
+      '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(reason) + '</div>');
+  } catch(e) {
+    alert('Reject failed: ' + e.message);
+  }
+}
+
+// Settle transfer
+async function settleTransfer() {
+  var s = loadSettings();
+  if (!selectedTxId) return;
+  var btn = document.getElementById('eb-settle-btn');
+  var result = document.getElementById('eb-settle-result');
+  btn.disabled = true; btn.textContent = 'Settling...';
+
+  var settlementId = '0x' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+
+  try {
+    var res = await fetch('/api/notabene/transfer/settle', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, settlementId: settlementId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    result.style.display = 'block';
+    result.innerHTML =
+      '<div style="background:#d1fae5;color:#047857;padding:10px;border-radius:6px;font-size:12px">' +
+        '<div style="font-weight:600;margin-bottom:4px">✓ Transfer Settled</div>' +
+        '<div class="mono" style="font-size:10px;word-break:break-all">Settlement ID: ' + esc(settlementId) + '</div>' +
+      '</div>';
+    btn.textContent = '✓ Settled'; btn.className = 'btn btn-success';
+
+    // Refresh transfer detail
+    selectIncomingTransfer(selectedTxId);
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Retry';
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// ─── Init transfer form ───
+autoFillTransferForm();
 
 // ─── Webhook Console (pickable cards, like onboarding page) ───
 var whCurrent = [];
