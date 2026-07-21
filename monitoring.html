@@ -66,6 +66,12 @@
   .result-row:first-child { border-top: none; }
   .rk { color: #888; }
   .rv { color: #1a1a1a; }
+  .input-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+  .input-row label { font-size: 10px; color: #888; min-width: 70px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .input-row input { flex: 1; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .input-row input:focus { outline: none; border-color: #2563eb; }
+  .input-group { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 6px 8px; margin-bottom: 4px; }
+  .input-group-title { font-size: 10px; font-weight: 600; color: #555; margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -96,34 +102,11 @@
       </div>
       <div class="card-body">
         <p style="font-size:11px;color:#888;margin-bottom:8px">Incoming pay-ins from multiple sources screened as a batch. Async submit then poll for results.</p>
+        <div id="inputs-s1" style="margin-bottom:8px"></div>
         <div class="progress-bar" id="bar-s1" style="display:none"><div class="progress-fill" id="fill-s1" style="width:0%"></div></div>
         <div id="label-s1" style="font-size:10px;color:#888;margin-bottom:4px"></div>
         <table id="table-s1">
-          <tr><th>TX Hash</th><th>Customer</th><th>Asset</th><th>Amount</th><th>Risk</th><th>Status</th></tr>
-          <tr>
-            <td class="mono" style="font-size:11px">0xd8537c...a4e1</td>
-            <td><span class="badge badge-blue">Entity A</span></td>
-            <td>ETH</td>
-            <td>50 ETH</td>
-            <td id="score-s1a">—</td>
-            <td id="status-s1a"><span class="badge badge-gray">pending</span></td>
-          </tr>
-          <tr>
-            <td class="mono" style="font-size:11px">0x2c92fa...d0b3</td>
-            <td><span class="badge badge-blue">Entity A</span></td>
-            <td>ETH</td>
-            <td>12 ETH</td>
-            <td id="score-s1b">—</td>
-            <td id="status-s1b"><span class="badge badge-gray">pending</span></td>
-          </tr>
-          <tr>
-            <td class="mono" style="font-size:11px">0xfa3b91...c0d4</td>
-            <td><span class="badge badge-blue">Entity B</span></td>
-            <td>CLCC</td>
-            <td>100,000</td>
-            <td id="score-s1c">—</td>
-            <td id="status-s1c"><span class="badge badge-gray">pending</span></td>
-          </tr>
+          <tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Status</th></tr>
         </table>
         <div class="raw-json" id="raw-s1"></div>
         <div style="margin-top:6px;display:flex;gap:8px"><button onclick="toggleRaw('raw-s1')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Raw JSON</button><button onclick="toggleRaw('log-s1')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Run Log</button></div>
@@ -140,42 +123,11 @@
       </div>
       <div class="card-body">
         <p style="font-size:11px;color:#888;margin-bottom:8px">All addresses held in custody screened in one batch. Async wallet exposure analysis.</p>
+        <div id="inputs-s2" style="margin-bottom:8px"></div>
         <div class="progress-bar" id="bar-s2" style="display:none"><div class="progress-fill" id="fill-s2" style="width:0%"></div></div>
         <div id="label-s2" style="font-size:10px;color:#888;margin-bottom:4px"></div>
         <table id="table-s2">
-          <tr><th>Address</th><th>Owner</th><th>Network</th><th>Risk</th><th>Categories</th><th>Status</th></tr>
-          <tr>
-            <td class="mono">0x5d3a...f812</td>
-            <td><span class="badge badge-blue">Entity A</span></td>
-            <td>Ethereum</td>
-            <td id="score-s2a">—</td>
-            <td id="cat-s2a">—</td>
-            <td id="status-s2a"><span class="badge badge-gray">pending</span></td>
-          </tr>
-          <tr>
-            <td class="mono">0x8f2c...a47e</td>
-            <td><span class="badge badge-blue">Entity B</span></td>
-            <td>Ethereum</td>
-            <td id="score-s2b">—</td>
-            <td id="cat-s2b">—</td>
-            <td id="status-s2b"><span class="badge badge-gray">pending</span></td>
-          </tr>
-          <tr>
-            <td class="mono">0x7c4e...b93a</td>
-            <td><span class="badge badge-gray">Custodian A Hot</span></td>
-            <td>Ethereum</td>
-            <td id="score-s2c">—</td>
-            <td id="cat-s2c">—</td>
-            <td id="status-s2c"><span class="badge badge-gray">pending</span></td>
-          </tr>
-          <tr>
-            <td class="mono">0x2d5a...e81c</td>
-            <td><span class="badge badge-gray">Custodian B Hot</span></td>
-            <td>Ethereum</td>
-            <td id="score-s2d">—</td>
-            <td id="cat-s2d">—</td>
-            <td id="status-s2d"><span class="badge badge-gray">pending</span></td>
-          </tr>
+          <tr><th>#</th><th>Address</th><th>Owner</th><th>Risk</th><th>Categories</th><th>Status</th></tr>
         </table>
         <div class="raw-json" id="raw-s2"></div>
         <div style="margin-top:6px;display:flex;gap:8px"><button onclick="toggleRaw('raw-s2')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Raw JSON</button><button onclick="toggleRaw('log-s2')" style="font-size:10px;color:#888;cursor:pointer;background:none;border:none;padding:0">Show Run Log</button></div>
@@ -192,16 +144,14 @@
       </div>
       <div class="card-body">
         <p style="font-size:11px;color:#888;margin-bottom:8px">Outbound withdrawal blocked until real-time screening passes. Sync analysis returns immediate results.</p>
+        <div id="inputs-s3" style="margin-bottom:8px"></div>
         <div id="label-s3" style="font-size:10px;color:#888;margin-bottom:4px"></div>
         <div style="display:flex;gap:12px;align-items:flex-start">
           <div style="flex:1">
-            <div class="result-row"><span class="rk">TX Hash</span><span class="rv mono">0x196670...b2f8</span></div>
             <div class="result-row"><span class="rk">Customer</span><span class="rv"><span class="badge badge-blue">Entity B</span></span></div>
-            <div class="result-row"><span class="rk">Direction</span><span class="rv" style="color:#ef4444">Withdraw</span></div>
-            <div class="result-row"><span class="rk">Asset</span><span class="rv">ETH</span></div>
-            <div class="result-row"><span class="rk">Amount</span><span class="rv">75 ETH</span></div>
-            <div class="result-row"><span class="rk">Destination</span><span class="rv mono">0x4a71...3e89</span></div>
-            <div class="result-row"><span class="rk">Type</span><span class="rv">Source of Funds</span></div>
+            <div class="result-row"><span class="rk">Direction</span><span class="rv" style="color:#ef4444">Withdraw (source_of_funds)</span></div>
+            <div class="result-row"><span class="rk">Analysis ID</span><span class="rv mono" id="id-s3">—</span></div>
+            <div class="result-row"><span class="rk">Process Status</span><span class="rv" id="proc-s3">—</span></div>
           </div>
           <div style="width:180px">
             <div id="score-s3" style="font-size:28px;font-weight:700;text-align:center;margin:12px 0">—</div>
@@ -215,25 +165,23 @@
       </div>
     </div>
 
-    <!-- ═══ Scenario 4: Deposit (Real-time TX Screening) ═══ -->
-    <div class="section-title">4. Deposit — Real-time Transaction Screening</div>
+    <!-- ═══ Scenario 4: Deposit (Real-time Wallet Screening) ═══ -->
+    <div class="section-title">4. Deposit — Real-time Wallet Screening</div>
     <div class="card" id="card-scenario4">
       <div class="card-header">
-        <span>Sync TX Screening · <code class="mono" style="font-size:10px">POST /v2/analyses/synchronous</code></span>
+        <span>Sync Wallet Screening · <code class="mono" style="font-size:10px">POST /v2/wallet/synchronous</code></span>
         <button class="btn btn-run" id="btn-s4" onclick="runScenario(4)">Run Check</button>
       </div>
       <div class="card-body">
-        <p style="font-size:11px;color:#888;margin-bottom:8px">Inbound deposit checked in real-time before crediting to customer account. Sync analysis returns immediate results.</p>
+        <p style="font-size:11px;color:#888;margin-bottom:8px">Inbound deposit address checked in real-time for wallet exposure before crediting to customer account.</p>
+        <div id="inputs-s4" style="margin-bottom:8px"></div>
         <div id="label-s4" style="font-size:10px;color:#888;margin-bottom:4px"></div>
         <div style="display:flex;gap:12px;align-items:flex-start">
           <div style="flex:1">
-            <div class="result-row"><span class="rk">TX Hash</span><span class="rv mono">0xfa3b91...c0d4</span></div>
             <div class="result-row"><span class="rk">Customer</span><span class="rv"><span class="badge badge-blue">Entity A</span></span></div>
-            <div class="result-row"><span class="rk">Direction</span><span class="rv" style="color:#16a34a">Deposit</span></div>
-            <div class="result-row"><span class="rk">Asset</span><span class="rv">CLCC</span></div>
-            <div class="result-row"><span class="rk">Amount</span><span class="rv">250,000 CLCC</span></div>
-            <div class="result-row"><span class="rk">Source</span><span class="rv mono">0xd8537c...a4e1</span></div>
-            <div class="result-row"><span class="rk">Type</span><span class="rv">Source of Funds</span></div>
+            <div class="result-row"><span class="rk">Direction</span><span class="rv" style="color:#16a34a">Deposit (wallet_exposure)</span></div>
+            <div class="result-row"><span class="rk">Analysis ID</span><span class="rv mono" id="id-s4">—</span></div>
+            <div class="result-row"><span class="rk">Process Status</span><span class="rv" id="proc-s4">—</span></div>
           </div>
           <div style="width:180px">
             <div id="score-s4" style="font-size:28px;font-weight:700;text-align:center;margin:12px 0">—</div>
@@ -290,26 +238,542 @@ function scoreBig(s) {
 
 function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
 
-// Mock data for each scenario
-var mockResults = {
-  // Scenario 1: Batch TX - pay-in
-  s1: [
-    { id: 'ana-001', risk_score: 1.5, contributions: [{ entities: [{ name: 'Unknown', category: 'N/A' }]}], evaluation_detail: [] },
-    { id: 'ana-002', risk_score: 2.8, contributions: [{ entities: [{ name: 'Binance', category: 'Exchange' }]}], evaluation_detail: [{ rule_name: 'Exchange Exposure', risk_score: 2.8 }] },
-    { id: 'ana-003', risk_score: 6.2, contributions: [{ entities: [{ name: 'Tornado Cash', category: 'Mixer' }]}], evaluation_detail: [{ rule_name: 'Mixer Interaction', risk_score: 6.2 }, { rule_name: 'Obfuscation Protocol', risk_score: 3.1 }] }
-  ],
-  // Scenario 2: Batch Wallet - custody addresses
-  s2: [
-    { id: 'wal-001', risk_score: 0.6, cluster_entities: [], contributions: [] },
-    { id: 'wal-002', risk_score: 5.8, cluster_entities: [{ name: 'Obfuscation Cluster', category: 'Mixer' }], contributions: [{ entities: [{ name: 'Tornado Cash', category: 'Mixer' }]}] },
-    { id: 'wal-003', risk_score: 0.4, cluster_entities: [], contributions: [] },
-    { id: 'wal-004', risk_score: 1.2, cluster_entities: [], contributions: [{ entities: [{ name: 'Coinbase', category: 'Exchange' }]}] }
-  ],
-  // Scenario 3: Withdraw (flagged!)
-  s3: { id: 'ana-005', risk_score: 8.7, contributions: [{ entities: [{ name: 'Sanctioned Entity', category: 'Sanctions' }]}], evaluation_detail: [{ rule_name: 'Sanctioned Entity Interaction', risk_score: 8.7 }, { rule_name: 'Illicit Activity', risk_score: 4.3 }] },
-  // Scenario 4: Deposit (clean)
-  s4: { id: 'ana-006', risk_score: 1.1, contributions: [{ entities: [{ name: 'Unknown', category: 'N/A' }]}], evaluation_detail: [] }
+// ═══════════════════════════════════════════════════════════════
+// Elliptic API integration (real calls via server proxy)
+// ═══════════════════════════════════════════════════════════════
+
+// Default test values from Elliptic API docs examples
+var DEFAULTS = {
+  // Holistic TX analysis defaults (from docs)
+  txHash: '24220e9cb717276300e17863c28f44787773c1ce156214594f36dc2a7a59f42d',
+  txOutputAddress: '35dRfg3bWZXdGjW1vKLMu28AmRSWvSid9o',
+  // Holistic Wallet analysis defaults (from docs)
+  walletAddress: '0x8589427373d6d84e98730d7795d8f6f8731fda16'
 };
+
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem('compliance-demo-settings') || '{}'); }
+  catch(e) { return {}; }
+}
+
+function ellipticHeaders() {
+  var s = getSettings();
+  return {
+    'Content-Type': 'application/json',
+    'x-elliptic-key': s.ellipticKey || '',
+    'x-elliptic-secret': s.ellipticSecret || '',
+    'x-elliptic-endpoint': s.ellipticEndpoint || 'aml-api.elliptic.co'
+  };
+}
+
+function checkCreds(logId) {
+  var s = getSettings();
+  if (!s.ellipticKey || !s.ellipticSecret) {
+    log(logId, 'log-err', 'ERROR: No Elliptic API credentials. Go to Settings → Elliptic AML tab to configure.');
+    return false;
+  }
+  log(logId, 'log-action', 'Using key: ' + s.ellipticKey.substring(0, 8) + '... @ ' + (s.ellipticEndpoint || 'aml-api.elliptic.co'));
+  return true;
+}
+
+// Generic fetch wrapper for our Elliptic proxy
+async function ellipticFetch(path, body, method) {
+  var m = method || (body ? 'POST' : 'GET');
+  var opts = { method: m, headers: ellipticHeaders() };
+  if (body) opts.body = JSON.stringify(body);
+  var resp = await fetch(path, opts);
+  var data = await resp.json();
+  return { status: resp.status, data: data };
+}
+
+// ── Response helpers ──
+
+// Extract risk_score from response (works for both TX and Wallet)
+function getRiskScore(data) {
+  if (data.risk_score !== undefined && data.risk_score !== null) return data.risk_score;
+  return null;
+}
+
+// Extract evaluation rules from TX response (flat array) or Wallet response ({source:[],destination:[]})
+function getRules(data) {
+  var ed = data.evaluation_detail;
+  if (!ed) return [];
+  if (Array.isArray(ed)) return ed.filter(function(e) { return (e.risk_score || 0) > 0; });
+  // Wallet format: {source:[], destination:[]}
+  var all = [];
+  if (ed.source) all = all.concat(ed.source);
+  if (ed.destination) all = all.concat(ed.destination);
+  return all.filter(function(e) { return (e.risk_score || 0) > 0; });
+}
+
+// Extract entity name + category from contributions (TX flat array, Wallet {source,destination})
+function getEntity(data) {
+  var contribs = data.contributions;
+  if (!contribs) return null;
+  var list = Array.isArray(contribs) ? contribs : ((contribs.source || []).concat(contribs.destination || []));
+  if (list.length === 0) return null;
+  var ents = list[0].entities;
+  if (ents && ents.length > 0 && ents[0].name && ents[0].name !== 'Unknown') {
+    return { name: ents[0].name, category: ents[0].category };
+  }
+  return null;
+}
+
+// Extract cluster entities (wallet only)
+function getClusterCategories(data) {
+  var cats = [];
+  if (data.cluster_entities && Array.isArray(data.cluster_entities)) {
+    data.cluster_entities.forEach(function(e) {
+      if (e.category) cats.push(e.name + ' (' + e.category + ')');
+    });
+  }
+  // Also check contributions for wallet format
+  if (!cats.length) {
+    var contribs = data.contributions;
+    if (contribs && !Array.isArray(contribs)) {
+      var list = (contribs.source || []).concat(contribs.destination || []);
+      list.forEach(function(c) {
+        if (c.entities) c.entities.forEach(function(e) {
+          if (e.name && e.name !== 'Unknown') cats.push(e.name + ' (' + e.category + ')');
+        });
+      });
+    }
+  }
+  return cats;
+}
+
+// ═══ Input rendering ═══
+
+function renderInputRow(id, label, value, placeholder) {
+  return '<div class="input-row"><label>' + label + '</label>' +
+    '<input type="text" id="' + id + '" value="' + (value || '') + '" placeholder="' + (placeholder || '') + '" /></div>';
+}
+
+function renderS1Inputs() {
+  var el = document.getElementById('inputs-s1');
+  el.innerHTML =
+    '<div class="input-group"><div class="input-group-title">TX 1 (Entity A — pay-in)</div>' +
+    renderInputRow('s1-tx1', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
+    renderInputRow('s1-addr1', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') + '</div>' +
+    '<div class="input-group"><div class="input-group-title">TX 2 (Entity A — pay-in)</div>' +
+    renderInputRow('s1-tx2', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
+    renderInputRow('s1-addr2', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') + '</div>' +
+    '<div class="input-group"><div class="input-group-title">TX 3 (Entity B — pay-in)</div>' +
+    renderInputRow('s1-tx3', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
+    renderInputRow('s1-addr3', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') + '</div>';
+}
+
+function renderS2Inputs() {
+  var el = document.getElementById('inputs-s2');
+  el.innerHTML =
+    '<div class="input-group"><div class="input-group-title">Address 1 (Entity A)</div>' +
+    renderInputRow('s2-addr1', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>' +
+    '<div class="input-group"><div class="input-group-title">Address 2 (Entity B)</div>' +
+    renderInputRow('s2-addr2', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>' +
+    '<div class="input-group"><div class="input-group-title">Address 3 (Custodian A Hot)</div>' +
+    renderInputRow('s2-addr3', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>' +
+    '<div class="input-group"><div class="input-group-title">Address 4 (Custodian B Hot)</div>' +
+    renderInputRow('s2-addr4', 'Address', DEFAULTS.walletAddress, 'wallet address') + '</div>';
+}
+
+function renderS3Inputs() {
+  var el = document.getElementById('inputs-s3');
+  el.innerHTML =
+    '<div class="input-group"><div class="input-group-title">Withdraw Transaction</div>' +
+    renderInputRow('s3-tx', 'TX Hash', DEFAULTS.txHash, 'transaction hash') +
+    renderInputRow('s3-addr', 'Output Addr', DEFAULTS.txOutputAddress, 'output address') +
+    '<div class="input-row"><label>Customer Ref</label><input type="text" id="s3-cust" value="entity_b" /></div></div>';
+}
+
+function renderS4Inputs() {
+  var el = document.getElementById('inputs-s4');
+  el.innerHTML =
+    '<div class="input-group"><div class="input-group-title">Deposit Source Address</div>' +
+    renderInputRow('s4-addr', 'Address', DEFAULTS.walletAddress, 'wallet address') +
+    '<div class="input-row"><label>Customer Ref</label><input type="text" id="s4-cust" value="entity_a" /></div></div>';
+}
+
+// ═══ Scenario runners ═══
+
+function buildTxRequest(hash, addr, customerRef) {
+  return {
+    customer_reference: customerRef || 'default',
+    subject: {
+      asset: 'holistic',
+      blockchain: 'holistic',
+      type: 'transaction',
+      hash: hash,
+      output_type: 'address',
+      output_address: addr
+    },
+    type: 'source_of_funds'
+  };
+}
+
+function buildWalletRequest(addr, customerRef) {
+  return {
+    customer_reference: customerRef || 'default',
+    subject: {
+      asset: 'holistic',
+      blockchain: 'holistic',
+      type: 'address',
+      hash: addr
+    },
+    type: 'wallet_exposure'
+  };
+}
+
+async function runScenario(n) {
+  var btn = document.getElementById('btn-s' + n);
+  btn.disabled = true;
+  btn.style.background = '#94a3b8';
+  btn.style.cursor = 'not-allowed';
+  var raw = document.getElementById('raw-s' + n);
+
+  if (n === 1) {
+    // ═══ S1: Batch TX Screening ═══
+    logClear('s1');
+    if (!checkCreds('s1')) { resetBtn(n); return; }
+
+    var txs = [
+      { hash: document.getElementById('s1-tx1').value, addr: document.getElementById('s1-addr1').value, cust: 'entity_a' },
+      { hash: document.getElementById('s1-tx2').value, addr: document.getElementById('s1-addr2').value, cust: 'entity_a' },
+      { hash: document.getElementById('s1-tx3').value, addr: document.getElementById('s1-addr3').value, cust: 'entity_b' }
+    ].filter(function(t) { return t.hash && t.addr; });
+
+    if (txs.length === 0) { log('s1', 'log-err', 'No TX hashes provided'); resetBtn(n); return; }
+
+    log('s1', 'log-api', 'POST /v2/analyses — batch ' + txs.length + ' transactions');
+    btn.textContent = 'Submitting...';
+    var bar = document.getElementById('bar-s1');
+    var fill = document.getElementById('fill-s1');
+    var label = document.getElementById('label-s1');
+    bar.style.display = 'block';
+    fill.style.width = '15%';
+    label.textContent = 'Submitting ' + txs.length + ' transactions...';
+    raw.textContent = '';
+
+    var batchBody = txs.map(function(t) { return buildTxRequest(t.hash, t.addr, t.cust); });
+    log('s1', 'log-action', 'Signing HMAC-SHA256 (x-access-key, x-access-sign, x-access-timestamp)');
+
+    var submitResult;
+    try {
+      submitResult = await ellipticFetch('/api/elliptic/analyses/batch', batchBody);
+    } catch(e) {
+      log('s1', 'log-err', 'Network error: ' + e.message);
+      resetBtn(n); return;
+    }
+
+    if (submitResult.status !== 200 || !Array.isArray(submitResult.data)) {
+      log('s1', 'log-err', 'Submit failed: ' + JSON.stringify(submitResult.data).substring(0, 200));
+      fill.style.width = '100%'; fill.style.background = '#dc2626';
+      label.textContent = 'Submit failed';
+      raw.textContent = JSON.stringify(submitResult.data, null, 2);
+      resetBtn(n); return;
+    }
+
+    var analyses = submitResult.data;
+    log('s1', 'log-ok', 'Submitted: ' + analyses.length + ' analyses received with IDs');
+    raw.textContent = JSON.stringify(analyses, null, 2);
+    fill.style.width = '40%';
+
+    // Build results table
+    var owners = ['Entity A', 'Entity A', 'Entity B'];
+    var table = document.getElementById('table-s1');
+    table.innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Status</th></tr>';
+    for (var i = 0; i < analyses.length; i++) {
+      var hashShort = txs[i].hash.substring(0, 10) + '...' + txs[i].hash.slice(-4);
+      table.innerHTML += '<tr><td>' + (i+1) + '</td>' +
+        '<td class="mono" style="font-size:11px">' + hashShort + '</td>' +
+        '<td><span class="badge badge-blue">' + owners[i] + '</span></td>' +
+        '<td id="score-s1' + i + '">—</td>' +
+        '<td id="status-s1' + i + '"><span class="badge badge-gray">pending</span></td></tr>';
+    }
+
+    label.textContent = 'Waiting for processing (min 2s)...';
+    await sleep(2000);
+    log('s1', 'log-action', 'Minimum processing time elapsed — starting poll');
+
+    // Poll each analysis
+    var results = [];
+    for (var i = 0; i < analyses.length; i++) {
+      var aid = analyses[i].id;
+      log('s1', 'log-api', 'GET /v2/analyses/' + aid.substring(0, 8) + '...');
+      var pollResult;
+      try {
+        pollResult = await ellipticFetch('/api/elliptic/analyses/' + aid);
+      } catch(e) {
+        log('s1', 'log-err', 'Poll error: ' + e.message);
+        continue;
+      }
+
+      if (pollResult.status === 200) {
+        var d = pollResult.data;
+        var score = getRiskScore(d);
+        var st = document.getElementById('status-s1' + i);
+        var sc = document.getElementById('score-s1' + i);
+        var status = d.process_status || 'unknown';
+        if (score !== null) {
+          sc.innerHTML = scoreHTML(score);
+          if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
+          else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
+          else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
+        } else {
+          sc.innerHTML = '—';
+          st.innerHTML = '<span class="badge badge-gray">' + status + '</span>';
+        }
+        results.push(d);
+        log('s1', 'log-ok', 'Analysis ' + (i+1) + ': score=' + (score !== null ? score.toFixed(2) : 'null') + ' (' + status + ')');
+      } else {
+        log('s1', 'log-err', 'Analysis ' + (i+1) + ': ' + pollResult.status);
+      }
+      fill.style.width = (40 + ((i+1) / analyses.length) * 60) + '%';
+      await sleep(500);
+    }
+
+    log('s1', 'log-ok', 'All ' + analyses.length + ' transactions screened');
+    fill.style.width = '100%';
+    fill.style.background = '#16a34a';
+    label.textContent = 'All ' + analyses.length + ' complete';
+    raw.textContent = JSON.stringify(results, null, 2);
+    resetBtn(n);
+
+  } else if (n === 2) {
+    // ═══ S2: Batch Wallet Monitoring ═══
+    logClear('s2');
+    if (!checkCreds('s2')) { resetBtn(n); return; }
+
+    var addrs = [
+      { addr: document.getElementById('s2-addr1').value, owner: 'Entity A' },
+      { addr: document.getElementById('s2-addr2').value, owner: 'Entity B' },
+      { addr: document.getElementById('s2-addr3').value, owner: 'Custodian A' },
+      { addr: document.getElementById('s2-addr4').value, owner: 'Custodian B' }
+    ].filter(function(a) { return a.addr; });
+
+    if (addrs.length === 0) { log('s2', 'log-err', 'No addresses provided'); resetBtn(n); return; }
+
+    log('s2', 'log-api', 'POST /v2/wallet — batch ' + addrs.length + ' addresses');
+    btn.textContent = 'Submitting...';
+    var bar = document.getElementById('bar-s2');
+    var fill = document.getElementById('fill-s2');
+    var label = document.getElementById('label-s2');
+    bar.style.display = 'block';
+    fill.style.width = '15%';
+    label.textContent = 'Submitting ' + addrs.length + ' addresses...';
+    raw.textContent = '';
+
+    var batchBody = addrs.map(function(a) { return buildWalletRequest(a.addr, a.owner.toLowerCase().replace(/\s/g,'_')); });
+    log('s2', 'log-action', 'Signing HMAC-SHA256 headers');
+
+    var submitResult;
+    try {
+      submitResult = await ellipticFetch('/api/elliptic/wallet/batch', batchBody);
+    } catch(e) {
+      log('s2', 'log-err', 'Network error: ' + e.message);
+      resetBtn(n); return;
+    }
+
+    if (submitResult.status !== 200 || !Array.isArray(submitResult.data)) {
+      log('s2', 'log-err', 'Submit failed: ' + JSON.stringify(submitResult.data).substring(0, 200));
+      fill.style.width = '100%'; fill.style.background = '#dc2626';
+      label.textContent = 'Submit failed';
+      raw.textContent = JSON.stringify(submitResult.data, null, 2);
+      resetBtn(n); return;
+    }
+
+    var analyses = submitResult.data;
+    log('s2', 'log-ok', 'Submitted: ' + analyses.length + ' wallet analyses received');
+    raw.textContent = JSON.stringify(analyses, null, 2);
+    fill.style.width = '40%';
+
+    // Build results table
+    var table = document.getElementById('table-s2');
+    table.innerHTML = '<tr><th>#</th><th>Address</th><th>Owner</th><th>Risk</th><th>Categories</th><th>Status</th></tr>';
+    for (var i = 0; i < analyses.length; i++) {
+      var addrShort = addrs[i].addr.substring(0, 10) + '...' + addrs[i].addr.slice(-4);
+      table.innerHTML += '<tr><td>' + (i+1) + '</td>' +
+        '<td class="mono" style="font-size:11px">' + addrShort + '</td>' +
+        '<td><span class="badge badge-blue">' + addrs[i].owner + '</span></td>' +
+        '<td id="score-s2' + i + '">—</td>' +
+        '<td id="cat-s2' + i + '">—</td>' +
+        '<td id="status-s2' + i + '"><span class="badge badge-gray">pending</span></td></tr>';
+    }
+
+    label.textContent = 'Waiting for processing (min 3s)...';
+    await sleep(3000);
+    log('s2', 'log-action', 'Minimum processing time elapsed — starting poll');
+
+    var results = [];
+    for (var i = 0; i < analyses.length; i++) {
+      var wid = analyses[i].id;
+      log('s2', 'log-api', 'GET /v2/wallet/' + wid.substring(0, 8) + '...');
+      var pollResult;
+      try {
+        pollResult = await ellipticFetch('/api/elliptic/wallet/' + wid);
+      } catch(e) {
+        log('s2', 'log-err', 'Poll error: ' + e.message);
+        continue;
+      }
+
+      if (pollResult.status === 200) {
+        var d = pollResult.data;
+        var score = getRiskScore(d);
+        var st = document.getElementById('status-s2' + i);
+        var sc = document.getElementById('score-s2' + i);
+        var catEl = document.getElementById('cat-s2' + i);
+        var status = d.process_status || 'unknown';
+        if (score !== null) {
+          sc.innerHTML = scoreHTML(score);
+          if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
+          else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
+          else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
+        } else {
+          sc.innerHTML = '—';
+          st.innerHTML = '<span class="badge badge-gray">' + status + '</span>';
+        }
+        var cats = getClusterCategories(d);
+        if (cats.length > 0) {
+          catEl.innerHTML = '';
+          cats.forEach(function(c) { catEl.innerHTML += '<span class="cat-tag">' + c + '</span>'; });
+        } else {
+          catEl.innerHTML = '<span class="cat-tag">None</span>';
+        }
+        results.push(d);
+        log('s2', 'log-ok', 'Wallet ' + (i+1) + ': score=' + (score !== null ? score.toFixed(2) : 'null') + ' (' + status + ')');
+      } else {
+        log('s2', 'log-err', 'Wallet ' + (i+1) + ': ' + pollResult.status);
+      }
+      fill.style.width = (40 + ((i+1) / analyses.length) * 60) + '%';
+      await sleep(500);
+    }
+
+    log('s2', 'log-ok', 'All ' + analyses.length + ' addresses screened');
+    fill.style.width = '100%';
+    fill.style.background = '#16a34a';
+    label.textContent = 'All ' + analyses.length + ' complete';
+    raw.textContent = JSON.stringify(results, null, 2);
+    resetBtn(n);
+
+  } else if (n === 3) {
+    // ═══ S3: Sync TX Screening (Withdraw) ═══
+    logClear('s3');
+    if (!checkCreds('s3')) { resetBtn(n); return; }
+
+    var hash = document.getElementById('s3-tx').value;
+    var addr = document.getElementById('s3-addr').value;
+    var cust = document.getElementById('s3-cust').value || 'entity_b';
+
+    if (!hash || !addr) { log('s3', 'log-err', 'TX hash and output address required'); resetBtn(n); return; }
+
+    log('s3', 'log-api', 'POST /v2/analyses/synchronous — tx ' + hash.substring(0,10) + '...');
+    btn.textContent = 'Checking...';
+    document.getElementById('label-s3').textContent = 'Sending sync request...';
+    raw.textContent = '';
+
+    var body = buildTxRequest(hash, addr, cust);
+    log('s3', 'log-action', 'Subject: { asset:"holistic", type:"transaction", hash:"' + hash.substring(0,10) + '..." }');
+    log('s3', 'log-action', 'Type: source_of_funds  ·  Customer: ' + cust);
+
+    var result;
+    try {
+      result = await ellipticFetch('/api/elliptic/analyses/sync', body);
+    } catch(e) {
+      log('s3', 'log-err', 'Network error: ' + e.message);
+      resetBtn(n); return;
+    }
+
+    if (result.status !== 200) {
+      log('s3', 'log-err', 'API error ' + result.status + ': ' + JSON.stringify(result.data).substring(0, 200));
+      document.getElementById('label-s3').textContent = 'Request failed';
+      document.getElementById('status-s3').innerHTML = '<span class="badge badge-red">Error</span>';
+      raw.textContent = JSON.stringify(result.data, null, 2);
+      resetBtn(n); return;
+    }
+
+    var d = result.data;
+    var score = getRiskScore(d);
+    var status = d.process_status || 'complete';
+
+    document.getElementById('id-s3').textContent = d.id || '—';
+    document.getElementById('proc-s3').textContent = status;
+    document.getElementById('score-s3').innerHTML = scoreBig(score);
+    document.getElementById('label-s3').textContent = 'Complete — score: ' + (score !== null ? score.toFixed(2) : 'null');
+
+    if (score !== null && score > 7) {
+      document.getElementById('status-s3').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
+      log('s3', 'log-err', 'BLOCKED: Score ' + score.toFixed(2) + '/10');
+    } else if (score !== null && score > 3) {
+      document.getElementById('status-s3').innerHTML = '<span class="badge badge-orange">⚠ Review</span>';
+      log('s3', 'log-warn', 'REVIEW: Score ' + score.toFixed(2) + '/10');
+    } else {
+      document.getElementById('status-s3').innerHTML = '<span class="badge badge-green">✓ Cleared</span>';
+      log('s3', 'log-ok', 'CLEARED: Score ' + (score !== null ? score.toFixed(2) : 'null') + '/10');
+    }
+
+    renderDetail('detail-s3', d);
+    raw.textContent = JSON.stringify(d, null, 2);
+    resetBtn(n);
+
+  } else if (n === 4) {
+    // ═══ S4: Sync Wallet Screening (Deposit) ═══
+    logClear('s4');
+    if (!checkCreds('s4')) { resetBtn(n); return; }
+
+    var addr = document.getElementById('s4-addr').value;
+    var cust = document.getElementById('s4-cust').value || 'entity_a';
+
+    if (!addr) { log('s4', 'log-err', 'Wallet address required'); resetBtn(n); return; }
+
+    log('s4', 'log-api', 'POST /v2/wallet/synchronous — address ' + addr.substring(0,10) + '...');
+    btn.textContent = 'Checking...';
+    document.getElementById('label-s4').textContent = 'Sending sync request...';
+    raw.textContent = '';
+
+    var body = buildWalletRequest(addr, cust);
+    log('s4', 'log-action', 'Subject: { asset:"holistic", type:"address", hash:"' + addr.substring(0,10) + '..." }');
+    log('s4', 'log-action', 'Type: wallet_exposure  ·  Customer: ' + cust);
+
+    var result;
+    try {
+      result = await ellipticFetch('/api/elliptic/wallet/sync', body);
+    } catch(e) {
+      log('s4', 'log-err', 'Network error: ' + e.message);
+      resetBtn(n); return;
+    }
+
+    if (result.status !== 200) {
+      log('s4', 'log-err', 'API error ' + result.status + ': ' + JSON.stringify(result.data).substring(0, 200));
+      document.getElementById('label-s4').textContent = 'Request failed';
+      document.getElementById('status-s4').innerHTML = '<span class="badge badge-red">Error</span>';
+      raw.textContent = JSON.stringify(result.data, null, 2);
+      resetBtn(n); return;
+    }
+
+    var d = result.data;
+    var score = getRiskScore(d);
+    var status = d.process_status || 'complete';
+
+    document.getElementById('id-s4').textContent = d.id || '—';
+    document.getElementById('proc-s4').textContent = status;
+    document.getElementById('score-s4').innerHTML = scoreBig(score);
+    document.getElementById('label-s4').textContent = 'Complete — score: ' + (score !== null ? score.toFixed(2) : 'null');
+
+    if (score !== null && score > 7) {
+      document.getElementById('status-s4').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
+      log('s4', 'log-err', 'BLOCKED: Score ' + score.toFixed(2) + '/10');
+    } else if (score !== null && score > 3) {
+      document.getElementById('status-s4').innerHTML = '<span class="badge badge-orange">⚠ Review</span>';
+      log('s4', 'log-warn', 'REVIEW: Score ' + score.toFixed(2) + '/10');
+    } else {
+      document.getElementById('status-s4').innerHTML = '<span class="badge badge-green">✓ Cleared</span>';
+      log('s4', 'log-ok', 'CLEARED: Score ' + (score !== null ? score.toFixed(2) : 'null') + '/10');
+    }
+
+    renderDetail('detail-s4', d);
+    raw.textContent = JSON.stringify(d, null, 2);
+    resetBtn(n);
+  }
+}
 
 function renderDetail(divId, data) {
   var div = document.getElementById(divId);
@@ -317,230 +781,45 @@ function renderDetail(divId, data) {
   div.style.display = 'block';
   var html = '';
 
-  // Rules
-  var evals = [];
-  if (data.evaluation_detail && Array.isArray(data.evaluation_detail)) {
-    evals = data.evaluation_detail.filter(function(e) { return (e.risk_score || 0) > 0; });
-  }
-  if (evals.length > 0) {
+  // Triggered rules
+  var rules = getRules(data);
+  if (rules.length > 0) {
     html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Triggered Rules</span>';
-    evals.forEach(function(r) {
-      html += '<div class="result-row"><span class="rk">Rule</span><span class="rv">' + r.rule_name + ' <span style="color:#888;font-size:10px">(' + r.risk_score.toFixed(2) + ')</span></span></div>';
+    rules.forEach(function(r) {
+      html += '<div class="result-row"><span class="rk">Rule</span><span class="rv">' + (r.rule_name || 'Unknown') + ' <span style="color:#888;font-size:10px">(' + (r.risk_score || 0).toFixed(2) + ')</span></span></div>';
     });
     html += '</div>';
   }
 
   // Entity
-  var entityName = null, entityCat = null;
-  var contribs = data.contributions;
-  if (Array.isArray(contribs) && contribs.length > 0) {
-    var ents = contribs[0].entities;
-    if (ents && ents.length > 0 && ents[0].name && ents[0].name !== 'Unknown') {
-      entityName = ents[0].name; entityCat = ents[0].category;
-    }
-  }
-  if (!entityName && data.cluster_entities && Array.isArray(data.cluster_entities) && data.cluster_entities.length > 0 && data.cluster_entities[0].name !== 'Unknown') {
-    entityName = data.cluster_entities[0].name; entityCat = data.cluster_entities[0].category;
-  }
-  if (entityName) {
-    html += '<div class="result-row"><span class="rk">Entity</span><span class="rv">' + entityName + (entityCat ? ' <span style="color:#888;font-size:10px">(' + entityCat + ')</span>' : '') + '</span></div>';
+  var entity = getEntity(data);
+  if (entity) {
+    html += '<div class="result-row"><span class="rk">Top Entity</span><span class="rv">' + entity.name + ' <span style="color:#888;font-size:10px">(' + entity.category + ')</span></span></div>';
   }
 
-  html += '<div class="result-row"><span class="rk">Analysis ID</span><span class="rv mono">' + data.id + '</span></div>';
+  // Cluster entities (wallet)
+  if (data.cluster_entities && data.cluster_entities.length > 0) {
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Cluster</span>';
+    data.cluster_entities.forEach(function(e) {
+      html += '<div class="result-row"><span class="rk">' + (e.category || 'Label') + '</span><span class="rv">' + e.name + '</span></div>';
+    });
+    html += '</div>';
+  }
 
   div.innerHTML = html;
 }
 
-async function runScenario(n) {
+function resetBtn(n) {
   var btn = document.getElementById('btn-s' + n);
-  btn.disabled = true;
-  btn.className = 'btn btn-run';
-  btn.style.background = '#94a3b8';
-  btn.style.cursor = 'not-allowed';
-
-  var raw = document.getElementById('raw-s' + n);
-
-  if (n === 1) {
-    // Batch TX - submit + poll
-    logClear('s1');
-    log('s1', 'log-api', 'POST /v2/analyses — batch 3 transactions');
-    btn.textContent = 'Submitting...';
-    var bar = document.getElementById('bar-s1');
-    var fill = document.getElementById('fill-s1');
-    var label = document.getElementById('label-s1');
-    bar.style.display = 'block';
-    fill.style.width = '15%';
-    label.textContent = 'Submitting 3 transactions...';
-    raw.textContent = '';
-    log('s1', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
-    await sleep(600);
-
-    fill.style.width = '40%';
-    var waitMs = 800 * 3;
-    log('s1', 'log-warn', 'Waiting ' + waitMs + 'ms (800ms × 3 items) before first poll...');
-    label.textContent = 'Processing (800ms × 3 = 2,400ms)...';
-    await sleep(waitMs);
-    log('s1', 'log-action', 'Minimum processing time elapsed — starting poll');
-
-    fill.style.width = '70%';
-    label.textContent = 'Polling results...';
-
-    var items = mockResults.s1;
-    var ids = ['s1a', 's1b', 's1c'];
-    var txHashes = ['0xd8537c...a4e1', '0x2c92fa...d0b3', '0xfa3b91...c0d4'];
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var score = Math.round(item.risk_score * 100) / 100;
-      log('s1', 'log-api', 'GET /v2/analyses/' + item.id + ' → ' + (score <= 3 ? '200 OK (clean)' : score <= 7 ? '200 OK (review)' : '200 OK (flagged)'));
-      document.getElementById('score-' + ids[i]).innerHTML = scoreHTML(score);
-      var st = document.getElementById('status-' + ids[i]);
-      if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
-      else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
-      else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
-      fill.style.width = (40 + (i + 1) * 20) + '%';
-      await sleep(300);
-    }
-
-    log('s1', 'log-ok', 'All 3 transactions screened successfully');
-    fill.style.width = '100%';
-    fill.style.background = '#16a34a';
-    label.textContent = 'All 3 complete';
-    raw.textContent = JSON.stringify(items, null, 2);
-
-    btn.disabled = false;
-    btn.textContent = 'Run Batch';
-
-  } else if (n === 2) {
-    // Batch Wallet - submit + poll
-    logClear('s2');
-    log('s2', 'log-api', 'POST /v2/wallet — batch 4 addresses (holistic exposure)');
-    btn.textContent = 'Submitting...';
-    var bar = document.getElementById('bar-s2');
-    var fill = document.getElementById('fill-s2');
-    var label = document.getElementById('label-s2');
-    bar.style.display = 'block';
-    fill.style.width = '15%';
-    label.textContent = 'Submitting 4 addresses...';
-    raw.textContent = '';
-    log('s2', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
-    await sleep(600);
-
-    fill.style.width = '40%';
-    var waitMs = 800 * 4;
-    log('s2', 'log-warn', 'Waiting ' + waitMs + 'ms (800ms × 4 items) before first poll...');
-    label.textContent = 'Processing (800ms × 4 = 3,200ms)...';
-    await sleep(waitMs);
-    log('s2', 'log-action', 'Minimum processing time elapsed — starting poll');
-
-    fill.style.width = '70%';
-    label.textContent = 'Polling results...';
-
-    var items = mockResults.s2;
-    var ids = ['s2a', 's2b', 's2c', 's2d'];
-    var addrs = ['0x5d3a...f812', '0x8f2c...a47e', '0x7c4e...b93a', '0x2d5a...e81c'];
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var score = Math.round(item.risk_score * 100) / 100;
-      log('s2', 'log-api', 'GET /v2/wallet/' + item.id + ' → ' + (score <= 3 ? '200 OK (clean)' : score <= 7 ? '200 OK (review)' : '200 OK (flagged)'));
-      document.getElementById('score-' + ids[i]).innerHTML = scoreHTML(score);
-      // Categories
-      var cats = [];
-      if (item.cluster_entities) {
-        item.cluster_entities.forEach(function(e) { if (e.category) cats.push(e.name); });
-      }
-      if (item.contributions) {
-        item.contributions.forEach(function(c) {
-          if (c.entities) c.entities.forEach(function(e) { if (e.category && cats.indexOf(e.name) < 0) cats.push(e.name); });
-        });
-      }
-      var catEl = document.getElementById('cat-' + ids[i]);
-      if (cats.length > 0) {
-        catEl.innerHTML = '';
-        cats.forEach(function(c) { catEl.innerHTML += '<span class="cat-tag">' + c + '</span>'; });
-      } else {
-        catEl.innerHTML = '<span class="cat-tag">None</span>';
-      }
-      var st = document.getElementById('status-' + ids[i]);
-      if (score <= 3) st.innerHTML = '<span class="badge badge-green">Clean</span>';
-      else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
-      else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
-      fill.style.width = (40 + (i + 1) * 15) + '%';
-      await sleep(300);
-    }
-
-    log('s2', 'log-ok', 'All 4 addresses screened successfully');
-    fill.style.width = '100%';
-    fill.style.background = '#16a34a';
-    label.textContent = 'All 4 complete';
-    raw.textContent = JSON.stringify(items, null, 2);
-
-    btn.disabled = false;
-    btn.textContent = 'Run Batch';
-
-  } else if (n === 3) {
-    // Withdraw - sync (flagged!)
-    logClear('s3');
-    log('s3', 'log-api', 'POST /v2/analyses/synchronous — tx 0x196670...b2f8 (source_of_funds)');
-    btn.textContent = 'Checking...';
-    document.getElementById('label-s3').textContent = 'Sending sync request...';
-    raw.textContent = '';
-    log('s3', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
-    log('s3', 'log-action', 'Payload: {"customer_reference":"entity_b","subject":{"hash":"0x196670...b2f8","type":"transaction","asset":"ETH"},"type":"source_of_funds"}');
-    await sleep(800);
-    log('s3', 'log-warn', 'Waiting for synchronous analysis (blocking call)...');
-    await sleep(400);
-
-    var data = mockResults.s3;
-    var score = Math.round(data.risk_score * 100) / 100;
-    log('s3', 'log-api', 'Response: risk_score=' + score + ', analysis_id=' + data.id);
-    document.getElementById('score-s3').innerHTML = scoreBig(score);
-    document.getElementById('status-s3').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
-    document.getElementById('label-s3').textContent = 'Complete — BLOCK TRANSFER';
-    log('s3', 'log-err', 'BLOCKED: Score 8.7/10 — Sanctioned Entity Interaction (8.70)');
-    renderDetail('detail-s3', data);
-    raw.textContent = JSON.stringify(data, null, 2);
-
-    btn.disabled = false;
-    btn.textContent = 'Run Check';
-
-  } else if (n === 4) {
-    // Deposit - sync (clean)
-    logClear('s4');
-    log('s4', 'log-api', 'POST /v2/analyses/synchronous — tx 0xfa3b91...c0d4 (source_of_funds)');
-    btn.textContent = 'Checking...';
-    document.getElementById('label-s4').textContent = 'Sending sync request...';
-    raw.textContent = '';
-    log('s4', 'log-action', 'Encoding HMAC-SHA256 headers (x-access-key, x-access-sign)');
-    log('s4', 'log-action', 'Payload: {"customer_reference":"entity_a","subject":{"hash":"0xfa3b91...c0d4","type":"transaction","asset":"CLCC"},"type":"source_of_funds"}');
-    await sleep(800);
-    log('s4', 'log-warn', 'Waiting for synchronous analysis (blocking call)...');
-    await sleep(400);
-
-    var data = mockResults.s4;
-    var score = Math.round(data.risk_score * 100) / 100;
-    log('s4', 'log-api', 'Response: risk_score=' + score + ', analysis_id=' + data.id);
-    document.getElementById('score-s4').innerHTML = scoreBig(score);
-    document.getElementById('status-s4').innerHTML = '<span class="badge badge-green">✓ Clean — Credit Account</span>';
-    document.getElementById('label-s4').textContent = 'Complete — CREDIT ALLOWED';
-    log('s4', 'log-ok', 'CLEARED: Score 1.1/10 — No triggered rules');
-    renderDetail('detail-s4', data);
-    raw.textContent = JSON.stringify(data, null, 2);
-
-    btn.disabled = false;
-    btn.textContent = 'Run Check';
-  }
+  btn.disabled = false;
+  btn.textContent = n <= 2 ? 'Run Batch' : 'Run Check';
+  btn.style.background = '';
+  btn.style.cursor = '';
 }
 
 function resetScenario(n) {
   logClear('s' + n);
-  var btn = document.getElementById('btn-s' + n);
-  btn.textContent = n <= 2 ? 'Run Batch' : 'Run Check';
-  btn.className = 'btn btn-run';
-  btn.style.background = '';
-  btn.style.cursor = '';
-  btn.onclick = function() { runScenario(n); };
-  btn.disabled = false;
-
+  resetBtn(n);
   var raw = document.getElementById('raw-s' + n);
   raw.textContent = '';
   raw.classList.remove('show');
@@ -550,46 +829,41 @@ function resetScenario(n) {
     document.getElementById('fill-s1').style.width = '0%';
     document.getElementById('fill-s1').style.background = '#2563eb';
     document.getElementById('label-s1').textContent = '';
-    ['s1a','s1b','s1c'].forEach(function(id) {
-      document.getElementById('score-' + id).textContent = '—';
-      document.getElementById('status-' + id).innerHTML = '<span class="badge badge-gray">pending</span>';
-    });
+    document.getElementById('table-s1').innerHTML = '<tr><th>#</th><th>TX Hash</th><th>Customer</th><th>Risk</th><th>Status</th></tr>';
   } else if (n === 2) {
     document.getElementById('bar-s2').style.display = 'none';
     document.getElementById('fill-s2').style.width = '0%';
     document.getElementById('fill-s2').style.background = '#2563eb';
     document.getElementById('label-s2').textContent = '';
-    ['s2a','s2b','s2c','s2d'].forEach(function(id) {
-      document.getElementById('score-' + id).textContent = '—';
-      document.getElementById('cat-' + id).textContent = '—';
-      document.getElementById('status-' + id).innerHTML = '<span class="badge badge-gray">pending</span>';
-    });
+    document.getElementById('table-s2').innerHTML = '<tr><th>#</th><th>Address</th><th>Owner</th><th>Risk</th><th>Categories</th><th>Status</th></tr>';
   } else if (n === 3) {
     document.getElementById('label-s3').textContent = '';
     document.getElementById('score-s3').textContent = '—';
     document.getElementById('status-s3').innerHTML = '<span class="badge badge-gray">pending</span>';
+    document.getElementById('id-s3').textContent = '—';
+    document.getElementById('proc-s3').textContent = '—';
     document.getElementById('detail-s3').style.display = 'none';
     document.getElementById('detail-s3').innerHTML = '';
   } else if (n === 4) {
     document.getElementById('label-s4').textContent = '';
     document.getElementById('score-s4').textContent = '—';
     document.getElementById('status-s4').innerHTML = '<span class="badge badge-gray">pending</span>';
+    document.getElementById('id-s4').textContent = '—';
+    document.getElementById('proc-s4').textContent = '—';
     document.getElementById('detail-s4').style.display = 'none';
     document.getElementById('detail-s4').innerHTML = '';
   }
 }
+
 function resetAll() {
   for (var i = 1; i <= 4; i++) resetScenario(i);
 }
 
-function loadEllipticSettings() {
-  try {
-    var s = JSON.parse(localStorage.getItem('compliance-demo-settings') || '{}');
-    if (s.ellipticEndpoint) console.log('[Settings] Elliptic endpoint:', s.ellipticEndpoint);
-    if (s.ellipticKey) console.log('[Settings] Elliptic key:', s.ellipticKey.substring(0, 8) + '...');
-  } catch(e) {}
-}
-loadEllipticSettings();
+// Initialize input fields on page load
+renderS1Inputs();
+renderS2Inputs();
+renderS3Inputs();
+renderS4Inputs();
 </script>
 
 </body>

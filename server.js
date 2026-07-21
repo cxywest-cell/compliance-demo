@@ -1703,6 +1703,135 @@ app.post('/api/wallet/transfer', async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// Elliptic AML API Proxy (HMAC-SHA256 signing server-side)
+// ═══════════════════════════════════════════════════════════════
+
+function ellipticSign(secret, timestamp, method, reqPath, bodyStr) {
+  // REQUEST_TEXT = timestamp + METHOD(upper) + path(lower) + body("{}" if GET)
+  var text = timestamp + method.toUpperCase() + reqPath.toLowerCase() + (bodyStr || '{}');
+  var key = Buffer.from(secret, 'base64'); // secret is base64-encoded
+  return crypto.createHmac('sha256', key).update(text).digest('base64');
+}
+
+function ellipticProxy(method, apiPath, body, apiKey, apiSecret, host) {
+  var bodyStr = (method === 'GET' || !body) ? '{}' : JSON.stringify(body);
+  var timestamp = Date.now().toString();
+  // Sign with FULL path including /v2 prefix (must match the HTTP request path)
+  var fullPath = '/v2' + apiPath;
+  var signature = ellipticSign(apiSecret, timestamp, method, fullPath, bodyStr);
+
+  var options = {
+    hostname: host || 'aml-api.elliptic.co',
+    path: fullPath,
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-access-key': apiKey,
+      'x-access-sign': signature,
+      'x-access-timestamp': timestamp
+    }
+  };
+
+  return new Promise(function(resolve, reject) {
+    var req = https.request(options, function(res) {
+      var data = '';
+      res.on('data', function(d) { data += d; });
+      res.on('end', function() {
+        var parsed;
+        try { parsed = JSON.parse(data); } catch(e) { parsed = data; }
+        resolve({ status: res.statusCode, data: parsed, headers: res.headers });
+      });
+    });
+    req.on('error', reject);
+    if (bodyStr && bodyStr !== '{}') req.write(bodyStr);
+    req.end();
+  });
+}
+
+// Read Elliptic creds from request headers (sent by browser from localStorage settings)
+function getEllipticCreds(req) {
+  var apiKey = req.headers['x-elliptic-key'];
+  var apiSecret = req.headers['x-elliptic-secret'];
+  var endpoint = req.headers['x-elliptic-endpoint'] || 'aml-api.elliptic.co';
+  if (!apiKey || !apiSecret) return null;
+  return { apiKey: apiKey, apiSecret: apiSecret, host: endpoint };
+}
+
+// POST /api/elliptic/analyses/sync  — synchronous single TX analysis
+app.post('/api/elliptic/analyses/sync', async function(req, res) {
+  var creds = getEllipticCreds(req);
+  if (!creds) return res.status(400).json({ error: 'Missing Elliptic API credentials (x-elliptic-key, x-elliptic-secret headers)' });
+  try {
+    var result = await ellipticProxy('POST', '/analyses/synchronous', req.body, creds.apiKey, creds.apiSecret, creds.host);
+    res.status(result.status).json(result.data);
+  } catch(e) {
+    res.status(502).json({ error: 'Elliptic proxy error: ' + e.message });
+  }
+});
+
+// POST /api/elliptic/analyses/batch  — batch TX analysis (async, returns IDs)
+app.post('/api/elliptic/analyses/batch', async function(req, res) {
+  var creds = getEllipticCreds(req);
+  if (!creds) return res.status(400).json({ error: 'Missing Elliptic API credentials' });
+  try {
+    var result = await ellipticProxy('POST', '/analyses', req.body, creds.apiKey, creds.apiSecret, creds.host);
+    res.status(result.status).json(result.data);
+  } catch(e) {
+    res.status(502).json({ error: 'Elliptic proxy error: ' + e.message });
+  }
+});
+
+// GET /api/elliptic/analyses/:id  — poll for TX analysis result
+app.get('/api/elliptic/analyses/:id', async function(req, res) {
+  var creds = getEllipticCreds(req);
+  if (!creds) return res.status(400).json({ error: 'Missing Elliptic API credentials' });
+  try {
+    var path = '/analyses/' + req.params.id;
+    var result = await ellipticProxy('GET', path, null, creds.apiKey, creds.apiSecret, creds.host);
+    res.status(result.status).json(result.data);
+  } catch(e) {
+    res.status(502).json({ error: 'Elliptic proxy error: ' + e.message });
+  }
+});
+
+// POST /api/elliptic/wallet/sync  — synchronous single wallet analysis
+app.post('/api/elliptic/wallet/sync', async function(req, res) {
+  var creds = getEllipticCreds(req);
+  if (!creds) return res.status(400).json({ error: 'Missing Elliptic API credentials' });
+  try {
+    var result = await ellipticProxy('POST', '/wallet/synchronous', req.body, creds.apiKey, creds.apiSecret, creds.host);
+    res.status(result.status).json(result.data);
+  } catch(e) {
+    res.status(502).json({ error: 'Elliptic proxy error: ' + e.message });
+  }
+});
+
+// POST /api/elliptic/wallet/batch  — batch wallet analysis (async)
+app.post('/api/elliptic/wallet/batch', async function(req, res) {
+  var creds = getEllipticCreds(req);
+  if (!creds) return res.status(400).json({ error: 'Missing Elliptic API credentials' });
+  try {
+    var result = await ellipticProxy('POST', '/wallet', req.body, creds.apiKey, creds.apiSecret, creds.host);
+    res.status(result.status).json(result.data);
+  } catch(e) {
+    res.status(502).json({ error: 'Elliptic proxy error: ' + e.message });
+  }
+});
+
+// GET /api/elliptic/wallet/:id  — poll for wallet analysis result
+app.get('/api/elliptic/wallet/:id', async function(req, res) {
+  var creds = getEllipticCreds(req);
+  if (!creds) return res.status(400).json({ error: 'Missing Elliptic API credentials' });
+  try {
+    var path = '/wallet/' + req.params.id;
+    var result = await ellipticProxy('GET', path, null, creds.apiKey, creds.apiSecret, creds.host);
+    res.status(result.status).json(result.data);
+  } catch(e) {
+    res.status(502).json({ error: 'Elliptic proxy error: ' + e.message });
+  }
+});
+
 app.listen(8000, '0.0.0.0', () => {
   console.log('Server running on http://0.0.0.0:8000');
   console.log('  Dashboard:  http://localhost:8000/');
