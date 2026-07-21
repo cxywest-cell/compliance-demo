@@ -688,12 +688,10 @@ async function createTransfer() {
     amount: String(amount),
     transactionValue: { amount: String(amount), currency: 'USD' },
     agents: [
-      { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': s.caDid, role: 'SourceAddress' },
-      { '@id': s.caDid, 'for': s.eaDid, role: 'Custodian' },
+      { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': s.eaDid, role: 'SourceAddress' },
       { '@id': s.eaDid, 'for': origId, role: 'VASP' },
-      { '@id': s.cbDid, 'for': s.ebDid, role: 'Custodian' },
       { '@id': s.ebDid, 'for': beneId, role: 'VASP' },
-      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': s.cbDid, role: 'SettlementAddress' }
+      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': s.ebDid, role: 'SettlementAddress' }
     ]
   };
 
