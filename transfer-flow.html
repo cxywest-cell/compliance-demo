@@ -783,7 +783,7 @@ async function fetchIncomingTransfers() {
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    var txs = data.transfers || data || [];
+    var txs = data.data || data.transfers || [];
     if (!Array.isArray(txs)) txs = [txs];
     if (txs.length === 0) {
       listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>No incoming transfers.</p></div>';
@@ -796,12 +796,13 @@ async function fetchIncomingTransfers() {
       var txId = t['@id'] || t.id;
       var status = t.status || '—';
       var amount = t.amount || '—';
+      var assetLabel = t.asset ? String(t.asset).split(':').pop().slice(0,8) : 'asset';
       var initiator = t.initiator ? String(t.initiator).split(':').slice(-2)[0] : '—';
       var statusColor = status === 'SETTLED' ? '#059669' : status === 'AUTHORIZED' ? '#2563eb' : status === 'OUTGOING' || status === 'INCOMING' ? '#d97706' : '#666';
       var cls = selectedTxId === txId ? 'wh-item selected' : 'wh-item';
       html += '<div class="' + cls + '" style="padding:8px 10px" onclick="selectIncomingTransfer(\'' + txId + '\')">' +
         '<div style="flex:1">' +
-          '<div style="font-weight:600;font-size:12px">' + esc(amount) + ' KLCC <span style="font-size:10px;color:#888">from ' + esc(initiator) + '</span></div>' +
+          '<div style="font-weight:600;font-size:12px">' + esc(amount) + ' ' + esc(assetLabel) + ' <span style="font-size:10px;color:#888">from ' + esc(initiator) + '</span></div>' +
           '<div style="font-size:10px;color:#888;margin-top:2px">' + esc(String(txId).slice(0, 20)) + '...</div>' +
         '</div>' +
         '<span class="transfer-status ts-' + status.toLowerCase() + '" style="font-size:10px">' + esc(status) + '</span>' +
@@ -829,6 +830,34 @@ async function selectIncomingTransfer(txId) {
   await fetchTapPolicies();
 }
 
+// Helper: extract PII from IVMS101 or flat format
+function extractPII(person, kind) {
+  if (!person) return { name: '—', account: '—', dob: '—' };
+  // Try flat fields first (what we sent)
+  var name = person.name || person.legalName;
+  var account = person.account && person.account[0];
+  var dob = person.dateOfBirth;
+  
+  // Try IVMS101 nested format (originatorPersons / beneficiaryPersons)
+  if (!name && person[kind + 'Persons']) {
+    var persons = person[kind + 'Persons'];
+    if (Array.isArray(persons) && persons.length > 0) {
+      var np = persons[0].naturalPerson || persons[0].legalPerson || persons[0];
+      if (np && np.name && np.name.nameIdentifier) {
+        var ids = np.name.nameIdentifier;
+        if (Array.isArray(ids) && ids.length > 0) {
+          name = [ids[0].secondaryIdentifier, ids[0].primaryIdentifier].filter(Boolean).join(' ');
+          if (!name) name = ids[0].nameIdentifier || ids[0].primaryIdentifier;
+        }
+      }
+      if (!dob && np && np.dateAndPlaceOfBirth) {
+        dob = np.dateAndPlaceOfBirth.dateOfBirth || np.dateAndPlaceOfBirth;
+      }
+    }
+  }
+  return { name: name || '—', account: account || '—', dob: dob || '—' };
+}
+
 // Fetch full transfer details
 async function fetchTransferDetails() {
   if (!selectedTxId) return;
@@ -839,7 +868,8 @@ async function fetchTransferDetails() {
   try {
     var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(s.ebApikey) +
       '&clientSecret=' + encodeURIComponent(s.ebApisecret) +
-      '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(selectedTxId));
+      '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(selectedTxId) +
+      '&decrypt=true');
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
@@ -847,30 +877,25 @@ async function fetchTransferDetails() {
     selectedTxData = t;
     var status = t.status || '—';
     var amount = t.amount || '—';
-    var asset = t.asset ? String(t.asset).split(':').pop() : 'KLCC';
+    var asset = t.asset ? String(t.asset).split(':').pop() : 'asset';
     var initiator = t.initiator || '—';
-
-    // Extract agent names for route display
-    var agents = t.agents || [];
-    var originatorName = '—', beneficiaryName = '—';
-    for (var i = 0; i < agents.length; i++) {
-      if (agents[i].role === 'VASP' && !originatorName || agents[i].role === 'VASP' && originatorName === '—') {
-        if (agents[i].name) originatorName = agents[i].name;
-      }
-    }
+    var direction = t.direction || '—';
 
     var summaryHtml =
       '<div class="tx-summary">' +
         '<div class="tx-id mono">' + esc(selectedTxId) + '</div>' +
         '<div class="tx-amount">' + esc(amount) + ' <span style="font-size:14px;color:#888">' + esc(asset) + '</span></div>' +
-        '<div class="tx-route">From <span>' + esc(initiator.split(':').slice(-2)[0]) + '</span></div>' +
+        '<div class="tx-route">From <span>' + esc(initiator.split(':').slice(-2)[0]) + '</span> · ' + esc(direction) + '</div>' +
         '<div style="margin-top:8px"><span class="transfer-status ts-' + status.toLowerCase() + '">' + esc(status) + '</span></div>' +
       '</div>';
 
-    var detailHtml = '<div style="margin-top:10px">';
+    // Agent chain
+    var agents = t.agents || [];
+    var detailHtml = '<div style="margin-top:10px;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Agent Chain</div>';
     for (var j = 0; j < agents.length; j++) {
       var a = agents[j];
-      var aName = a.name || String(a.agent && a.agent['@id'] || '—').split(':').slice(-2)[0];
+      var aDid = (a.agent && a.agent['@id']) || a['@id'] || '—';
+      var aName = a.name || String(aDid).split(':').slice(-2)[0];
       var aRole = a.role || '—';
       var aStatus = a.status || '—';
       detailHtml += '<div class="cred-row">' +
@@ -878,28 +903,32 @@ async function fetchTransferDetails() {
         '<span class="v">' + esc(aName) + ' <span style="font-size:10px;color:#888">(' + esc(aStatus) + ')</span></span>' +
       '</div>';
     }
-    detailHtml += '</div>';
+
+    // Collapsible raw JSON
+    var rawJson = esc(JSON.stringify(t, null, 2));
+    detailHtml += '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:10px;color:#5b4cdb;font-weight:600">Raw API Response (JSON)</summary>' +
+      '<pre class="mono" style="font-size:9px;max-height:300px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:6px;border:1px solid #e8e8e8">' + rawJson + '</pre></details>';
 
     body.innerHTML = summaryHtml + detailHtml;
 
-    // Populate PII panel in Step 5 (Compliance Decision)
-    var orig = t.originator || {};
-    var bene = t.beneficiary || {};
+    // Populate PII panel in Step 5 using IVMS101-aware extraction
+    var origPii = extractPII(t.originator, 'originator');
+    var benePii = extractPII(t.beneficiary, 'beneficiary');
     var reviewBody = document.getElementById('eb-review-body');
     reviewBody.innerHTML = '<div style="padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
       '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
         '<div>' +
           '<div style="font-size:9px;font-weight:600;color:#5b4cdb;margin-bottom:2px">ORIGINATOR</div>' +
-          '<div style="font-size:11px">' + esc(orig.name || orig.legalName || '—') + '</div>' +
-          '<div class="mono" style="font-size:9px;color:#888">' + esc((orig.account && orig.account[0]) || '—') + '</div>' +
-          (orig.dateOfBirth ? '<div style="font-size:10px;color:#888">DOB: ' + esc(orig.dateOfBirth) + '</div>' : '') +
+          '<div style="font-size:11px">' + esc(origPii.name) + '</div>' +
+          '<div class="mono" style="font-size:9px;color:#888">' + esc(origPii.account) + '</div>' +
+          (origPii.dob !== '—' ? '<div style="font-size:10px;color:#888">DOB: ' + esc(origPii.dob) + '</div>' : '') +
         '</div>' +
         '<div>' +
           '<div style="font-size:9px;font-weight:600;color:#06b6d4;margin-bottom:2px">BENEFICIARY</div>' +
-          '<div style="font-size:11px">' + esc(bene.name || bene.legalName || '—') + '</div>' +
-          '<div class="mono" style="font-size:9px;color:#888">' + esc((bene.account && bene.account[0]) || '—') + '</div>' +
-          (bene.dateOfBirth ? '<div style="font-size:10px;color:#888">DOB: ' + esc(bene.dateOfBirth) + '</div>' : '') +
+          '<div style="font-size:11px">' + esc(benePii.name) + '</div>' +
+          '<div class="mono" style="font-size:9px;color:#888">' + esc(benePii.account) + '</div>' +
+          (benePii.dob !== '—' ? '<div style="font-size:10px;color:#888">DOB: ' + esc(benePii.dob) + '</div>' : '') +
         '</div>' +
       '</div>' +
     '</div>';

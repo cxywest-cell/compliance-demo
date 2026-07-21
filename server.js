@@ -751,10 +751,14 @@ app.get('/api/notabene/transfers', async (req, res) => {
 
 // Get specific transfer
 app.get('/api/notabene/transfer', async (req, res) => {
-  const { clientId, clientSecret, did, txId } = req.query;
+  const { clientId, clientSecret, did, txId, decrypt } = req.query;
   try {
     const token = await getNotabeneToken(clientId, clientSecret);
-    const data = await notabeneApi('GET', '/entity/' + did + '/tx/' + txId, token);
+    let path = '/entity/' + did + '/tx/' + txId;
+    const params = [];
+    if (decrypt === 'true') params.push('decrypt=true', 'sanitize=false');
+    if (params.length) path += '?' + params.join('&');
+    const data = await notabeneApi('GET', path, token);
     res.json(data);
   } catch(e) {
     res.status(500).json({ error: e.message });
