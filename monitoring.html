@@ -225,13 +225,13 @@ function logClear(id) {
 }
 
 function scoreHTML(s) {
-  if (s === null || s === undefined) return '—';
+  if (s === null || s === undefined) return '<span class="badge badge-green">CLEAN</span>';
   var cls = s <= 3 ? 'badge-green' : s <= 7 ? 'badge-orange' : 'badge-red';
   return '<span class="badge ' + cls + '">' + s.toFixed(1) + '</span>';
 }
 
 function scoreBig(s) {
-  if (s === null || s === undefined) return '—';
+  if (s === null || s === undefined) return '<span style="color:#16a34a">CLEAN</span>';
   var c = s <= 3 ? '#16a34a' : s <= 7 ? '#d97706' : '#dc2626';
   return '<span style="color:' + c + '">' + s.toFixed(1) + ' / 10</span>';
 }
@@ -299,24 +299,53 @@ function getRules(data) {
   var ed = data.evaluation_detail;
   if (!ed) return [];
   if (Array.isArray(ed)) return ed.filter(function(e) { return (e.risk_score || 0) > 0; });
-  // Wallet format: {source:[], destination:[]}
+  // Wallet format: {source:[], destination:[]} — return with direction labels
   var all = [];
-  if (ed.source) all = all.concat(ed.source);
-  if (ed.destination) all = all.concat(ed.destination);
-  return all.filter(function(e) { return (e.risk_score || 0) > 0; });
+  (ed.source || []).forEach(function(r) { all.push({direction:'source', rule:r}); });
+  (ed.destination || []).forEach(function(r) { all.push({direction:'destination', rule:r}); });
+  return all.filter(function(e) { return (e.rule.risk_score || 0) > 0; });
 }
 
-// Extract entity name + category from contributions (TX flat array, Wallet {source,destination})
+// Extract entity name + category from contributions
 function getEntity(data) {
   var contribs = data.contributions;
   if (!contribs) return null;
   var list = Array.isArray(contribs) ? contribs : ((contribs.source || []).concat(contribs.destination || []));
   if (list.length === 0) return null;
-  var ents = list[0].entities;
-  if (ents && ents.length > 0 && ents[0].name && ents[0].name !== 'Unknown') {
-    return { name: ents[0].name, category: ents[0].category };
+  // Find first contribution with a named entity (not Unknown)
+  for (var i = 0; i < list.length; i++) {
+    var ents = list[i].entities;
+    if (ents && ents.length > 0 && ents[0].name && ents[0].name !== 'Unknown') {
+      return { name: ents[0].name, category: ents[0].category, pct: list[i].contribution_percentage };
+    }
   }
   return null;
+}
+
+// Get blockchain info for display
+function getBlockchainInfo(data) {
+  var bi = data.blockchain_info || {};
+  var lines = [];
+  // TX info
+  if (bi.transaction) {
+    if (bi.transaction.time) lines.push({label:'TX Time', value: bi.transaction.time});
+    if (bi.transaction.value && bi.transaction.value.usd) lines.push({label:'TX Value', value: '$' + bi.transaction.value.usd.toFixed(2)});
+  }
+  // Wallet cluster info
+  if (bi.cluster) {
+    if (bi.cluster.inflow_value && bi.cluster.inflow_value.usd != null) lines.push({label:'Cluster Inflow', value: '$' + bi.cluster.inflow_value.usd.toLocaleString()});
+    if (bi.cluster.outflow_value && bi.cluster.outflow_value.usd != null) lines.push({label:'Cluster Outflow', value: '$' + bi.cluster.outflow_value.usd.toLocaleString()});
+  }
+  return lines;
+}
+
+// Get risk_score_detail for wallet
+function getRiskDetail(data) {
+  var rsd = data.risk_score_detail || {};
+  var lines = [];
+  if (rsd.source !== undefined && rsd.source !== null) lines.push({label:'Source Risk', value: rsd.source.toFixed(1), cls: rsd.source > 5 ? 'badge-red' : rsd.source > 3 ? 'badge-orange' : 'badge-green'});
+  if (rsd.destination !== undefined && rsd.destination !== null) lines.push({label:'Dest Risk', value: rsd.destination.toFixed(1), cls: rsd.destination > 5 ? 'badge-red' : rsd.destination > 3 ? 'badge-orange' : 'badge-green'});
+  return lines;
 }
 
 // Extract cluster entities (wallet only)
@@ -519,11 +548,11 @@ async function runScenario(n) {
           else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
           else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
         } else {
-          sc.innerHTML = '—';
-          st.innerHTML = '<span class="badge badge-gray">' + status + '</span>';
+          sc.innerHTML = scoreHTML(null);
+          st.innerHTML = '<span class="badge badge-green">Clean</span>';
         }
         results.push(d);
-        log('s1', 'log-ok', 'Analysis ' + (i+1) + ': score=' + (score !== null ? score.toFixed(2) : 'null') + ' (' + status + ')');
+        log('s1', 'log-ok', 'Analysis ' + (i+1) + ': ' + (score !== null ? 'score ' + score.toFixed(2) : 'CLEAN') + ' (' + status + ')');
       } else {
         log('s1', 'log-err', 'Analysis ' + (i+1) + ': ' + pollResult.status);
       }
@@ -628,8 +657,8 @@ async function runScenario(n) {
           else if (score <= 7) st.innerHTML = '<span class="badge badge-orange">Review</span>';
           else st.innerHTML = '<span class="badge badge-red">Flagged</span>';
         } else {
-          sc.innerHTML = '—';
-          st.innerHTML = '<span class="badge badge-gray">' + status + '</span>';
+          sc.innerHTML = scoreHTML(null);
+          st.innerHTML = '<span class="badge badge-green">Clean</span>';
         }
         var cats = getClusterCategories(d);
         if (cats.length > 0) {
@@ -639,7 +668,7 @@ async function runScenario(n) {
           catEl.innerHTML = '<span class="cat-tag">None</span>';
         }
         results.push(d);
-        log('s2', 'log-ok', 'Wallet ' + (i+1) + ': score=' + (score !== null ? score.toFixed(2) : 'null') + ' (' + status + ')');
+        log('s2', 'log-ok', 'Wallet ' + (i+1) + ': ' + (score !== null ? 'score ' + score.toFixed(2) : 'CLEAN') + ' (' + status + ')');
       } else {
         log('s2', 'log-err', 'Wallet ' + (i+1) + ': ' + pollResult.status);
       }
@@ -697,7 +726,7 @@ async function runScenario(n) {
     document.getElementById('id-s3').textContent = d.id || '—';
     document.getElementById('proc-s3').textContent = status;
     document.getElementById('score-s3').innerHTML = scoreBig(score);
-    document.getElementById('label-s3').textContent = 'Complete — score: ' + (score !== null ? score.toFixed(2) : 'null');
+    document.getElementById('label-s3').textContent = 'Complete — ' + (score !== null ? 'score: ' + score.toFixed(2) : 'CLEAN (no rules)');
 
     if (score !== null && score > 7) {
       document.getElementById('status-s3').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
@@ -707,7 +736,7 @@ async function runScenario(n) {
       log('s3', 'log-warn', 'REVIEW: Score ' + score.toFixed(2) + '/10');
     } else {
       document.getElementById('status-s3').innerHTML = '<span class="badge badge-green">✓ Cleared</span>';
-      log('s3', 'log-ok', 'CLEARED: Score ' + (score !== null ? score.toFixed(2) : 'null') + '/10');
+      log('s3', 'log-ok', 'CLEARED — no rules triggered');
     }
 
     renderDetail('detail-s3', d);
@@ -756,7 +785,7 @@ async function runScenario(n) {
     document.getElementById('id-s4').textContent = d.id || '—';
     document.getElementById('proc-s4').textContent = status;
     document.getElementById('score-s4').innerHTML = scoreBig(score);
-    document.getElementById('label-s4').textContent = 'Complete — score: ' + (score !== null ? score.toFixed(2) : 'null');
+    document.getElementById('label-s4').textContent = 'Complete — ' + (score !== null ? 'score: ' + score.toFixed(2) : 'CLEAN (no rules)');
 
     if (score !== null && score > 7) {
       document.getElementById('status-s4').innerHTML = '<span class="badge badge-red">⚠ FLAGGED</span>';
@@ -766,7 +795,7 @@ async function runScenario(n) {
       log('s4', 'log-warn', 'REVIEW: Score ' + score.toFixed(2) + '/10');
     } else {
       document.getElementById('status-s4').innerHTML = '<span class="badge badge-green">✓ Cleared</span>';
-      log('s4', 'log-ok', 'CLEARED: Score ' + (score !== null ? score.toFixed(2) : 'null') + '/10');
+      log('s4', 'log-ok', 'CLEARED — no rules triggered');
     }
 
     renderDetail('detail-s4', d);
@@ -781,25 +810,57 @@ function renderDetail(divId, data) {
   div.style.display = 'block';
   var html = '';
 
-  // Triggered rules
-  var rules = getRules(data);
-  if (rules.length > 0) {
-    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Triggered Rules</span>';
-    rules.forEach(function(r) {
-      html += '<div class="result-row"><span class="rk">Rule</span><span class="rv">' + (r.rule_name || 'Unknown') + ' <span style="color:#888;font-size:10px">(' + (r.risk_score || 0).toFixed(2) + ')</span></span></div>';
+  // Risk score detail (source/dest for wallet)
+  var rd = getRiskDetail(data);
+  if (rd.length > 0) {
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Risk Breakdown</span>';
+    rd.forEach(function(r) {
+      html += '<div class="result-row"><span class="rk">' + r.label + '</span><span class="rv"><span class="badge ' + r.cls + '">' + r.value + '</span></span></div>';
     });
     html += '</div>';
   }
 
-  // Entity
+  // Blockchain info
+  var bi = getBlockchainInfo(data);
+  if (bi.length > 0) {
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Blockchain</span>';
+    bi.forEach(function(l) {
+      html += '<div class="result-row"><span class="rk">' + l.label + '</span><span class="rv mono" style="font-size:11px">' + l.value + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Triggered rules
+  var rules = getRules(data);
+  if (rules.length > 0) {
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Triggered Rules</span>';
+    rules.forEach(function(entry) {
+      // Support both wallet (entry.rule + entry.direction) and TX (flat entry)
+      var r = entry.rule || entry;
+      var dir = entry.direction ? ' [' + entry.direction + ']' : '';
+      html += '<div class="result-row"><span class="rk">Rule' + dir + '</span><span class="rv">' + (r.rule_name || 'Unknown') + ' <span style="color:#888;font-size:10px">(' + (r.risk_score || 0).toFixed(2) + ')</span></span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Detected behaviors (TX)
+  if (data.detected_behaviors && data.detected_behaviors.length > 0) {
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Behaviors</span>';
+    data.detected_behaviors.forEach(function(b) {
+      html += '<div class="result-row"><span class="rk">' + b.behavior_type + '</span><span class="rv" style="font-size:11px">length=' + b.length + ' usd=$' + (b.usd_value || 0).toLocaleString() + '</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Top entity
   var entity = getEntity(data);
   if (entity) {
-    html += '<div class="result-row"><span class="rk">Top Entity</span><span class="rv">' + entity.name + ' <span style="color:#888;font-size:10px">(' + entity.category + ')</span></span></div>';
+    html += '<div class="result-row"><span class="rk">Top Entity</span><span class="rv">' + entity.name + ' <span style="color:#888;font-size:10px">(' + entity.category + (entity.pct ? ' · ' + entity.pct.toFixed(1) + '%' : '') + ')</span></span></div>';
   }
 
   // Cluster entities (wallet)
   if (data.cluster_entities && data.cluster_entities.length > 0) {
-    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Cluster</span>';
+    html += '<div style="margin-bottom:6px"><span style="font-size:10px;color:#888;text-transform:uppercase">Cluster Labels</span>';
     data.cluster_entities.forEach(function(e) {
       html += '<div class="result-row"><span class="rk">' + (e.category || 'Label') + '</span><span class="rv">' + e.name + '</span></div>';
     });
