@@ -737,6 +737,18 @@ app.post('/api/notabene/transfer', async (req, res) => {
   }
 });
 
+// Append PII (IVMS101) to a transfer
+app.post('/api/notabene/transfer/append', async (req, res) => {
+  const { clientId, clientSecret, did, txId, ivms101 } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entity/' + did + '/tx/' + txId + '/append', token, { ivms101 });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // List transfers for entity
 app.get('/api/notabene/transfers', async (req, res) => {
   const { clientId, clientSecret, did } = req.query;

@@ -692,21 +692,11 @@ async function createTransfer() {
   var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
   var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
 
-  // Build originator with PII (Travel Rule requires originator info)
+  // Build originator — only @id, PII submitted separately via /append
   var originator = { '@id': origId };
-  if (eaCust) {
-    originator.name = eaCust.firstName + ' ' + eaCust.lastName;
-    originator.account = ['did:pkh:eip155:11155111:' + eaWallet];
-    if (eaCust.dob) originator.dateOfBirth = eaCust.dob;
-  }
 
-  // Build beneficiary with PII
+  // Build beneficiary — only @id
   var beneficiary = { '@id': beneId };
-  if (ebCust) {
-    beneficiary.name = ebCust.firstName + ' ' + ebCust.lastName;
-    beneficiary.account = ['did:pkh:eip155:11155111:' + ebWallet];
-    if (ebCust.dob) beneficiary.dateOfBirth = ebCust.dob;
-  }
 
   var transferBody = {
     ref: ref,
@@ -739,6 +729,62 @@ async function createTransfer() {
     var status = data.transfer ? data.transfer.status : data.status;
     selectedTxId = txId;
 
+    // Submit PII via IVMS101 /append endpoint
+    var piiStatus = 'pending';
+    var ivms101 = null;
+
+    if (eaCust || ebCust) {
+      ivms101 = {};
+      if (eaCust) {
+        ivms101.originator = {
+          originatorPersons: [{
+            naturalPerson: {
+              name: { nameIdentifier: [{ primaryIdentifier: eaCust.lastName, secondaryIdentifier: eaCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
+              ...(eaCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: eaCust.dob } } : {})
+            },
+            accountNumber: ['did:pkh:eip155:11155111:' + eaWallet]
+          }]
+        };
+      }
+      if (ebCust) {
+        ivms101.beneficiary = {
+          beneficiaryPersons: [{
+            naturalPerson: {
+              name: { nameIdentifier: [{ primaryIdentifier: ebCust.lastName, secondaryIdentifier: ebCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
+              ...(ebCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: ebCust.dob } } : {})
+            },
+            accountNumber: ['did:pkh:eip155:11155111:' + ebWallet]
+          }]
+        };
+      }
+
+      try {
+        var piiRes = await fetch('/api/notabene/transfer/append', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: txId, ivms101: ivms101 })
+        });
+        var piiData = await piiRes.json();
+        if (piiData.error) {
+          piiStatus = 'error: ' + piiData.error;
+        } else {
+          piiStatus = 'success';
+        }
+      } catch(piiErr) {
+        piiStatus = 'error: ' + piiErr.message;
+      }
+    }
+
+    // Display result
+    var piiBadge = piiStatus === 'success'
+      ? '<span class="tag" style="background:#d1fae5;color:#065f46">PII Sent ✓</span>'
+      : '<span class="tag" style="background:#fee2e2;color:#991b1b">PII: ' + esc(piiStatus) + '</span>';
+
+    var eaName = eaCust ? eaCust.firstName + ' ' + eaCust.lastName : '—';
+    var ebName = ebCust ? ebCust.firstName + ' ' + ebCust.lastName : '—';
+    var eaDob = eaCust && eaCust.dob ? eaCust.dob : '—';
+    var ebDob = ebCust && ebCust.dob ? ebCust.dob : '—';
+
     result.innerHTML =
       '<div class="card">' +
         '<div class="card-header">Transfer Created <span class="tag" style="background:#d1fae5;color:#065f46">' + esc(status) + '</span></div>' +
@@ -748,16 +794,16 @@ async function createTransfer() {
           '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' KLCC</span></div>' +
           '<div class="cred-row"><span class="k">Route</span><span class="v">Entity A <span class="hl">→</span> Entity B</span></div>' +
         '</div>' +
-        '<div class="card-header" style="border-top:1px solid #e0e0e0;background:#f8f9fa;font-size:10px">Travel Rule PII Transmitted</div>' +
+        '<div class="card-header" style="border-top:1px solid #e0e0e0;background:#f8f9fa;font-size:10px">Travel Rule PII Transmitted via IVMS101 ' + piiBadge + '</div>' +
         '<div class="card-body">' +
           '<div style="font-size:10px;font-weight:600;color:#5b4cdb;margin-bottom:4px">ORIGINATOR</div>' +
-          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(originator.name || '—') + '</span></div>' +
-          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">' + esc((originator.account || ['—'])[0]) + '</span></div>' +
-          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(originator.dateOfBirth || '—') + '</span></div>' +
+          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(eaName) + '</span></div>' +
+          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">did:pkh:eip155:11155111:' + esc(eaWallet) + '</span></div>' +
+          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(eaDob) + '</span></div>' +
           '<div style="font-size:10px;font-weight:600;color:#06b6d4;margin:8px 0 4px">BENEFICIARY</div>' +
-          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(beneficiary.name || '—') + '</span></div>' +
-          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">' + esc((beneficiary.account || ['—'])[0]) + '</span></div>' +
-          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(beneficiary.dateOfBirth || '—') + '</span></div>' +
+          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(ebName) + '</span></div>' +
+          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">did:pkh:eip155:11155111:' + esc(ebWallet) + '</span></div>' +
+          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(ebDob) + '</span></div>' +
         '</div>' +
         '<div class="card-body" style="border-top:1px solid #e0e0e0">' +
           '<div class="hint">Switch to Entity B tab → Refresh to review this transfer.</div>' +
