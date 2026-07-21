@@ -127,6 +127,31 @@
   .no-transfer .icon { font-size: 40px; margin-bottom: 12px; }
   .no-transfer h3 { font-size: 14px; color: #1a1a1a; margin-bottom: 6px; }
   .no-transfer p { font-size: 12px; color: #888; }
+
+  /* ─── Webhook Console (fixed bottom, pickable cards) ─── */
+  .wh-console-bar { background: #fff; border-top: 2px solid #5b4cdb; cursor: pointer; transition: background 0.15s; }
+  .wh-console-bar:hover { background: #f0efff; }
+  .wh-console-panel { display: none; flex: 1; min-height: 0; background: #f5f5f5; border-top: 1px solid #e0e0e0; }
+  .wh-list { display: flex; flex-direction: column; gap: 4px; }
+  .wh-item { display: flex; align-items: center; gap: 6px; padding: 7px 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 11px; }
+  .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
+  .wh-item.selected { background: #f0efff; border-color: #5b4cdb; }
+  .wh-time { font-size: 10px; color: #888; font-family: monospace; min-width: 55px; }
+  .wh-role { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; min-width: 28px; text-align: center; }
+  .wh-role-ea { background: #ede9fe; color: #5b21b6; }
+  .wh-role-ca { background: #ddd6fe; color: #5b21b6; }
+  .wh-role-eb { background: #cffafe; color: #155e75; }
+  .wh-role-cb { background: #ccfbf1; color: #115e59; }
+  .wh-verify-yes { color: #059669; font-weight: 700; }
+  .wh-verify-no { color: #dc2626; font-weight: 700; }
+  .wh-type { font-weight: 500; min-width: 0; flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wh-status-change { font-size: 10px; font-family: monospace; }
+  .json-viewer { background: #0d1117; border-radius: 4px; padding: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: #c9d1d9; overflow-x: auto; white-space: pre; line-height: 1.7; min-height: 0; height: 100%; }
+  .json-key { color: #79c0ff; }
+  .json-str { color: #a5d6ff; }
+  .json-num { color: #79c0ff; }
+  .json-bool { color: #ff7b72; }
+  .json-null { color: #8b949e; }
 </style>
 
 </head>
@@ -252,6 +277,35 @@
     </div>
 
   </div>
+
+  <!-- ═══ Webhook Console (fixed bottom) ═══ -->
+  <div class="wh-console-bar" id="wh-bar" onclick="whToggle()">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px">
+      <span id="wh-arrow" style="font-size:18px;color:#5b4cdb;transition:transform 0.2s;line-height:1">▶</span>
+      <span style="font-size:11px;font-weight:600;color:#5b4cdb">📡 Notabene Webhook Console</span>
+      <span id="wh-count" style="font-size:10px;font-weight:600;color:#5b4cdb;background:#f0efff;padding:2px 8px;border-radius:10px;border:1px solid #5b4cdb">0 events</span>
+      <span id="wh-latest" style="font-size:10px;color:#888;margin-left:auto"></span>
+    </div>
+  </div>
+  <div class="wh-console-panel" id="wh-panel">
+    <div style="display:flex;height:100%;min-height:280px">
+      <div style="width:340px;overflow-y:auto;background:#fff;border-right:1px solid #e0e0e0">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #e0e0e0">
+          <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Events</span>
+          <button class="btn btn-outline btn-sm" onclick="whClearLog()">Clear</button>
+        </div>
+        <div id="wh-list" class="wh-list" style="padding:6px"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #e0e0e0;background:#fff">
+          <span id="wh-detail-title" style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Select an event</span>
+          <button class="btn btn-outline btn-sm" onclick="whCopyJSON()">Copy JSON</button>
+        </div>
+        <div id="wh-json" class="json-viewer" style="flex:1">// Click an event to see full payload</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -385,6 +439,150 @@ document.querySelectorAll('.role-tab').forEach(function(tab) {
     document.getElementById('role-' + tab.dataset.tab).classList.add('active');
   });
 });
+
+// ─── Webhook Console (pickable cards, like onboarding page) ───
+var whCurrent = [];
+var whSelected = -1;
+
+function whToggle() {
+  var panel = document.getElementById('wh-panel');
+  var arrow = document.getElementById('wh-arrow');
+  if (panel.style.display === 'none' || !panel.style.display) {
+    panel.style.display = 'flex';
+    arrow.style.transform = 'rotate(90deg)';
+  } else {
+    panel.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
+}
+
+function whRoleClass(role) {
+  return { ea: 'wh-role-ea', ca: 'wh-role-ca', eb: 'wh-role-eb', cb: 'wh-role-cb' }[role] || '';
+}
+
+function whShortType(msgType) {
+  return msgType.replace(/^notification\./, '').replace(/^tap\./, '[tap] ');
+}
+
+function whExtractBody(ev) {
+  var msgType = 'unknown';
+  var forDid = '—';
+  var txId = '—';
+  var fromStatus = '';
+  var toStatus = '';
+  if (typeof ev.body === 'object' && ev.body) {
+    var inner = ev.body.payload && ev.body.payload.payload ? ev.body.payload.payload : (ev.body.payload || {});
+    msgType = ev.body.message || (ev.body.payload && ev.body.payload.message) || 'unknown';
+    forDid = inner.for || (ev.body.payload && ev.body.payload.for) || '—';
+    txId = inner.id || inner['@id'] || (ev.body.payload && ev.body.payload.id) || ev.body.id || '—';
+    fromStatus = inner.fromStatus || '';
+    toStatus = inner.toStatus || '';
+  }
+  return { msgType: msgType, forDid: forDid, txId: txId, fromStatus: fromStatus, toStatus: toStatus };
+}
+
+function whRender(entries) {
+  whCurrent = entries;
+  var el = document.getElementById('wh-list');
+  var countEl = document.getElementById('wh-count');
+  var latestEl = document.getElementById('wh-latest');
+  if (!el) return;
+
+  if (!entries || entries.length === 0) {
+    el.innerHTML = '<div style="padding:12px;text-align:center;color:#888;font-size:11px">Waiting for Notabene webhooks...</div>';
+    if (countEl) countEl.textContent = '0 events';
+    if (latestEl) latestEl.textContent = '';
+    return;
+  }
+
+  var total = entries.length;
+  if (countEl) countEl.textContent = total + ' event' + (total !== 1 ? 's' : '');
+
+  var latest = entries[entries.length - 1];
+  var latestInfo = whExtractBody(latest);
+  if (latestEl) latestEl.textContent = 'Latest: ' + whShortType(latestInfo.msgType);
+
+  // Auto-select latest on first load
+  if (whSelected === -1) {
+    whSelected = entries.length - 1;
+    whShowDetail(entries[whSelected]);
+  }
+
+  var html = '';
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    var info = whExtractBody(e);
+    var cls = whSelected === i ? 'wh-item selected' : 'wh-item';
+    var time = (e.timestamp || '').slice(11, 19);
+    var vIcon = e.verified === true ? '<span class="wh-verify-yes">✓</span>'
+              : e.verified === false ? '<span class="wh-verify-no">✗</span>'
+              : '<span style="color:#f59e0b">?</span>';
+    var role = e.matchedRole || '';
+    var roleBadge = role ? '<span class="wh-role ' + whRoleClass(role) + '">' + role.toUpperCase() + '</span>' : '';
+    var statusChange = info.fromStatus && info.toStatus
+      ? '<span class="wh-status-change">' + esc(info.fromStatus) + '→' + esc(info.toStatus) + '</span>' : '';
+    html += '<div class="' + cls + '" onclick="whSelect(' + i + ')">' +
+      '<span class="wh-time">' + time + '</span>' +
+      vIcon +
+      roleBadge +
+      '<span class="wh-type">' + esc(whShortType(info.msgType)) + '</span>' +
+      statusChange +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function whSelect(idx) {
+  whSelected = idx;
+  whShowDetail(whCurrent[idx]);
+  whRender(whCurrent);
+}
+
+function whShowDetail(e) {
+  if (!e) return;
+  var info = whExtractBody(e);
+  var titleEl = document.getElementById('wh-detail-title');
+  if (titleEl) titleEl.textContent = info.msgType;
+  var viewer = document.getElementById('wh-json');
+  if (viewer) viewer.innerHTML = whSyntaxHighlight(JSON.stringify(e, null, 2));
+}
+
+function whCopyJSON() {
+  if (whSelected < 0 || !whCurrent[whSelected]) return;
+  var text = JSON.stringify(whCurrent[whSelected], null, 2);
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+}
+
+function whSyntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) return '<span class="json-key">' + match.replace(/"/g, '').replace(/:$/, '') + '</span>:';
+      return '<span class="json-str">' + match + '</span>';
+    }
+    if (/true|false/.test(match)) return '<span class="json-bool">' + match + '</span>';
+    if (/null/.test(match)) return '<span class="json-null">' + match + '</span>';
+    return '<span class="json-num">' + match + '</span>';
+  });
+}
+
+function whClearLog() {
+  fetch('/api/webhooks/clear', { method: 'POST' }).then(function() {
+    whSelected = -1;
+    document.getElementById('wh-detail-title').textContent = 'Select an event';
+    document.getElementById('wh-json').innerHTML = '// Click an event to see full payload';
+    whPoll();
+  });
+}
+
+function whPoll() {
+  fetch('/api/webhooks').then(function(r) { return r.json(); }).then(function(data) {
+    // Filter to Notabene events only
+    var notabeneEvents = data.filter(function(e) { return e.type === 'notabene'; });
+    whRender(notabeneEvents);
+  }).catch(function() {});
+}
+setInterval(whPoll, 2000);
+whPoll();
 
 // ─── Init ───
 populateCustomerSelects();

@@ -126,10 +126,20 @@
           <div class="field" style="margin-top:10px">
             <label>Webhook Secrets (per role)</label>
             <div style="font-size:10px;color:#888;margin-bottom:6px">Each VASP workspace signs its own webhooks. Paste each workspace's webhook secret here to verify incoming events.</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div class="field" style="margin-bottom:6px">
+              <label style="font-size:10px;font-weight:600">Entity A</label>
               <input type="text" id="s-ea-webhook-secret" placeholder="Entity A webhook secret" style="font-size:11px">
+            </div>
+            <div class="field" style="margin-bottom:6px">
+              <label style="font-size:10px;font-weight:600">Custodian A</label>
               <input type="text" id="s-ca-webhook-secret" placeholder="Custodian A webhook secret" style="font-size:11px">
+            </div>
+            <div class="field" style="margin-bottom:6px">
+              <label style="font-size:10px;font-weight:600">Entity B</label>
               <input type="text" id="s-eb-webhook-secret" placeholder="Entity B webhook secret" style="font-size:11px">
+            </div>
+            <div class="field" style="margin-bottom:6px">
+              <label style="font-size:10px;font-weight:600">Custodian B</label>
               <input type="text" id="s-cb-webhook-secret" placeholder="Custodian B webhook secret" style="font-size:11px">
             </div>
             <div id="wh-secret-status" style="font-size:10px;margin-top:4px"></div>
@@ -141,15 +151,6 @@
             <button class="tunnel-btn" id="notabene-tunnel-test-btn" onclick="testTunnel('notabene')" disabled>Test</button>
           </div>
           <div id="notabene-tunnel-test-result" class="test-result" style="display:none"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">Webhook Console</div>
-        <div class="card-body" style="padding:0">
-          <div id="notabene-wh-console" style="background:#0d1117;max-height:300px;overflow-y:auto;font-size:10px;font-family:'SF Mono',monospace;color:#c9d1d9;min-height:80px;padding:8px 10px">
-            <div style="color:#6e7681">Waiting for Notabene webhooks...</div>
-          </div>
         </div>
       </div>
 
@@ -1401,62 +1402,9 @@ function renderWebhooks(entries) {
     el.innerHTML = html || '<div style="color:#6e7681">Waiting for webhooks...</div>';
   }
 
-  // --- Notabene rendering ---
+  // --- Notabene rendering (moved to transfer-flow page) ---
   if (elNotabene) {
-    var htmlN = '';
-    for (var j = notabeneEntries.length - 1; j >= 0; j--) {
-      var ev = notabeneEntries[j];
-      var k = 'nb-' + ev.timestamp + JSON.stringify(ev.body).substring(0, 50);
-      var isEvNew = !whSeen.has(k);
-      whSeen.add(k);
-
-      var msgType = 'unknown';
-      var forDid = '\u2014';
-      var txId = '\u2014';
-      var extra = '';
-
-      if (typeof ev.body === 'object' && ev.body) {
-        var inner = ev.body.payload && ev.body.payload.payload ? ev.body.payload.payload : (ev.body.payload || {});
-        msgType = ev.body.message || ev.body.eventType || (ev.body.payload && ev.body.payload.message) || 'unknown';
-        forDid = inner.for || (ev.body.payload && ev.body.payload.for) || '\u2014';
-        txId = inner.id || (ev.body.payload && ev.body.payload.id) || '\u2014';
-        if (inner.fromStatus && inner.toStatus) {
-          extra = ' <span style="color:#ffa657">' + inner.fromStatus + '</span>\u2192<span style="color:#7ee787">' + inner.toStatus + '</span>';
-        }
-      } else if (typeof ev.body === 'string' && ev.body) {
-        msgType = ev.body.substring(0, 80);
-      }
-
-      var cat = msgType.startsWith('notification.') ? 'notification'
-              : msgType.startsWith('tap.') ? 'tap'
-              : msgType === 'unknown' ? '?'
-              : 'other';
-      var catColor = cat === 'notification' ? '#79c0ff'
-                    : cat === 'tap' ? '#d2a8ff'
-                    : '#c9d1d9';
-      var catBadge = cat === 'notification' ? 'N'
-                    : cat === 'tap' ? 'T'
-                    : '?';
-
-      var bgN = isEvNew ? 'background:rgba(56,139,253,0.08)' : '';
-      var vTagN = ev.verified === true
-        ? '<span style="color:#7ee787">\u2713</span>'
-        : ev.verified === false
-        ? '<span style="color:#ff7b72">\u2717</span>'
-        : '<span style="color:#ffa657">?</span>';
-      var roleTag = ev.matchedRole && ev.matchedRole !== 'legacy'
-        ? ' <span style="color:#bb6700;background:#fff8e1;padding:1px 4px;border-radius:2px;font-size:9px">' + ev.matchedRole.toUpperCase() + '</span>'
-        : '';
-      htmlN += '<div style="padding:4px 0;border-bottom:1px solid #161b22;' + bgN + '">' +
-        '<span style="color:#6e7681">' + (ev.timestamp || '').slice(11, 19) + '</span> ' +
-        vTagN + roleTag + ' ' +
-        '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + catColor + ';color:#0d1117;text-align:center;font-weight:600;font-size:9px;line-height:14px">' + catBadge + '</span> ' +
-        '<span style="color:' + catColor + '">' + msgType + '</span>' +
-        extra +
-        '<br/><span style="color:#6e7681;margin-left:16px">for: ' + forDid + ' \u00b7 tx: ' + (txId || '\u2014').slice(-12) + '</span>' +
-        '</div>';
-    }
-    elNotabene.innerHTML = htmlN || '<div style="color:#6e7681">Waiting for Notabene webhooks...</div>';
+    elNotabene.innerHTML = '<div style="color:#6e7681">Webhook console moved to Travel Rule Transfer page.</div>';
   }
 }
 
