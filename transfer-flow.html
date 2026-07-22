@@ -176,6 +176,7 @@
     <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
     <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
     <a class="nav-item active" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
+    <a class="nav-item" href="network.html"><span class="icon">🌐</span> VASP Directory</a>
     <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
   </div>
 </div>
@@ -293,7 +294,7 @@
           <button class="btn btn-primary btn-sm" id="ea-travelrule-btn" onclick="checkTravelRule()">Check</button>
         </div>
         <div class="card-body">
-          <p class="hint" style="margin-bottom:8px">GET /travelrule — Determine if this transfer is subject to Travel Rule based on jurisdiction and amount.</p>
+          <p class="hint" style="margin-bottom:8px">GET /travelrule — Determine if this transfer is subject to Travel Rule based on originator jurisdiction and amount. Currency and threshold are resolved from jurisdiction data.</p>
           <div class="transfer-form">
             <div class="form-group">
               <label>Originator Jurisdiction</label>
@@ -307,23 +308,8 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Beneficiary Jurisdiction</label>
-              <select id="ea-tr-jurisdiction-bene" style="font-size:12px">
-                <option value="AE-AZ" selected>Abu Dhabi (AE-AZ)</option>
-                <option value="AE-DU">Dubai (AE-DU)</option>
-                <option value="SG">Singapore (SG)</option>
-                <option value="US">United States (US)</option>
-                <option value="GB">United Kingdom (GB)</option>
-                <option value="DE">Germany (DE)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Amount (USD)</label>
+              <label>Amount</label>
               <input type="text" id="ea-tr-amount" value="1" style="font-size:12px">
-            </div>
-            <div class="form-group">
-              <label>Currency</label>
-              <input type="text" id="ea-tr-currency" value="USD" readonly style="font-size:12px;background:#f8f8f8">
             </div>
           </div>
           <div id="ea-travelrule-result" style="display:none;margin-top:10px"></div>
@@ -864,9 +850,7 @@ async function discoverCounterparty() {
 async function checkTravelRule() {
   var s = await loadSettings();
   var origJur = document.getElementById('ea-tr-jurisdiction-orig').value;
-  var beneJur = document.getElementById('ea-tr-jurisdiction-bene').value;
   var amount = document.getElementById('ea-tr-amount').value || '1';
-  var currency = document.getElementById('ea-tr-currency').value || 'USD';
   var btn = document.getElementById('ea-travelrule-btn');
   var result = document.getElementById('ea-travelrule-result');
 
@@ -877,9 +861,7 @@ async function checkTravelRule() {
   try {
     var url = '/api/notabene/travelrule?' +
       'originatorJurisdiction=' + encodeURIComponent(origJur) +
-      '&beneficiaryJurisdiction=' + encodeURIComponent(beneJur) +
-      '&amount=' + encodeURIComponent(amount) +
-      '&currency=' + encodeURIComponent(currency);
+      '&amount=' + encodeURIComponent(amount);
 
     var res = await fetch(url);
     var data = await res.json();
@@ -897,9 +879,12 @@ async function checkTravelRule() {
         '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:' + trColor + ';color:#fff">' + trLabel + '</span>' +
       '</div>';
 
-    html += '<div class="cred-row"><span class="k">Originator</span><span class="v">' + esc(origJur) + '</span></div>';
-    html += '<div class="cred-row"><span class="k">Beneficiary</span><span class="v">' + esc(beneJur) + '</span></div>';
-    html += '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' ' + esc(currency) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Country Code</span><span class="v">' + esc(data.originatorJurisdiction || origJur) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Currency</span><span class="v">' + esc(data.currency || '-') + '</span></div>';
+    if (data.threshold !== undefined) {
+      html += '<div class="cred-row"><span class="k">Threshold</span><span class="v">' + esc(String(data.threshold)) + ' ' + esc(data.currency || '') + '</span></div>';
+    }
+    html += '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' ' + esc(data.currency || '') + '</span></div>';
 
     if (pdUrl) {
       html += '<div class="cred-row"><span class="k">Presentation Definition</span><span class="v mono" style="font-size:9px;word-break:break-all">' + esc(pdUrl) + '</span></div>';

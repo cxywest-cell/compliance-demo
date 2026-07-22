@@ -725,19 +725,6 @@ app.post('/api/notabene/token', async (req, res) => {
   }
 });
 
-// List network entities
-app.get('/api/notabene/network', async (req, res) => {
-  const { clientId, clientSecret, listing } = req.query;
-  try {
-    const token = await getNotabeneToken(clientId, clientSecret);
-    const path = '/network' + (listing ? '?listing=' + listing : '');
-    const data = await notabeneApi('GET', path, token);
-    res.json(data);
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // Get entity info (from Notabene network)
 app.get('/api/notabene/entity', async (req, res) => {
   const { clientId, clientSecret, did } = req.query;
@@ -858,7 +845,7 @@ app.post('/api/notabene/discover', async (req, res) => {
 
 // Check Travel Rule threshold (uses public jurisdiction-thresholds JSON)
 app.get('/api/notabene/travelrule', async (req, res) => {
-  const { originatorJurisdiction, beneficiaryJurisdiction, amount, currency } = req.query;
+  const { originatorJurisdiction, amount } = req.query;
   try {
     // Fetch jurisdiction thresholds from Notabene's public presentation definitions
     const thresholdsResp = await fetch('https://pd.notabene.id/ivms101/v2/jurisdiction-thresholds.json');
@@ -872,9 +859,7 @@ app.get('/api/notabene/travelrule', async (req, res) => {
         reason: `Jurisdiction ${originatorJurisdiction} not in threshold list — FATF guidelines apply (threshold: 0)`,
         presentationDefinitionURL: 'https://pd.notabene.id/ivms101/v2/FATF-0.json',
         originatorJurisdiction,
-        beneficiaryJurisdiction,
-        amount,
-        currency
+        amount
       });
     }
 
@@ -896,18 +881,16 @@ app.get('/api/notabene/travelrule', async (req, res) => {
         currency: origJur.currency,
         presentationDefinitionURL: applicableThreshold.presentationDefinitionURL,
         originatorJurisdiction,
-        beneficiaryJurisdiction,
         amount,
         jurisdictionStatus: origJur.jurisdictionStatus || 'unknown'
       });
     } else {
       res.json({
         isTravelRule: false,
-        reason: `Amount ${amount} ${currency} below threshold (${origJur.thresholds.map(t => t.threshold).join(', ')} ${origJur.currency})`,
+        reason: `Amount ${amount} ${origJur.currency} below threshold (${origJur.thresholds.map(t => t.threshold).join(', ')} ${origJur.currency})`,
         threshold: origJur.thresholds,
         currency: origJur.currency,
         originatorJurisdiction,
-        beneficiaryJurisdiction,
         amount,
         jurisdictionStatus: origJur.jurisdictionStatus || 'unknown'
       });
@@ -925,6 +908,43 @@ app.post('/api/notabene/validate-pii', async (req, res) => {
     const token = await getNotabeneToken(creds.clientId, creds.clientSecret);
     const path = '/validate-pii?presentationDefinitionUrl=' + encodeURIComponent(presentationDefinitionUrl);
     const data = await notabeneApi('POST', path, token, { ivms101 });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// List entities in the Notabene network
+app.get('/api/notabene/network', async (req, res) => {
+  const { q, jurisdictions, listing, regulatoryStatus, page, per_page } = req.query;
+  try {
+    const creds = credsFromReq('ea', req);
+    const token = await getNotabeneToken(creds.clientId, creds.clientSecret);
+    
+    let path = '/network?';
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+    if (jurisdictions) params.append('jurisdictions', jurisdictions);
+    if (listing) params.append('listing', listing);
+    if (regulatoryStatus) params.append('regulatoryStatus', regulatoryStatus);
+    if (page) params.append('page', page);
+    if (per_page) params.append('per_page', per_page);
+    path += params.toString();
+    
+    const data = await notabeneApi('GET', path, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get entity details by DID
+app.get('/api/notabene/network/:did', async (req, res) => {
+  const { did } = req.params;
+  try {
+    const creds = credsFromReq('ea', req);
+    const token = await getNotabeneToken(creds.clientId, creds.clientSecret);
+    const data = await notabeneApi('GET', '/network/' + encodeURIComponent(did), token);
     res.json(data);
   } catch(e) {
     res.status(500).json({ error: e.message });

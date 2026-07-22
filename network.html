@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VASP Directory — Compliance Demo</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 16px; border-bottom: 1px solid #e0e0e0; }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 600; }
+  .sidebar-logo h1 span { color: #5b4cdb; }
+  .sidebar-nav { padding: 12px 0; }
+  .nav-item { padding: 10px 16px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; display: flex; align-items: center; gap: 8px; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: #f5f5f5; color: #1a1a1a; }
+  .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .content { flex: 1; overflow-y: auto; padding: 16px; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+  .card-body { padding: 12px; }
+  .filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+  .filter-group label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #888; }
+  .filter-group input, .filter-group select { padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; min-width: 140px; }
+  .btn { padding: 6px 14px; border: none; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: #5b4cdb; color: #fff; }
+  .btn-primary:hover { background: #4a3db0; }
+  .btn-secondary { background: #e5e7eb; color: #374151; }
+  .btn-secondary:hover { background: #d1d5db; }
+  .entity-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .entity-table th { text-align: left; padding: 8px 10px; background: #fafafa; border-bottom: 1px solid #e0e0e0; font-size: 10px; font-weight: 600; text-transform: uppercase; color: #888; }
+  .entity-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  .entity-table tr:hover { background: #f9f9f9; cursor: pointer; }
+  .entity-table tr:last-child td { border-bottom: none; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-orange { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; font-size: 12px; }
+  .pagination-controls { display: flex; gap: 8px; align-items: center; }
+  .pagination-controls button { padding: 4px 10px; border: 1px solid #e0e0e0; background: #fff; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .pagination-controls button:hover:not(:disabled) { background: #f5f5f5; }
+  .pagination-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .detail-panel { position: fixed; right: 0; top: 0; width: 500px; height: 100vh; background: #fff; border-left: 1px solid #e0e0e0; box-shadow: -2px 0 8px rgba(0,0,0,0.1); overflow-y: auto; z-index: 100; display: none; }
+  .detail-panel.open { display: block; }
+  .detail-header { padding: 16px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+  .detail-header h2 { font-size: 16px; font-weight: 600; }
+  .detail-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+  .detail-close:hover { color: #1a1a1a; }
+  .detail-body { padding: 16px; }
+  .detail-section { margin-bottom: 20px; }
+  .detail-section h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid #f0f0f0; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { color: #888; font-weight: 500; }
+  .detail-value { color: #1a1a1a; text-align: right; max-width: 60%; word-break: break-word; }
+  .loading { text-align: center; padding: 40px; color: #888; }
+  .empty { text-align: center; padding: 40px; color: #888; }
+  .error { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+</style>
+
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1><span>◈</span> Compliance Demo</h1>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item" href="onboarding.html"><span class="icon">+</span> Onboard</a>
+    <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
+    <a class="nav-item" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
+    <a class="nav-item active" href="network.html"><span class="icon">🌐</span> VASP Directory</a>
+    <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">VASP Directory</div>
+  <div class="content">
+
+    <!-- Filters -->
+    <div class="card">
+      <div class="card-header">Filters</div>
+      <div class="card-body">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Search (Name/Email)</label>
+            <input type="text" id="filter-q" placeholder="e.g. Binance, Coinbase...">
+          </div>
+          <div class="filter-group">
+            <label>Jurisdiction</label>
+            <input type="text" id="filter-jurisdiction" placeholder="e.g. US, SG, AE">
+          </div>
+          <div class="filter-group">
+            <label>Listing Type</label>
+            <select id="filter-listing">
+              <option value="">All</option>
+              <option value="sandbox">Sandbox</option>
+              <option value="non-sandbox">Production</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Regulatory Status</label>
+            <select id="filter-regulatory">
+              <option value="">All</option>
+              <option value="Regulated">Regulated</option>
+              <option value="Not Regulated">Not Regulated</option>
+              <option value="Exempt">Exempt</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-primary" onclick="loadEntities()">Search</button>
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+      <div class="card-header">
+        <span>Entities</span>
+        <span id="result-count" style="font-size: 10px; color: #888;">Loading...</span>
+      </div>
+      <div class="card-body" id="results-container">
+        <div class="loading">Loading entities...</div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div id="pagination-info">Page 1 of 1</div>
+      <div class="pagination-controls">
+        <button id="btn-first" onclick="goToPage(0)" disabled>First</button>
+        <button id="btn-prev" onclick="goToPage(currentPage - 1)" disabled>Previous</button>
+        <span id="page-display">1</span>
+        <button id="btn-next" onclick="goToPage(currentPage + 1)" disabled>Next</button>
+        <button id="btn-last" onclick="goToPage(totalPages - 1)" disabled>Last</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <h2 id="detail-title">Entity Details</h2>
+    <button class="detail-close" onclick="closeDetail()">×</button>
+  </div>
+  <div class="detail-body" id="detail-body">
+    <div class="loading">Loading...</div>
+  </div>
+</div>
+
+<script>
+var currentPage = 0;
+var totalPages = 1;
+var perPage = 20;
+var currentData = null;
+
+async function loadEntities(page) {
+  if (page !== undefined) currentPage = page;
+  
+  const container = document.getElementById('results-container');
+  const searchBtn = document.querySelector('button[onclick="loadEntities()"]');
+  
+  // Show loading state
+  container.innerHTML = '<div class="loading"><div style="font-size: 14px; color: #666;">Searching the Notabene network...</div><div style="font-size: 12px; color: #999; margin-top: 8px;">This may take a few seconds</div></div>';
+  document.getElementById('result-count').textContent = 'Searching...';
+  
+  // Disable search button
+  if (searchBtn) {
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Searching...';
+  }
+  
+  const q = document.getElementById('filter-q').value;
+  const jurisdictions = document.getElementById('filter-jurisdiction').value;
+  const listing = document.getElementById('filter-listing').value;
+  const regulatoryStatus = document.getElementById('filter-regulatory').value;
+  
+  const params = new URLSearchParams();
+  if (q) params.append('q', q);
+  if (jurisdictions) params.append('jurisdictions', jurisdictions);
+  if (listing) params.append('listing', listing);
+  if (regulatoryStatus) params.append('regulatoryStatus', regulatoryStatus);
+  params.append('page', currentPage);
+  params.append('per_page', perPage);
+  
+  try {
+    const resp = await fetch('/api/notabene/network?' + params.toString());
+    const data = await resp.json();
+    
+    if (data.error) throw new Error(data.error);
+    
+    currentData = data;
+    totalPages = Math.ceil((data.pagination?.total || 0) / perPage);
+    
+    renderTable(data.vasps || []);
+    updatePagination(data.pagination);
+    document.getElementById('result-count').textContent = (data.pagination?.total || 0) + ' entities found';
+    
+  } catch(e) {
+    container.innerHTML = '<div class="error">Error: ' + escapeHtml(e.message) + '</div>';
+    document.getElementById('result-count').textContent = 'Error';
+  } finally {
+    // Re-enable search button
+    if (searchBtn) {
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Search';
+    }
+  }
+}
+
+function renderTable(entities) {
+  const container = document.getElementById('results-container');
+  
+  if (!entities.length) {
+    container.innerHTML = '<div class="empty">No entities found</div>';
+    return;
+  }
+  
+  let html = '<table class="entity-table">';
+  html += '<thead><tr>';
+  html += '<th>Name</th>';
+  html += '<th>Jurisdiction</th>';
+  html += '<th>Status</th>';
+  html += '<th>Regulatory</th>';
+  html += '<th>TR Capable</th>';
+  html += '<th>DID</th>';
+  html += '</tr></thead>';
+  html += '<tbody>';
+  
+  entities.forEach(e => {
+    const statusBadge = getStatusBadge(e.verificationStatus);
+    const regBadge = getRegulatoryBadge(e.regulatoryStatus);
+    const trBadge = e.trCapable ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-gray">No</span>';
+    
+    html += '<tr onclick="showDetail(\'' + escapeHtml(e.did) + '\')">';
+    html += '<td><strong>' + escapeHtml(e.name || '-') + '</strong></td>';
+    html += '<td>' + escapeHtml(e.jurisdictions || '-') + '</td>';
+    html += '<td>' + statusBadge + '</td>';
+    html += '<td>' + regBadge + '</td>';
+    html += '<td>' + trBadge + '</td>';
+    html += '<td class="mono" style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(e.did || '-') + '</td>';
+    html += '</tr>';
+  });
+  
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function getStatusBadge(status) {
+  if (!status) return '<span class="badge badge-gray">Unknown</span>';
+  const s = status.toUpperCase();
+  if (s === 'VERIFIED') return '<span class="badge badge-green">Verified</span>';
+  if (s === 'PENDING') return '<span class="badge badge-orange">Pending</span>';
+  if (s === 'UNVERIFIED') return '<span class="badge badge-red">Unverified</span>';
+  return '<span class="badge badge-gray">' + escapeHtml(status) + '</span>';
+}
+
+function getRegulatoryBadge(status) {
+  if (!status) return '<span class="badge badge-gray">-</span>';
+  const s = status.toLowerCase();
+  if (s === 'regulated') return '<span class="badge badge-green">Regulated</span>';
+  if (s === 'not regulated') return '<span class="badge badge-orange">Not Regulated</span>';
+  if (s === 'exempt') return '<span class="badge badge-blue">Exempt</span>';
+  if (s === 'pending') return '<span class="badge badge-orange">Pending</span>';
+  return '<span class="badge badge-gray">' + escapeHtml(status) + '</span>';
+}
+
+function updatePagination(pagination) {
+  if (!pagination) return;
+  
+  const currentPageNum = (pagination.page || 0) + 1;
+  const totalPagesNum = Math.ceil((pagination.total || 0) / (pagination.per_page || perPage));
+  
+  document.getElementById('pagination-info').textContent = 'Page ' + currentPageNum + ' of ' + totalPagesNum;
+  document.getElementById('page-display').textContent = currentPageNum;
+  
+  document.getElementById('btn-first').disabled = currentPage === 0;
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= totalPagesNum - 1;
+  document.getElementById('btn-last').disabled = currentPage >= totalPagesNum - 1;
+}
+
+function goToPage(page) {
+  if (page < 0 || page >= totalPages) return;
+  loadEntities(page);
+}
+
+function clearFilters() {
+  document.getElementById('filter-q').value = '';
+  document.getElementById('filter-jurisdiction').value = '';
+  document.getElementById('filter-listing').value = '';
+  document.getElementById('filter-regulatory').value = '';
+  currentPage = 0;
+  loadEntities();
+}
+
+async function showDetail(did) {
+  const panel = document.getElementById('detail-panel');
+  const body = document.getElementById('detail-body');
+  const title = document.getElementById('detail-title');
+  
+  panel.classList.add('open');
+  body.innerHTML = '<div class="loading">Loading details...</div>';
+  title.textContent = 'Entity Details';
+  
+  try {
+    const resp = await fetch('/api/notabene/network/' + encodeURIComponent(did));
+    const data = await resp.json();
+    
+    if (data.error) throw new Error(data.error);
+    
+    title.textContent = data.name || 'Entity Details';
+    renderDetail(data);
+    
+  } catch(e) {
+    body.innerHTML = '<div class="error">Error: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function renderDetail(entity) {
+  const body = document.getElementById('detail-body');
+  
+  let html = '';
+  
+  // Basic Info
+  html += '<div class="detail-section">';
+  html += '<h3>Basic Information</h3>';
+  html += detailRow('Name', entity.name);
+  html += detailRow('Legal Name', entity.legalName);
+  html += detailRow('DID', entity.did, true);
+  html += detailRow('Website', entity.website);
+  html += detailRow('Description', entity.description);
+  html += '</div>';
+  
+  // Jurisdiction & Regulatory
+  html += '<div class="detail-section">';
+  html += '<h3>Jurisdiction & Regulatory</h3>';
+  html += detailRow('Jurisdictions', entity.jurisdictions);
+  html += detailRow('Incorporation Country', entity.incorporationCountry);
+  html += detailRow('Regulatory Status', entity.regulatoryStatus);
+  html += detailRow('Verification Status', entity.verificationStatus);
+  html += detailRow('Supervisory Authority', entity.supervisoryAuthority);
+  html += detailRow('Registration License ID', entity.registrationLicenseId);
+  html += detailRow('Is Regulated', entity.isRegulated);
+  html += '</div>';
+  
+  // Business Info
+  html += '<div class="detail-section">';
+  html += '<h3>Business Information</h3>';
+  html += detailRow('Legal Structure', entity.legalStructure);
+  html += detailRow('Year Founded', entity.yearFounded);
+  html += detailRow('Business Number', entity.businessNumber);
+  html += detailRow('Entity Category', entity.entityCategory);
+  html += detailRow('Entity Status', entity.entityStatus);
+  html += '</div>';
+  
+  // Address
+  html += '<div class="detail-section">';
+  html += '<h3>Headquarters Address</h3>';
+  html += detailRow('Street', entity.hqStreet);
+  html += detailRow('Number', entity.hqNumber);
+  html += detailRow('City', entity.hqCity);
+  html += detailRow('Region', entity.hqRegion);
+  html += detailRow('Postcode', entity.hqPostcode);
+  html += detailRow('Country', entity.hqCountry);
+  html += '</div>';
+  
+  // Travel Rule
+  html += '<div class="detail-section">';
+  html += '<h3>Travel Rule Capability</h3>';
+  html += detailRow('TR Capable', entity.trCapable ? 'Yes' : 'No');
+  html += detailRow('Flow Capability', entity.flowCapability);
+  html += detailRow('Status', entity.status);
+  html += detailRow('Sandbox', entity.sandbox ? 'Yes' : 'No');
+  html += '</div>';
+  
+  // Timestamps
+  html += '<div class="detail-section">';
+  html += '<h3>Timestamps</h3>';
+  html += detailRow('Created', entity.createdAt ? new Date(entity.createdAt).toLocaleString() : '-');
+  html += detailRow('Updated', entity.updatedAt ? new Date(entity.updatedAt).toLocaleString() : '-');
+  html += '</div>';
+  
+  // Raw JSON
+  html += '<div class="detail-section">';
+  html += '<h3>Raw JSON</h3>';
+  html += '<pre style="background:#f5f5f5;padding:12px;border-radius:4px;font-size:10px;overflow-x:auto;max-height:300px;overflow-y:auto;">' + escapeHtml(JSON.stringify(entity, null, 2)) + '</pre>';
+  html += '</div>';
+  
+  body.innerHTML = html;
+}
+
+function detailRow(key, value, isMono) {
+  if (value === null || value === undefined || value === '') {
+    value = '-';
+  }
+  const valueClass = isMono ? 'detail-value mono' : 'detail-value';
+  return '<div class="detail-row"><span class="detail-key">' + escapeHtml(key) + '</span><span class="' + valueClass + '">' + escapeHtml(String(value)) + '</span></div>';
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+function escapeHtml(text) {
+  if (text === null || text === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+}
+
+// Show empty state on page load
+document.getElementById('results-container').innerHTML = '<div class="empty">Use the filters above to search for VASPs in the Notabene network</div>';
+document.getElementById('result-count').textContent = 'Enter search criteria';
+</script>
+
+</body>
+</html>
