@@ -199,14 +199,22 @@
     </div>
 
     <div class="role-tabs">
-      <div class="role-tab" data-tab="entity-a">Entity A</div>
-      <div class="role-tab" data-tab="custodian-a">Custodian A</div>
-      <div class="role-tab" data-tab="entity-b">Entity B</div>
-      <div class="role-tab" data-tab="custodian-b">Custodian B</div>
+      <div class="role-tab passive" data-tab="entity-a">Entity A <span class="lock">🔒</span></div>
+      <div class="role-tab passive" data-tab="custodian-a">Custodian A <span class="lock">🔒</span></div>
+      <div class="role-tab passive" data-tab="entity-b">Entity B <span class="lock">🔒</span></div>
+      <div class="role-tab passive" data-tab="custodian-b">Custodian B <span class="lock">🔒</span></div>
+    </div>
+
+    <!-- ═══ Void Page (shown when no case selected) ═══ -->
+    <div class="role-page active" id="void-page">
+      <div class="placeholder">
+        <h3>Select a test case to begin</h3>
+        <p>Choose a scenario from the dropdown above to load the transfer flow.</p>
+      </div>
     </div>
 
     <!-- ═══ Entity A ═══ -->
-    <div class="role-page active" id="role-entity-a">
+    <div class="role-page" id="role-entity-a">
       <div class="role-header"><span class="dot" style="background:#5b4cdb"></span><h2>Entity A</h2><span class="tag">Originator VASP</span></div>
 
       <div class="section-title">Step 1 · Connection Test</div>
@@ -402,21 +410,6 @@
         </div>
       </div>
 
-      <div class="section-title">Customer</div>
-      <div class="card"><div class="card-body">
-        <div class="cred-row" style="margin-bottom:6px">
-          <span class="k">Select Individual</span>
-          <select id="eb-customer-select" onchange="updateEbCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
-            <option value="">— choose —</option>
-          </select>
-        </div>
-        <div id="eb-customer-detail" style="display:none">
-          <div class="cred-row"><span class="k">Name</span><span class="v" id="eb-customer-name">—</span></div>
-          <div class="cred-row"><span class="k">DOB</span><span class="v" id="eb-customer-dob">—</span></div>
-          <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="eb-customer-hit">—</span></div>
-        </div>
-      </div></div>
-
       <!-- Step 2: Review Incoming -->
       <div class="section-title">Step 2 · Review Incoming Transfer</div>
       <div class="card">
@@ -545,7 +538,7 @@ var IND_CASES = [
 ];
 
 function populateCustomerSelects() {
-  ['ea', 'eb', 'eb-ea'].forEach(function(key) {
+  ['ea', 'eb-ea'].forEach(function(key) {
     var selId = key === 'eb-ea' ? 'eb-customer-select-ea' : key + '-customer-select';
     var sel = document.getElementById(selId);
     if (!sel) return;
@@ -581,27 +574,35 @@ function updateEbCustomerEA() {
   fill('eb-customer-hit-ea', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
 }
 
-function updateEbCustomer() {
-  var idx = document.getElementById('eb-customer-select').value;
-  var detail = document.getElementById('eb-customer-detail');
-  if (idx === '') { detail.style.display = 'none'; return; }
-  detail.style.display = 'block';
-  var c = IND_CASES[parseInt(idx)];
-  fill('eb-customer-name', c.firstName + ' ' + c.lastName);
-  fill('eb-customer-dob', c.dob || '—');
-  fill('eb-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
-}
-
-function loadSettings() {
-  var s = localStorage.getItem('compliance-demo-settings');
-  if (s) { try { return JSON.parse(s); } catch(e) {} }
-  return {
-    notabeneBaseUrl: 'https://api.notabene.io',
-    eaDid: '', eaApikey: '', eaApisecret: '',
-    caDid: '', caApikey: '', caApisecret: '',
-    ebDid: '', ebApikey: '', ebApisecret: '',
-    cbDid: '', cbApikey: '', cbApisecret: ''
-  };
+async function loadSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    return {
+      notabeneBaseUrl: data.config?.notabeneBaseUrl || 'https://api.eu1.notabene.id',
+      eaDid: data.notabene?.ea?.did || '',
+      eaApikey: data.notabene?.ea?.clientId || '',
+      eaApisecret: data.notabene?.ea?.clientSecret || '',
+      caDid: data.notabene?.ca?.did || '',
+      caApikey: data.notabene?.ca?.clientId || '',
+      caApisecret: data.notabene?.ca?.clientSecret || '',
+      ebDid: data.notabene?.eb?.did || '',
+      ebApikey: data.notabene?.eb?.clientId || '',
+      ebApisecret: data.notabene?.eb?.clientSecret || '',
+      cbDid: data.notabene?.cb?.did || '',
+      cbApikey: data.notabene?.cb?.clientId || '',
+      cbApisecret: data.notabene?.cb?.clientSecret || ''
+    };
+  } catch(e) {
+    console.error('Failed to load settings:', e);
+    return {
+      notabeneBaseUrl: 'https://api.eu1.notabene.id',
+      eaDid: '', eaApikey: '', eaApisecret: '',
+      caDid: '', caApikey: '', caApisecret: '',
+      ebDid: '', ebApikey: '', ebApisecret: '',
+      cbDid: '', cbApikey: '', cbApisecret: ''
+    };
+  }
 }
 
 function fill(id, val) {
@@ -611,7 +612,7 @@ function fill(id, val) {
 
 // ─── Step 1: Connection Test ───
 async function verifyConnection(role) {
-  var s = loadSettings();
+  var s = await loadSettings();
   var clientId = s[role + 'Apikey'];
   var clientSecret = s[role + 'Apisecret'];
   var did = s[role + 'Did'];
@@ -682,19 +683,28 @@ function switchCase() {
   var caseId = document.getElementById('case-selector').value;
   var descEl = document.getElementById('case-desc');
   var tabs = document.querySelectorAll('.role-tab');
+  var voidPage = document.getElementById('void-page');
 
   if (!caseId || !CASES[caseId]) {
-    // No case selected — reset all tabs to neutral
+    // No case selected — show void page and keep tabs locked
     descEl.textContent = 'Choose a scenario to begin.';
+    voidPage.classList.add('active');
     tabs.forEach(function(t) {
-      t.classList.remove('active', 'passive');
-      t.style.pointerEvents = '';
-      var lock = t.querySelector('.lock');
-      if (lock) lock.remove();
+      t.classList.remove('active');
+      t.classList.add('passive');
+      t.style.pointerEvents = 'none';
+      if (!t.querySelector('.lock')) {
+        t.innerHTML = t.textContent.trim() + ' <span class="lock">🔒</span>';
+      }
     });
-    document.querySelectorAll('.role-page').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.role-page').forEach(function(p) { 
+      if (p.id !== 'void-page') p.classList.remove('active'); 
+    });
     return;
   }
+
+  // Hide void page when case is selected
+  voidPage.classList.remove('active');
 
   var c = CASES[caseId];
   descEl.textContent = c.desc;
@@ -755,8 +765,8 @@ var selectedTxId = null;
 var selectedTxData = null;
 
 // Auto-fill transfer form from settings + persisted wallets
-function autoFillTransferForm() {
-  var s = loadSettings();
+async function autoFillTransferForm() {
+  var s = await loadSettings();
   var benEl = document.getElementById('ea-tx-beneficiary');
   if (benEl) benEl.value = s.ebDid || '';
 
@@ -774,7 +784,7 @@ function autoFillTransferForm() {
 
 // 2a: Counterparty Discovery
 async function discoverCounterparty() {
-  var s = loadSettings();
+  var s = await loadSettings();
   var address = document.getElementById('ea-discover-address').value.trim();
   var asset = document.getElementById('ea-discover-asset').value.trim();
   var btn = document.getElementById('ea-discover-btn');
@@ -845,7 +855,7 @@ async function discoverCounterparty() {
 
 // 2b: Travel Rule Threshold Check
 async function checkTravelRule() {
-  var s = loadSettings();
+  var s = await loadSettings();
   var origJur = document.getElementById('ea-tr-jurisdiction-orig').value;
   var beneJur = document.getElementById('ea-tr-jurisdiction-bene').value;
   var amount = document.getElementById('ea-tr-amount').value || '1';
@@ -905,7 +915,7 @@ async function checkTravelRule() {
 
 // 2c: Validate PII
 async function validatePII() {
-  var s = loadSettings();
+  var s = await loadSettings();
   var pdUrl = document.getElementById('ea-pd-url').value.trim();
   var btn = document.getElementById('ea-validate-pii-btn');
   var result = document.getElementById('ea-validate-pii-result');
@@ -1022,7 +1032,7 @@ async function validatePII() {
 
 // Create Travel Rule transfer
 async function createTransfer() {
-  var s = loadSettings();
+  var s = await loadSettings();
   var amount = document.getElementById('ea-tx-amount').value || '1';
   var btn = document.getElementById('ea-create-btn');
   var result = document.getElementById('ea-tx-result');
@@ -1190,7 +1200,7 @@ async function createTransfer() {
 
 // Fetch incoming transfers for Entity B
 async function fetchIncomingTransfers() {
-  var s = loadSettings();
+  var s = await loadSettings();
   var listEl = document.getElementById('eb-incoming-list');
   if (!listEl) return;
   listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>Loading...</p></div>';
@@ -1279,7 +1289,7 @@ function extractPII(person, kind) {
 // Fetch full transfer details
 async function fetchTransferDetails() {
   if (!selectedTxId) return;
-  var s = loadSettings();
+  var s = await loadSettings();
   var body = document.getElementById('eb-details-body');
   body.innerHTML = '<div style="color:#888;padding:8px">Fetching transfer details...</div>';
 
@@ -1372,7 +1382,7 @@ async function fetchTransferDetails() {
 // Fetch TAP policies
 async function fetchTapPolicies() {
   if (!selectedTxId) return;
-  var s = loadSettings();
+  var s = await loadSettings();
   var body = document.getElementById('eb-tap-body');
   body.innerHTML = '<div style="color:#888;padding:8px">Fetching TAP policies...</div>';
 
@@ -1419,7 +1429,7 @@ async function fetchTapPolicies() {
 
 // Authorize transfer
 async function authorizeTransfer() {
-  var s = loadSettings();
+  var s = await loadSettings();
   if (!selectedTxId) return;
   var actionBar = document.getElementById('eb-action-bar');
   actionBar.style.display = 'none';
@@ -1447,7 +1457,7 @@ async function authorizeTransfer() {
 
 // Reject transfer
 async function rejectTransfer() {
-  var s = loadSettings();
+  var s = await loadSettings();
   if (!selectedTxId) return;
   var reason = prompt('Rejection reason:', 'COMPLIANCE_CONCERN');
   if (!reason) return;
@@ -1470,7 +1480,7 @@ async function rejectTransfer() {
 
 // Settle transfer
 async function settleTransfer() {
-  var s = loadSettings();
+  var s = await loadSettings();
   if (!selectedTxId) return;
   var btn = document.getElementById('eb-settle-btn');
   var result = document.getElementById('eb-settle-result');
