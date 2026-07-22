@@ -271,9 +271,21 @@ var DEFAULTS = {
   ]
 };
 
+// Load settings from localStorage (synced from settings page which reads from .env)
+function loadSettings() {
+  const saved = localStorage.getItem('compliance-demo-settings');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse settings:', e);
+    }
+  }
+  return {};
+}
+
 function getSettings() {
-  try { return JSON.parse(localStorage.getItem('compliance-demo-settings') || '{}'); }
-  catch(e) { return {}; }
+  return loadSettings();
 }
 
 function ellipticHeaders() {

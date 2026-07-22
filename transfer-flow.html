@@ -253,8 +253,96 @@
         </div>
       </div></div>
 
-      <!-- Step 2: Create Transfer -->
-      <div class="section-title">Step 2 · Create Travel Rule Transfer</div>
+      <!-- Step 2: Pre-Transfer Validation -->
+      <div class="section-title">Step 2 · Pre-Transfer Validation</div>
+
+      <!-- 2a: Counterparty Discovery -->
+      <div class="card">
+        <div class="card-header">
+          Counterparty Discovery
+          <button class="btn btn-primary btn-sm" id="ea-discover-btn" onclick="discoverCounterparty()">Discover</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">POST /entities/:did/address-ownership/discover — Identify which VASP owns the destination address.</p>
+          <div class="transfer-form">
+            <div class="form-group">
+              <label>Destination Address</label>
+              <input type="text" id="ea-discover-address" placeholder="0x... or bc1q..." style="font-size:11px">
+            </div>
+            <div class="form-group">
+              <label>Asset</label>
+              <input type="text" id="ea-discover-asset" value="USDC-TEST" style="font-size:11px">
+            </div>
+          </div>
+          <div id="ea-discover-result" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- 2b: Travel Rule Threshold -->
+      <div class="card">
+        <div class="card-header">
+          Travel Rule Threshold Check
+          <button class="btn btn-primary btn-sm" id="ea-travelrule-btn" onclick="checkTravelRule()">Check</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">GET /travelrule — Determine if this transfer is subject to Travel Rule based on jurisdiction and amount.</p>
+          <div class="transfer-form">
+            <div class="form-group">
+              <label>Originator Jurisdiction</label>
+              <select id="ea-tr-jurisdiction-orig" style="font-size:12px">
+                <option value="AM" selected>Armenia (AM)</option>
+                <option value="AE">UAE (AE)</option>
+                <option value="DE">Germany (DE)</option>
+                <option value="SG">Singapore (SG)</option>
+                <option value="US">United States (US)</option>
+                <option value="GB">United Kingdom (GB)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Beneficiary Jurisdiction</label>
+              <select id="ea-tr-jurisdiction-bene" style="font-size:12px">
+                <option value="AE" selected>UAE (AE)</option>
+                <option value="AM">Armenia (AM)</option>
+                <option value="DE">Germany (DE)</option>
+                <option value="SG">Singapore (SG)</option>
+                <option value="US">United States (US)</option>
+                <option value="GB">United Kingdom (GB)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Amount (USD)</label>
+              <input type="text" id="ea-tr-amount" value="1" style="font-size:12px">
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <input type="text" id="ea-tr-currency" value="USD" readonly style="font-size:12px;background:#f8f8f8">
+            </div>
+          </div>
+          <div id="ea-travelrule-result" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- 2c: PII Validation -->
+      <div class="card">
+        <div class="card-header">
+          PII Validation (IVMS101)
+          <button class="btn btn-primary btn-sm" id="ea-validate-pii-btn" onclick="validatePII()">Validate</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">POST /validate-pii — Validate collected PII against jurisdictional requirements before submission.</p>
+          <div class="transfer-form">
+            <div class="form-group full">
+              <label>Presentation Definition URL</label>
+              <input type="text" id="ea-pd-url" value="https://pd.notabene.id/ivms101/v2/AM-0.json" style="font-size:11px">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:4px">PII is auto-constructed from the selected originator/beneficiary customers above.</div>
+          <div id="ea-validate-pii-result" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Create Transfer -->
+      <div class="section-title">Step 3 · Create Travel Rule Transfer</div>
       <div class="card">
         <div class="card-header">
           Transfer Details
@@ -676,7 +764,260 @@ function autoFillTransferForm() {
   fetch('/api/wallet/persisted').then(function(r) { return r.json(); }).then(function(data) {
     var destEl = document.getElementById('ea-tx-destaddr');
     if (destEl && data.eb && data.eb.address) destEl.value = data.eb.address;
+    // Also fill discover address
+    var discEl = document.getElementById('ea-discover-address');
+    if (discEl && data.eb && data.eb.address) discEl.value = data.eb.address;
   }).catch(function() {});
+}
+
+// ─── Pre-Transfer Validation ───
+
+// 2a: Counterparty Discovery
+async function discoverCounterparty() {
+  var s = loadSettings();
+  var address = document.getElementById('ea-discover-address').value.trim();
+  var asset = document.getElementById('ea-discover-asset').value.trim();
+  var btn = document.getElementById('ea-discover-btn');
+  var result = document.getElementById('ea-discover-result');
+
+  if (!address) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">Enter a destination address first.</div>';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Discovering...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Querying Notabene network...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/discover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'ea',
+        address: address, asset: asset
+      })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var ao = data.addressOwnership || {};
+    var confidence = ao.confidence || '—';
+    var agent = ao.agent || {};
+    var custodian = ao.custodian || {};
+    var source = ao.source || '—';
+    var confColor = confidence === 'CONFIRMED' ? '#059669' : confidence === 'UNCONFIRMED' ? '#d97706' : '#666';
+
+    var html = '<div style="background:#f0f7ff;border-radius:6px;padding:10px;border:1px solid #dbeafe">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<span style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase">Discovered Counterparty</span>' +
+        '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:3px;background:' + confColor + ';color:#fff">' + esc(confidence) + '</span>' +
+      '</div>';
+
+    if (agent.did) {
+      html += '<div class="cred-row"><span class="k">VASP</span><span class="v" style="font-weight:600">' + esc(agent.name || '—') + '</span></div>';
+      html += '<div class="cred-row"><span class="k">DID</span><span class="v mono" style="font-size:10px">' + esc(agent.did) + '</span></div>';
+      html += '<div class="cred-row"><span class="k">Jurisdiction</span><span class="v">' + esc(agent.jurisdiction || '—') + '</span></div>';
+    } else {
+      html += '<div style="font-size:11px;color:#888;padding:4px 0">No VASP found for this address.</div>';
+    }
+
+    if (custodian.did) {
+      html += '<div class="cred-row" style="border-top:1px solid #e0e0e0;margin-top:4px;padding-top:6px"><span class="k">Custodian</span><span class="v">' + esc(custodian.name || '—') + ' (' + esc(custodian.jurisdiction || '—') + ')</span></div>';
+    }
+
+    html += '<div class="cred-row"><span class="k">Source</span><span class="v" style="font-size:10px">' + esc(source) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Response Time</span><span class="v">' + esc(ao.responseTimeMs || '—') + ' ms</span></div>';
+
+    // Raw JSON
+    html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#5b4cdb;font-weight:600">Raw Response</summary>' +
+      '<pre class="mono" style="font-size:9px;max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:4px;border:1px solid #e8e8e8">' + esc(JSON.stringify(data, null, 2)) + '</pre></details>';
+    html += '</div>';
+
+    result.innerHTML = html;
+    btn.textContent = '✓ Done'; btn.className = 'btn btn-success btn-sm';
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+    btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+// 2b: Travel Rule Threshold Check
+async function checkTravelRule() {
+  var s = loadSettings();
+  var origJur = document.getElementById('ea-tr-jurisdiction-orig').value;
+  var beneJur = document.getElementById('ea-tr-jurisdiction-bene').value;
+  var amount = document.getElementById('ea-tr-amount').value || '1';
+  var currency = document.getElementById('ea-tr-currency').value || 'USD';
+  var btn = document.getElementById('ea-travelrule-btn');
+  var result = document.getElementById('ea-travelrule-result');
+
+  btn.disabled = true; btn.textContent = 'Checking...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Checking Travel Rule applicability...</div>';
+
+  try {
+    var url = '/api/notabene/travelrule?' +
+      'originatorJurisdiction=' + encodeURIComponent(origJur) +
+      '&beneficiaryJurisdiction=' + encodeURIComponent(beneJur) +
+      '&amount=' + encodeURIComponent(amount) +
+      '&currency=' + encodeURIComponent(currency);
+
+    var res = await fetch(url);
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var isTR = data.isTravelRule;
+    var pdUrl = data.presentationDefinitionURL || data.presentationDefinitionUrl || '';
+
+    var trColor = isTR ? '#d97706' : '#059669';
+    var trLabel = isTR ? 'SUBJECT TO TRAVEL RULE' : 'BELOW THRESHOLD';
+
+    var html = '<div style="background:' + (isTR ? '#fffbeb' : '#f0fdf4') + ';border-radius:6px;padding:10px;border:1px solid ' + (isTR ? '#fde68a' : '#bbf7d0') + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<span style="font-size:10px;font-weight:600;color:' + trColor + ';text-transform:uppercase">Travel Rule Status</span>' +
+        '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:' + trColor + ';color:#fff">' + trLabel + '</span>' +
+      '</div>';
+
+    html += '<div class="cred-row"><span class="k">Originator</span><span class="v">' + esc(origJur) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Beneficiary</span><span class="v">' + esc(beneJur) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' ' + esc(currency) + '</span></div>';
+
+    if (pdUrl) {
+      html += '<div class="cred-row"><span class="k">Presentation Definition</span><span class="v mono" style="font-size:9px;word-break:break-all">' + esc(pdUrl) + '</span></div>';
+      // Auto-fill the PII validation URL
+      var pdInput = document.getElementById('ea-pd-url');
+      if (pdInput) pdInput.value = pdUrl;
+    }
+
+    html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#5b4cdb;font-weight:600">Raw Response</summary>' +
+      '<pre class="mono" style="font-size:9px;max-height:150px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:4px;border:1px solid #e8e8e8">' + esc(JSON.stringify(data, null, 2)) + '</pre></details>';
+    html += '</div>';
+
+    result.innerHTML = html;
+    btn.textContent = '✓ Done'; btn.className = 'btn btn-success btn-sm';
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+    btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+// 2c: Validate PII
+async function validatePII() {
+  var s = loadSettings();
+  var pdUrl = document.getElementById('ea-pd-url').value.trim();
+  var btn = document.getElementById('ea-validate-pii-btn');
+  var result = document.getElementById('ea-validate-pii-result');
+
+  // Read customer PII from selectors (reuse same logic as createTransfer)
+  var eaCustIdx = document.getElementById('ea-customer-select').value;
+  var ebCustIdx = document.getElementById('eb-customer-select-ea').value;
+  var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+  var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
+
+  if (!eaCust && !ebCust) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">Select at least an originator or beneficiary customer first.</div>';
+    return;
+  }
+
+  // Build IVMS101 from selected customers
+  var ivms101 = {};
+  var eaWallet = '', ebWallet = '';
+  try {
+    var wRes = await fetch('/api/wallet/persisted');
+    var wallets = await wRes.json();
+    eaWallet = wallets.ea ? wallets.ea.address : '';
+    ebWallet = wallets.eb ? wallets.eb.address : '';
+  } catch(e) {}
+
+  if (eaCust) {
+    ivms101.originator = {
+      originatorPerson: [{
+        naturalPerson: {
+          name: { nameIdentifier: [{ primaryIdentifier: eaCust.lastName, secondaryIdentifier: eaCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
+          ...(eaCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: eaCust.dob } } : {})
+        },
+        accountNumber: ['did:pkh:eip155:11155111:' + eaWallet]
+      }]
+    };
+  }
+  if (ebCust) {
+    ivms101.beneficiary = {
+      beneficiaryPerson: [{
+        naturalPerson: {
+          name: { nameIdentifier: [{ primaryIdentifier: ebCust.lastName, secondaryIdentifier: ebCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
+          ...(ebCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: ebCust.dob } } : {})
+        },
+        accountNumber: ['did:pkh:eip155:11155111:' + ebWallet]
+      }]
+    };
+  }
+
+  btn.disabled = true; btn.textContent = 'Validating...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Validating PII against ' + esc(pdUrl) + '...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/validate-pii', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'ea',
+        presentationDefinitionUrl: pdUrl, ivms101: ivms101
+      })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var isValid = data.isValid;
+    var errors = data.errors || [];
+    var missing = data.missingFields || [];
+    var validPaths = data.validPaths || [];
+
+    var valColor = isValid ? '#059669' : '#dc2626';
+    var valBg = isValid ? '#f0fdf4' : '#fef2f2';
+    var valBorder = isValid ? '#bbf7d0' : '#fecaca';
+
+    var html = '<div style="background:' + valBg + ';border-radius:6px;padding:10px;border:1px solid ' + valBorder + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<span style="font-size:10px;font-weight:600;color:' + valColor + ';text-transform:uppercase">PII Validation Result</span>' +
+        '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:' + valColor + ';color:#fff">' + (isValid ? 'VALID ✓' : 'INVALID ✗') + '</span>' +
+      '</div>';
+
+    if (errors.length > 0) {
+      html += '<div style="font-size:10px;font-weight:600;color:#dc2626;margin-bottom:4px">Errors:</div>';
+      errors.forEach(function(err) {
+        html += '<div style="font-size:10px;color:#991b1b;padding:1px 0">• ' + esc(err) + '</div>';
+      });
+    }
+
+    if (missing.length > 0) {
+      html += '<div style="font-size:10px;font-weight:600;color:#d97706;margin:6px 0 4px">Missing Fields (' + missing.length + '):</div>';
+      missing.forEach(function(f) {
+        html += '<div class="mono" style="font-size:9px;color:#92400e;padding:1px 0;word-break:break-all">' + esc(f) + '</div>';
+      });
+    }
+
+    if (validPaths.length > 0) {
+      html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#059669;font-weight:600">Valid Paths (' + validPaths.length + ')</summary>';
+      validPaths.forEach(function(p) {
+        html += '<div class="mono" style="font-size:9px;color:#065f46;padding:1px 0;word-break:break-all">' + esc(p) + '</div>';
+      });
+      html += '</details>';
+    }
+
+    html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#5b4cdb;font-weight:600">Raw Response</summary>' +
+      '<pre class="mono" style="font-size:9px;max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:4px;border:1px solid #e8e8e8">' + esc(JSON.stringify(data, null, 2)) + '</pre></details>';
+    html += '</div>';
+
+    result.innerHTML = html;
+    btn.textContent = '✓ Done'; btn.className = 'btn btn-success btn-sm';
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+    btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
+  }
 }
 
 // Create Travel Rule transfer

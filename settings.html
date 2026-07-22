@@ -161,7 +161,7 @@
           <div class="grid-2">
             <div class="field">
               <label>Contract Address</label>
-              <input type="text" id="s-asset-contract" value="0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66">
+              <input type="text" id="s-asset-contract" value="0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868">
             </div>
             <div class="field">
               <label>Token Info (from chain)</label>
@@ -196,9 +196,9 @@
             </div>
             <div id="ea-balance-display" style="margin-top:8px;font-size:12px"></div>
             <div id="ea-transfer-panel" style="display:none;margin-top:10px;padding:10px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px">
-              <div style="font-size:11px;color:#888;margin-bottom:6px">Send KLCC from this wallet</div>
+              <div style="font-size:11px;color:#888;margin-bottom:6px">Send USDT-TEST from this wallet</div>
               <div class="field" style="margin-bottom:6px">
-                <label style="font-size:11px">Amount (KLCC)</label>
+                <label style="font-size:11px">Amount (USDT-TEST)</label>
                 <input type="text" id="ea-tx-amount" placeholder="e.g. 100" style="width:100%">
               </div>
               <div class="field" style="margin-bottom:6px">
@@ -237,9 +237,9 @@
             </div>
             <div id="eb-balance-display" style="margin-top:8px;font-size:12px"></div>
             <div id="eb-transfer-panel" style="display:none;margin-top:10px;padding:10px;background:#f8f8f8;border:1px solid #e0e0e0;border-radius:4px">
-              <div style="font-size:11px;color:#888;margin-bottom:6px">Send KLCC from this wallet</div>
+              <div style="font-size:11px;color:#888;margin-bottom:6px">Send USDT-TEST from this wallet</div>
               <div class="field" style="margin-bottom:6px">
-                <label style="font-size:11px">Amount (KLCC)</label>
+                <label style="font-size:11px">Amount (USDT-TEST)</label>
                 <input type="text" id="eb-tx-amount" placeholder="e.g. 100" style="width:100%">
               </div>
               <div class="field" style="margin-bottom:6px">
@@ -254,6 +254,64 @@
               <div id="eb-tx-result" style="margin-top:8px;font-size:11px"></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="section-title">Token Mint (Test Faucet)</div>
+      <div class="card">
+        <div class="card-header">Mint Permissionless Test Tokens <span style="float:right;font-size:10px;color:#888">Sepolia</span></div>
+        <div class="card-body">
+          <p style="font-size:11px;color:#888;margin-bottom:10px">
+            Mint USDT-TEST (or any permissionless test token) to any address.
+            The minter wallet signs and pays gas. Anyone can call <code style="font-size:10px">mintTo(addr, amount)</code> on these contracts — no owner gate.
+          </p>
+
+          <div class="field">
+            <label>Token Contract</label>
+            <select id="mint-token-select" onchange="onMintTokenChange()" style="width:100%;padding:7px 10px;border:1px solid #e0e0e0;border-radius:4px;font-size:12px;background:#fff">
+              <option value="0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868">USDT-TEST · Tether USD (Test) — permissionless</option>
+              <option value="__custom">Custom contract address…</option>
+            </select>
+          </div>
+
+          <div class="field" id="mint-custom-wrap" style="display:none">
+            <label>Custom Contract Address</label>
+            <input type="text" id="mint-custom-addr" placeholder="0x..." style="width:100%;font-family:monospace;font-size:12px">
+          </div>
+
+          <div id="mint-token-info" style="font-size:11px;color:#555;padding:6px 10px;background:#f8f8ff;border:1px solid #e0e0e0;border-radius:3px;margin-bottom:10px">
+            USDT-TEST · 18 decimals · internal mint multiplier ×10⁶
+          </div>
+
+          <div class="field">
+            <label>Recipient Address</label>
+            <input type="text" id="mint-to-addr" placeholder="0x... (or click Use EA / Use EB)" style="width:100%;font-family:monospace;font-size:12px">
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button class="tunnel-btn" style="font-size:10px;padding:3px 8px" onclick="mintUseWallet('ea')">Use Entity A</button>
+              <button class="tunnel-btn" style="font-size:10px;padding:3px 8px" onclick="mintUseWallet('eb')">Use Entity B</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Amount (display units)</label>
+            <input type="text" id="mint-amount" placeholder="e.g. 10000" value="10000" style="width:100%;font-family:monospace;font-size:12px">
+          </div>
+
+          <div class="field">
+            <label>Minter Private Key <span style="font-size:9px;color:#aaa">(who signs + pays gas)</span></label>
+            <div style="display:flex;gap:4px">
+              <input type="password" id="mint-minter-pk" placeholder="0x... (e.g. Entity A's custodian key)" style="flex:1;font-family:monospace;font-size:12px;background:#f8f8f8">
+              <button class="tunnel-btn" style="font-size:10px;padding:3px 8px" onclick="mintUseMinter('ea')">Entity A key</button>
+              <button class="tunnel-btn" style="font-size:10px;padding:3px 8px" onclick="mintUseMinter('eb')">Entity B key</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;align-items:center;margin-top:10px">
+            <button class="tunnel-btn" id="mint-submit-btn" onclick="mintTokens()">⚡ Mint Tokens</button>
+            <span id="mint-status" style="font-size:11px"></span>
+          </div>
+
+          <div id="mint-result" style="margin-top:10px"></div>
         </div>
       </div>
 
@@ -595,20 +653,20 @@ var defaults = {
   docLevel: 'kyc-test-daniel-260618',
   nonDocLevel: 'non-doc-kyc-level',
   kybLevel: 'kyb-test-daniel-0626',
-  appToken: 'sbx:XlavCZsZv8bpT0XlO55p2RP3.q86zg7sLn2enTIR8Mq0EJWFtsIt3jLLC',
-  apiSecret: 'SX1TV5oUsneQNYhnxOFIHMLB7glt0Ry4',
-  websdkSecret: 'dbkXTPisF5WJ4E6-hP_mi8myVpwelq_cO-R1DV_1JPQ',
+  appToken: '',
+  apiSecret: '',
+  websdkSecret: '',
   sumsubBaseUrl: 'https://api.sumsub.com',
   websdkDomains: 'localhost',
-  ellipticKey: '77f3e28752d79b7f37b1e7f9c4e753bc',
-  ellipticSecret: '5fc70fdd01205490b1a3d386cbb4fe78',
+  ellipticKey: '',
+  ellipticSecret: '',
   ellipticEndpoint: 'aml-api.elliptic.co',
   ellipticSign: 'HMAC-SHA256',
   notabeneBaseUrl: 'https://api.eu1.notabene.id',
   notabeneWebhookUrl: '',
   eaWebhookSecret: '', caWebhookSecret: '',
   ebWebhookSecret: '', cbWebhookSecret: '',
-  assetContract: '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66',
+  assetContract: '0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868',
   eaWalletAddr: '', eaWalletPk: '',
   ebWalletAddr: '', ebWalletPk: '',
   eaDid: '', eaApikey: '', eaApisecret: '',
@@ -618,60 +676,83 @@ var defaults = {
   cbEntityName: "cregis counterparty's custodian", cbJurisdiction: 'AE', cbLegalStructure: 'CORPORATION', cbIsRegulated: 'YES', cbWebsite: 'https://www.cregis-counterparty-custodian.com', cbSandbox: true
 };
 
-function loadSettings() {
-  var s = localStorage.getItem('compliance-demo-settings');
-  if (s) { try { return JSON.parse(s); } catch(e) {} }
-  return Object.assign({}, defaults);
+// Load settings from server (reads .env)
+async function loadSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    return data;
+  } catch(e) {
+    console.error('Failed to load settings:', e);
+    return {};
+  }
 }
-function storeSettings(s) {
-  localStorage.setItem('compliance-demo-settings', JSON.stringify(s));
-}
-function saveAll() {
-  var s = {
-    baseUrl: document.getElementById('s-baseurl').value.replace(/\/$/, ''),
-    webhookUrl: document.getElementById('s-webhookurl').value,
-    webhookSecret: document.getElementById('s-webhooksecret').value,
-    docLevel: document.getElementById('s-doclevel').value,
-    nonDocLevel: document.getElementById('s-nondoclevel').value,
-    kybLevel: document.getElementById('s-kyblevel').value,
-    appToken: document.getElementById('s-apptoken').value,
-    apiSecret: document.getElementById('s-apisecret').value,
-    websdkSecret: document.getElementById('s-websdksecret').value,
-    sumsubBaseUrl: document.getElementById('s-sumsubbaseurl').value,
-    websdkDomains: document.getElementById('s-websdkdomains').value,
-    ellipticKey: document.getElementById('s-elliptickey').value,
-    ellipticSecret: document.getElementById('s-ellipticsecret').value,
-    ellipticEndpoint: document.getElementById('s-ellipticendpoint').value,
-    ellipticSign: document.getElementById('s-ellipticsign').value,
-    notabeneBaseUrl: document.getElementById('s-notabene-baseurl').value,
-    notabeneWebhookUrl: document.getElementById('s-notabene-webhookurl').value,
-    eaWebhookSecret: document.getElementById('s-ea-webhook-secret').value,
-    caWebhookSecret: document.getElementById('s-ca-webhook-secret').value,
-    ebWebhookSecret: document.getElementById('s-eb-webhook-secret').value,
-    cbWebhookSecret: document.getElementById('s-cb-webhook-secret').value,
-    assetContract: document.getElementById('s-asset-contract').value,
-    eaWalletAddr: document.getElementById('s-ea-wallet-addr').value,
-    eaWalletPk: document.getElementById('s-ea-wallet-pk').value,
-    ebWalletAddr: document.getElementById('s-eb-wallet-addr').value,
-    ebWalletPk: document.getElementById('s-eb-wallet-pk').value,
-    eaDid: document.getElementById('s-ea-did').value,
-    eaApikey: document.getElementById('s-ea-apikey').value,
-    eaApisecret: document.getElementById('s-ea-apisecret').value,
-    caDid: document.getElementById('s-ca-did').value,
-    caApikey: document.getElementById('s-ca-apikey').value,
-    caApisecret: document.getElementById('s-ca-apisecret').value,
-    ebDid: document.getElementById('s-eb-did').value,
-    ebApikey: document.getElementById('s-eb-apikey').value,
-    ebApisecret: document.getElementById('s-eb-apisecret').value,
-    cbDid: document.getElementById('s-cb-did').value,
-    cbApikey: document.getElementById('s-cb-apikey').value,
-    cbApisecret: document.getElementById('s-cb-apisecret').value
+
+// Save settings to server (writes .env)
+async function saveAll() {
+  try {
+  const payload = {
+    notabene: {
+      ea: {
+        did: document.getElementById('s-ea-did').value,
+        clientId: document.getElementById('s-ea-apikey').value,
+        clientSecret: document.getElementById('s-ea-apisecret').value,
+        webhookSecret: document.getElementById('s-ea-webhook-secret').value,
+        didDoc: DID_DOCS.ea
+      },
+      ca: {
+        did: document.getElementById('s-ca-did').value,
+        clientId: document.getElementById('s-ca-apikey').value,
+        clientSecret: document.getElementById('s-ca-apisecret').value,
+        webhookSecret: document.getElementById('s-ca-webhook-secret').value,
+        didDoc: DID_DOCS.ca
+      },
+      eb: {
+        did: document.getElementById('s-eb-did').value,
+        clientId: document.getElementById('s-eb-apikey').value,
+        clientSecret: document.getElementById('s-eb-apisecret').value,
+        webhookSecret: document.getElementById('s-eb-webhook-secret').value,
+        didDoc: DID_DOCS.eb
+      },
+      cb: {
+        did: document.getElementById('s-cb-did').value,
+        clientId: document.getElementById('s-cb-apikey').value,
+        clientSecret: document.getElementById('s-cb-apisecret').value,
+        webhookSecret: document.getElementById('s-cb-webhook-secret').value,
+        didDoc: DID_DOCS.cb
+      }
+    },
+    sumsub: {
+      appToken: document.getElementById('s-apptoken').value,
+      apiSecret: document.getElementById('s-apisecret').value,
+      websdkSecret: document.getElementById('s-websdksecret').value,
+      baseUrl: document.getElementById('s-sumsubbaseurl').value
+    },
+    elliptic: {
+      key: document.getElementById('s-elliptickey').value,
+      secret: document.getElementById('s-ellipticsecret').value,
+      endpoint: document.getElementById('s-ellipticendpoint').value
+    },
+    config: {
+      notabeneBaseUrl: document.getElementById('s-notabene-baseurl').value,
+      assetContract: document.getElementById('s-asset-contract').value
+    }
   };
-  storeSettings(s);
-  // Push webhook secrets to server (server uses these to verify incoming webhooks)
-  syncWebhookSecrets();
-  updatePreviews();
-  showGlobalStatus('Settings saved to localStorage', 'ok');
+
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+    const data = await res.json();
+    if (data.ok) {
+      alert('Settings saved to .env');
+    } else {
+      alert('Error saving settings: ' + (data.error || 'Unknown error'));
+    }
+  } catch(e) {
+    alert('Error saving settings: ' + e.message);
+  }
 }
 
 // Sync per-role webhook secrets to server-side file
@@ -769,7 +850,6 @@ async function generateWallet(role) {
     if (data.error) throw new Error(data.error);
     document.getElementById('s-' + role + '-wallet-addr').value = data.address;
     document.getElementById('s-' + role + '-wallet-pk').value = data.privateKey;
-    saveSettings();
     if (balBtn) balBtn.disabled = false;
     var txBtn = document.getElementById(role + '-tx-btn');
     if (txBtn) txBtn.disabled = false;
@@ -822,7 +902,6 @@ async function loadPersistedWallets() {
         if (genBtn) genBtn.textContent = 'Regenerate';
         if (balBtn) balBtn.disabled = false;
         if (txBtn) txBtn.disabled = false;
-        saveSettings();
       }
       // Update badge based on persistence state
       if (badge) {
@@ -895,7 +974,7 @@ async function sendTransfer(role) {
   if (!amount)   { alert('Amount required'); return; }
   if (!to)       { alert('Destination address required'); return; }
 
-  if (!confirm('Send ' + amount + ' KLCC\nfrom: ' + fromAddr + '\nto:   ' + to + '\n\nThis is a REAL on-chain transaction on Sepolia.')) {
+  if (!confirm('Send ' + amount + ' USDT-TEST\nfrom: ' + fromAddr + '\nto:   ' + to + '\n\nThis is a REAL on-chain transaction on Sepolia.')) {
     return;
   }
 
@@ -986,6 +1065,154 @@ async function verifyAsset() {
 function saveSettings() {
   // Delegate to the main save function
   if (typeof saveAll === 'function') return saveAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Token Mint — permissionless test-token faucet
+// ═══════════════════════════════════════════════════════════════
+
+function onMintTokenChange() {
+  var sel = document.getElementById('mint-token-select');
+  var customWrap = document.getElementById('mint-custom-wrap');
+  var info = document.getElementById('mint-token-info');
+  if (sel.value === '__custom') {
+    customWrap.style.display = '';
+    info.innerHTML = '<span style="color:#888">Custom contract — server will auto-detect decimals and try mintTo(address,uint256) then mint(uint256)</span>';
+  } else {
+    customWrap.style.display = 'none';
+    if (sel.value === '0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868') {
+      info.innerHTML = 'USDT-TEST · 18 decimals · internal mint multiplier ×10⁶ <span style="color:#888">(anyone can mint)</span>';
+    } else {
+      info.textContent = '';
+    }
+  }
+}
+
+function mintUseWallet(role) {
+  var addr = document.getElementById('s-' + role + '-wallet-addr');
+  var target = document.getElementById('mint-to-addr');
+  if (addr && addr.value && target) {
+    target.value = addr.value;
+  } else {
+    alert('No ' + role.toUpperCase() + ' wallet address found. Generate it first in the Custody Wallets section above.');
+  }
+}
+
+function mintUseMinter(role) {
+  var pk = document.getElementById('s-' + role + '-wallet-pk');
+  var target = document.getElementById('mint-minter-pk');
+  if (pk && pk.value && target) {
+    target.value = pk.value;
+  } else {
+    alert('No ' + role.toUpperCase() + ' private key found. Generate the wallet first.');
+  }
+}
+
+async function mintTokens() {
+  var sel = document.getElementById('mint-token-select');
+  var customAddr = document.getElementById('mint-custom-addr').value.trim();
+  var to = document.getElementById('mint-to-addr').value.trim();
+  var amount = document.getElementById('mint-amount').value.trim();
+  var pk = document.getElementById('mint-minter-pk').value.trim();
+  var status = document.getElementById('mint-status');
+  var result = document.getElementById('mint-result');
+  var btn = document.getElementById('mint-submit-btn');
+
+  var contract = sel.value === '__custom' ? customAddr : sel.value;
+  if (!contract) { alert('Token contract required'); return; }
+  if (!to)       { alert('Recipient address required'); return; }
+  if (!amount)   { alert('Amount required'); return; }
+  if (!pk)       { alert('Minter private key required'); return; }
+
+  if (!confirm('Mint ' + amount + ' tokens\ncontract: ' + contract + '\nto: ' + to + '\n\nThis is a REAL on-chain transaction on Sepolia.')) {
+    return;
+  }
+
+  status.innerHTML = '<span style="color:#888">Broadcasting to Sepolia…</span>';
+  result.innerHTML = '';
+  btn.disabled = true; btn.textContent = 'Minting…';
+
+  try {
+    var res = await fetch('/api/wallet/mint', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ privateKey: pk, to: to, amount: amount, contract: contract })
+    });
+    var data = await res.json();
+    if (data.error || !data.ok) throw new Error(data.error || 'Mint failed');
+
+    // Tx broadcasted — show pending immediately with explorer link
+    status.innerHTML = '<span style="color:#d97706">⏳ Waiting for block confirmation…</span>';
+    result.innerHTML =
+      '<div style="background:#fff;padding:10px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px">' +
+        '<div style="font-weight:600;margin-bottom:6px;color:#d97706">⏳ +' + data.amount + ' ' + data.symbol + ' → ' + data.to.slice(0,8) + '…' + data.to.slice(-4) + ' (pending)</div>' +
+        '<div style="font-family:monospace;font-size:10px;word-break:break-all;line-height:1.6">' +
+          '<div><span style="color:#888">tx:</span> ' + data.txHash + '</div>' +
+          '<div><span style="color:#888">method:</span> ' + data.method + '</div>' +
+        '</div>' +
+        '<div style="margin-top:6px"><a href="' + data.explorerUrl + '" target="_blank" style="color:#2563eb">↗ View on Blockscout</a></div>' +
+      '</div>';
+
+    // Poll for confirmation
+    pollMintStatus(data.txHash, to, contract, data, status, result, btn);
+  } catch(e) {
+    status.innerHTML = '<span style="color:#dc2626">✗ ' + e.message + '</span>';
+    btn.disabled = false; btn.textContent = '⚡ Mint Tokens';
+  }
+}
+
+function pollMintStatus(txHash, recipient, contract, mintData, statusEl, resultEl, btn) {
+  var attempts = 0;
+  var maxAttempts = 30; // 30 × 4s = 2 min max
+  var timer = setInterval(async function() {
+    attempts++;
+    try {
+      var url = '/api/wallet/tx-status?txhash=' + encodeURIComponent(txHash) +
+                '&address=' + encodeURIComponent(recipient) +
+                '&contract=' + encodeURIComponent(contract);
+      var res = await fetch(url);
+      var data = await res.json();
+
+      if (data.status === 'success') {
+        clearInterval(timer);
+        statusEl.innerHTML = '<span style="color:#059669">✓ Confirmed in block ' + data.blockNumber + '</span>';
+        resultEl.innerHTML =
+          '<div style="background:#fff;padding:10px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px">' +
+            '<div style="font-weight:600;margin-bottom:6px;color:#059669">+' + mintData.amount + ' ' + mintData.symbol + ' → ' + mintData.to.slice(0,8) + '…' + mintData.to.slice(-4) + '</div>' +
+            '<div style="font-family:monospace;font-size:10px;word-break:break-all;line-height:1.6">' +
+              '<div><span style="color:#888">tx:</span> ' + txHash + '</div>' +
+              '<div><span style="color:#888">method:</span> ' + mintData.method + '</div>' +
+              '<div><span style="color:#888">mintParam:</span> ' + mintData.mintParam + ' <span style="color:#aaa">(raw passed to contract)</span></div>' +
+              '<div><span style="color:#888">gas:</span> ' + data.gasUsed + '</div>' +
+              (data.newBalance ? '<div><span style="color:#888">newBalance:</span> ' + data.newBalance + ' ' + data.symbol + '</div>' : '') +
+            '</div>' +
+            '<div style="margin-top:6px"><a href="' + mintData.explorerUrl + '" target="_blank" style="color:#2563eb">↗ View on Blockscout</a></div>' +
+          '</div>';
+        btn.disabled = false; btn.textContent = '⚡ Mint Tokens';
+
+        // Refresh EA/EB balances if either was the recipient
+        ['ea','eb'].forEach(function(role) {
+          var addrEl = document.getElementById('s-' + role + '-wallet-addr');
+          if (addrEl && addrEl.value && addrEl.value.toLowerCase() === recipient.toLowerCase()) {
+            setTimeout(function() { refreshBalance(role); }, 1000);
+          }
+        });
+      } else if (data.status === 'reverted') {
+        clearInterval(timer);
+        statusEl.innerHTML = '<span style="color:#dc2626">✗ Transaction reverted</span>';
+        btn.disabled = false; btn.textContent = '⚡ Mint Tokens';
+      } else {
+        // Still pending
+        statusEl.innerHTML = '<span style="color:#d97706">⏳ Waiting for block confirmation… (' + attempts + '/' + maxAttempts + ')</span>';
+      }
+    } catch(e) { /* retry on next tick */ }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(timer);
+      statusEl.innerHTML = '<span style="color:#888">Polling timed out — check <a href="' + mintData.explorerUrl + '" target="_blank">Blockscout</a> for final status</span>';
+      btn.disabled = false; btn.textContent = '⚡ Mint Tokens';
+    }
+  }, 4000);
 }
 
 // Auto-verify asset on load if contract is set
@@ -1121,13 +1348,9 @@ async function checkTunnelStatus() {
 }
 
 // ─── DID Document Toggle & Fill ───
-var CB_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","verificationMethod":[{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#3d1adf94b3353ae0ed04227f942baa83d06224ae6f1c15ec248a2e42da72bd4c","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","publicKeyBase58":"57XdvC7acZc2JRAW1SwYR8xMNLoaApvrrxp2NJdSpqVD"},{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#83497a27bb9778dc9c825309357fe9968f93f63c4abbf06083dbff10016ed7b2","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","publicKeyBase58":"9qVPjeRPJghQmMYsjpdgLds8YXEi9TMvAaPiWnvqZd8m"},{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-fb18c.sandbox.notabene.id:ae","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"UeH8RgqJtXrSptHR131JY8XATmqNepq8RujkS63Brog","y":"MBLB7LNQsYHFXyReyBnR45DPaPqL8EBgQBqi2Q3ukSQ"}}],"authentication":["did:web:cregisio-fb18c.sandbox.notabene.id:ae#83497a27bb9778dc9c825309357fe9968f93f63c4abbf06083dbff10016ed7b2"],"assertionMethod":["did:web:cregisio-fb18c.sandbox.notabene.id:ae#83497a27bb9778dc9c825309357fe9968f93f63c4abbf06083dbff10016ed7b2"],"keyAgreement":["did:web:cregisio-fb18c.sandbox.notabene.id:ae#notabene-pii","did:web:cregisio-fb18c.sandbox.notabene.id:ae#3d1adf94b3353ae0ed04227f942baa83d06224ae6f1c15ec248a2e42da72bd4c"],"service":[{"id":"did:web:cregisio-fb18c.sandbox.notabene.id:ae#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
-
-var CA_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-5a794.sandbox.notabene.id:am","verificationMethod":[{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#5ef93950cc426a04fd21ab5bede15203266422cf4cd932eb7e626938cfa89d31","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyBase58":"7PjjqBWSNuEDxnMHh1AKQ3es7Jun5LzxjmAH8q77CwdS"},{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyBase58":"ANeEFYcqN99C8AunMuetriibeqWJkXKrvezpJHvPbhWg"},{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-5a794.sandbox.notabene.id:am","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"5cMZRBurSEOo2SH_bMyrvlMY-4FIfs444ALO4AotpYg","y":"RdzIn4RHIegEQsEQa2EY3ew1f-Cz1QxKZ4fCV2QDzHU"}}],"authentication":["did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9"],"assertionMethod":["did:web:cregisio-5a794.sandbox.notabene.id:am#8b44794353c71a29b6578f7069d4022fd1d74c56e38809241b9e13ccb8d002a9"],"keyAgreement":["did:web:cregisio-5a794.sandbox.notabene.id:am#notabene-pii","did:web:cregisio-5a794.sandbox.notabene.id:am#5ef93950cc426a04fd21ab5bede15203266422cf4cd932eb7e626938cfa89d31"],"service":[{"id":"did:web:cregisio-5a794.sandbox.notabene.id:am#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
-
-var EA_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am","verificationMethod":[{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#510ae76ad8eae042f94fb86baac006d8ce8ed8a9019831b52d99d8615e219a59","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-8f89b.sandbox.notabene.id:am","publicKeyBase58":"6TMfgxCHEkscZcPZYPB2xsgyKKVJdPSYUU4C3PT4b81W"},{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#16e0f7956ac8bbb3ada03803500f52873f1041c9bbb6fc3d8c8191a737530413","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-8f89b.sandbox.notabene.id:am","publicKeyBase58":"2YJw2HKJCmuK6DXYTwsPgvpHRhuNPG13VvA9nGec921Y"},{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-8f89b.sandbox.notabene.id:am","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"asbjBgrkc_bN26bFngXL-_6Sa7coc0ICTQxdbFiCo4w","y":"rGrDPuXNFYCFv67T1SMCqRa6pi0QA7lEaoAoIpmQQgM"}}],"authentication":["did:web:cregisio-8f89b.sandbox.notabene.id:am#16e0f7956ac8bbb3ada03803500f52873f1041c9bbb6fc3d8c8191a737530413"],"assertionMethod":["did:web:cregisio-8f89b.sandbox.notabene.id:am#16e0f7956ac8bbb3ada03803500f52873f1041c9bbb6fc3d8c8191a737530413"],"keyAgreement":["did:web:cregisio-8f89b.sandbox.notabene.id:am#notabene-pii","did:web:cregisio-8f89b.sandbox.notabene.id:am#510ae76ad8eae042f94fb86baac006d8ce8ed8a9019831b52d99d8615e219a59"],"service":[{"id":"did:web:cregisio-8f89b.sandbox.notabene.id:am#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
-
-var EB_DID_DOC = {"@context":["https://www.w3.org/ns/did/v1","https://w3id.org/security/suites/x25519-2019/v1","https://w3id.org/security/suites/ed25519-2018/v1","https://w3id.org/security/v2","https://w3id.org/security/suites/jws-2020/v1"],"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","verificationMethod":[{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#3f0247fb8537be90a6d843bb47682d581f9b78131111f4eb6872c65e41a2b112","type":"X25519KeyAgreementKey2019","controller":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","publicKeyBase58":"5Exhk2x8MGcFP9sghBCRpm3khrPiQHDJwa2MyqyUPMPf"},{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#51fc32db4f083b2387f261024029db9974fefa296add377a90baf8df4f9154aa","type":"Ed25519VerificationKey2018","controller":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","publicKeyBase58":"6X3526X7uxfAHju1jiSpVu4cgusKsc31XM46cQSHckwB"},{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#notabene-pii","type":"JsonWebKey2020","controller":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae","publicKeyJwk":{"kty":"EC","crv":"P-256","x":"WAuN26H_6P5psuZ2Un0vKeOX1EiTvKzRQSizYahZ-ik","y":"0p3wK6LSg0TJz62_JW2AsUHNqs-DBb4DyO3uLwmpnig"}}],"authentication":["did:web:cregisio-a5f9c.sandbox.notabene.id:ae#51fc32db4f083b2387f261024029db9974fefa296add377a90baf8df4f9154aa"],"assertionMethod":["did:web:cregisio-a5f9c.sandbox.notabene.id:ae#51fc32db4f083b2387f261024029db9974fefa296add377a90baf8df4f9154aa"],"keyAgreement":["did:web:cregisio-a5f9c.sandbox.notabene.id:ae#notabene-pii","did:web:cregisio-a5f9c.sandbox.notabene.id:ae#3f0247fb8537be90a6d843bb47682d581f9b78131111f4eb6872c65e41a2b112"],"service":[{"id":"did:web:cregisio-a5f9c.sandbox.notabene.id:ae#vasp","type":"DIDCommMessaging","serviceEndpoint":"https://api.eu1.notabene.id/didcomm"}]};
+// DID documents are loaded from server via /api/settings
+var DID_DOCS = { ea: null, ca: null, eb: null, cb: null };
+var ENTITY_INFOS = { ea: null, ca: null, eb: null, cb: null };
 
 var DID_ROLES = ['ea', 'ca', 'eb', 'cb'];
 
@@ -1164,9 +1387,9 @@ function fillDidEntity(role, info) {
   var el = document.getElementById(prefix + 'did-full-json');
   if (!el || !info) return;
   el.textContent = JSON.stringify(info, null, 2);
-  // Also update DID val
+  // Also update DID val from DID_DOCS (entityInfo doesn't include did)
   var didEl = document.getElementById(prefix + 'did-val');
-  if (didEl) didEl.textContent = info.did || '—';
+  if (didEl) didEl.textContent = (DID_DOCS[role] && DID_DOCS[role].id) || info.did || '—';
   // Show entity details
   var edEl = document.getElementById(prefix + 'ed25519-val');
   if (edEl) edEl.textContent = info.name || info.legalName || '—';
@@ -1229,119 +1452,88 @@ function updatePreviews() {
   }
 }
 
-// Load on start
-var saved = loadSettings();
+// Load on start - async function to fetch from server
+async function initSettings() {
+  var saved = await loadSettings();
+  
+  // Check if page is served via HTTP (not file://)
+  if (location.protocol === 'file:') {
+    var genBtn = document.getElementById('tunnel-generate-btn');
+    var testBtn = document.getElementById('tunnel-test-btn');
+    if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Must serve via HTTP'; }
+    if (testBtn) testBtn.disabled = true;
+  }
 
-// Auto-sync: if on a cloudflared tunnel, update settings baseUrl to match
-if (window.location.origin.includes('trycloudflare.com') && saved.baseUrl !== window.location.origin) {
-  saved.baseUrl = window.location.origin;
-  localStorage.setItem('compliance-demo-settings', JSON.stringify(saved));
+  // Map server response to form fields
+  var fieldMap = {
+    's-baseurl': saved.config?.baseUrl || '',
+    's-webhookurl': saved.config?.webhookUrl || '',
+    's-webhooksecret': saved.config?.webhookSecret || '',
+    's-doclevel': saved.config?.docLevel || '',
+    's-nondoclevel': saved.config?.nonDocLevel || '',
+    's-kyblevel': saved.config?.kybLevel || '',
+    's-apptoken': saved.sumsub?.appToken || '',
+    's-apisecret': saved.sumsub?.apiSecret || '',
+    's-websdksecret': saved.sumsub?.websdkSecret || '',
+    's-sumsubbaseurl': saved.sumsub?.baseUrl || 'https://api.sumsub.com',
+    's-websdkdomains': saved.config?.websdkDomains || '',
+    's-elliptickey': saved.elliptic?.key || '',
+    's-ellipticsecret': saved.elliptic?.secret || '',
+    's-ellipticendpoint': saved.elliptic?.endpoint || 'aml-api.elliptic.co',
+    's-ellipticsign': saved.config?.ellipticSign || '',
+    's-notabene-baseurl': saved.config?.notabeneBaseUrl || 'https://api.eu1.notabene.id',
+    's-notabene-webhookurl': saved.config?.notabeneWebhookUrl || '',
+    's-ea-webhook-secret': saved.notabene?.ea?.webhookSecret || '',
+    's-ca-webhook-secret': saved.notabene?.ca?.webhookSecret || '',
+    's-eb-webhook-secret': saved.notabene?.eb?.webhookSecret || '',
+    's-cb-webhook-secret': saved.notabene?.cb?.webhookSecret || '',
+    's-asset-contract': saved.config?.assetContract || '0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868',
+    's-ea-wallet-addr': saved.wallets?.ea?.address || '',
+    's-ea-wallet-pk': saved.wallets?.ea?.privateKey || '',
+    's-eb-wallet-addr': saved.wallets?.eb?.address || '',
+    's-eb-wallet-pk': saved.wallets?.eb?.privateKey || '',
+    's-ea-did': saved.notabene?.ea?.did || '',
+    's-ea-apikey': saved.notabene?.ea?.clientId || '',
+    's-ea-apisecret': saved.notabene?.ea?.clientSecret || '',
+    's-ca-did': saved.notabene?.ca?.did || '',
+    's-ca-apikey': saved.notabene?.ca?.clientId || '',
+    's-ca-apisecret': saved.notabene?.ca?.clientSecret || '',
+    's-eb-did': saved.notabene?.eb?.did || '',
+    's-eb-apikey': saved.notabene?.eb?.clientId || '',
+    's-eb-apisecret': saved.notabene?.eb?.clientSecret || '',
+    's-cb-did': saved.notabene?.cb?.did || '',
+    's-cb-apikey': saved.notabene?.cb?.clientId || '',
+    's-cb-apisecret': saved.notabene?.cb?.clientSecret || ''
+  };
+  
+  for (var id in fieldMap) {
+    var el = document.getElementById(id);
+    if (el) el.value = fieldMap[id];
+  }
+  
+  // Populate DID docs and entity info from server response
+  DID_DOCS.ea = saved.notabene?.ea?.didDoc || null;
+  DID_DOCS.ca = saved.notabene?.ca?.didDoc || null;
+  DID_DOCS.eb = saved.notabene?.eb?.didDoc || null;
+  DID_DOCS.cb = saved.notabene?.cb?.didDoc || null;
+  
+  ENTITY_INFOS.ea = saved.notabene?.ea?.entityInfo || null;
+  ENTITY_INFOS.ca = saved.notabene?.ca?.entityInfo || null;
+  ENTITY_INFOS.eb = saved.notabene?.eb?.entityInfo || null;
+  ENTITY_INFOS.cb = saved.notabene?.cb?.entityInfo || null;
+  
+  // Fill DID docs and entity info for all roles
+  DID_ROLES.forEach(function(role) {
+    fillDidDoc(role, DID_DOCS[role]);
+    fillDidEntity(role, ENTITY_INFOS[role]);
+  });
+  
+  updatePreviews();
+  checkTunnelStatus();
 }
 
-// Check if page is served via HTTP (not file://)
-if (location.protocol === 'file:') {
-  var genBtn = document.getElementById('tunnel-generate-btn');
-  var testBtn = document.getElementById('tunnel-test-btn');
-  if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Must serve via HTTP'; }
-  if (testBtn) testBtn.disabled = true;
-}
-
-var fieldMap = {
-  's-baseurl': saved.baseUrl, 's-webhookurl': saved.webhookUrl, 's-webhooksecret': saved.webhookSecret,
-  's-doclevel': saved.docLevel,
-  's-nondoclevel': saved.nonDocLevel, 's-kyblevel': saved.kybLevel,
-  's-apptoken': saved.appToken,
-  's-apisecret': saved.apiSecret, 's-websdksecret': saved.websdkSecret,
-  's-sumsubbaseurl': saved.sumsubBaseUrl, 's-websdkdomains': saved.websdkDomains,
-  's-elliptickey': saved.ellipticKey, 's-ellipticsecret': saved.ellipticSecret,
-  's-ellipticendpoint': saved.ellipticEndpoint, 's-ellipticsign': saved.ellipticSign,
-  's-notabene-baseurl': saved.notabeneBaseUrl,
-  's-notabene-webhookurl': saved.notabeneWebhookUrl,
-  's-ea-webhook-secret': saved.eaWebhookSecret,
-  's-ca-webhook-secret': saved.caWebhookSecret,
-  's-eb-webhook-secret': saved.ebWebhookSecret,
-  's-cb-webhook-secret': saved.cbWebhookSecret,
-  's-asset-contract': saved.assetContract,
-  's-ea-wallet-addr': saved.eaWalletAddr, 's-ea-wallet-pk': saved.eaWalletPk,
-  's-eb-wallet-addr': saved.ebWalletAddr, 's-eb-wallet-pk': saved.ebWalletPk,
-  's-ea-did': saved.eaDid, 's-ea-apikey': saved.eaApikey, 's-ea-apisecret': saved.eaApisecret,
-  's-ca-did': saved.caDid, 's-ca-apikey': saved.caApikey, 's-ca-apisecret': saved.caApisecret,
-  's-eb-did': saved.ebDid, 's-eb-apikey': saved.ebApikey, 's-eb-apisecret': saved.ebApisecret,
-  's-cb-did': saved.cbDid, 's-cb-apikey': saved.cbApikey, 's-cb-apisecret': saved.cbApisecret
-};
-for (var id in fieldMap) {
-  var el = document.getElementById(id);
-  if (el) el.value = fieldMap[id];
-}
-updatePreviews();
-checkTunnelStatus();
-var CB_ENTITY_INFO = {
-  did: 'did:web:cregisio-fb18c.sandbox.notabene.id:ae',
-  name: "cregis counterparty's custodian",
-  legalName: "cregis counterparty's custodian",
-  domain: 'cregisio-fb18c.sandbox.notabene.id',
-  jurisdiction: 'AE',
-  website: 'https://www.cregis-counterparty-custodian.com',
-  legalStructure: 'CORPORATION',
-  yearFounded: '2001',
-  incorporationCountry: 'AE',
-  isRegulated: 'YES',
-  sandbox: true,
-  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
-};
-
-fillDidDoc('cb', CB_DID_DOC);
-fillDidEntity('cb', CB_ENTITY_INFO);
-fillDidDoc('ca', CA_DID_DOC);
-var CA_ENTITY_INFO = {
-  did: 'did:web:cregisio-5a794.sandbox.notabene.id:am',
-  name: "cregis's custodian",
-  legalName: "cregis's custodian",
-  domain: 'cregisio-5a794.sandbox.notabene.id',
-  jurisdiction: 'AM',
-  website: 'https://www.cregis-custodian.com',
-  legalStructure: 'CORPORATION',
-  yearFounded: '2001',
-  incorporationCountry: 'AM',
-  isRegulated: 'YES',
-  sandbox: true,
-  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
-};
-fillDidEntity('ca', CA_ENTITY_INFO);
-fillDidDoc('ea', EA_DID_DOC);
-var EA_ENTITY_INFO = {
-  did: 'did:web:cregisio-8f89b.sandbox.notabene.id:am',
-  name: 'cregis',
-  legalName: 'cregis',
-  domain: 'cregisio-8f89b.sandbox.notabene.id',
-  jurisdiction: 'AM',
-  website: 'https://www.cregis.com',
-  legalStructure: 'CORPORATION',
-  yearFounded: '7',
-  incorporationCountry: 'AS',
-  country: 'BG',
-  isRegulated: 'YES',
-  sandbox: true,
-  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
-};
-fillDidEntity('ea', EA_ENTITY_INFO);
-fillDidDoc('eb', EB_DID_DOC);
-var EB_ENTITY_INFO = {
-  did: 'did:web:cregisio-a5f9c.sandbox.notabene.id:ae',
-  name: 'cregis  counterparty',
-  legalName: 'cregis  counterparty',
-  domain: 'cregisio-a5f9c.sandbox.notabene.id',
-  jurisdiction: 'AE',
-  website: 'https://www.cregis-counterparty.com',
-  legalStructure: 'CORPORATION',
-  yearFounded: '2020',
-  incorporationCountry: 'AE',
-  country: 'AE',
-  isRegulated: 'YES',
-  sandbox: true,
-  supportedCurrencies: [{ code: 'USD', name: 'US Dollar', symbol: '$' }]
-};
-fillDidEntity('eb', EB_ENTITY_INFO);
+// Initialize settings on page load
+initSettings();
 
 // ─── Webhook Console ───
 var whSeen = new Set();

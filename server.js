@@ -634,6 +634,32 @@ app.post('/api/applicant/reset/:applicantId', async (req, res) => {
 const NOTABENE_AUTH_URL = 'https://auth.notabene.id/oauth/token';
 const NOTABENE_API_BASE = 'https://api.eu1.notabene.id';
 
+// Resolve role credentials: use .env as source of truth, frontend values as override
+const ROLE_ENV_MAP = {
+  ea: { did: 'NOTABENE_EA_DID', id: 'NOTABENE_EA_CLIENT_ID', secret: 'NOTABENE_EA_CLIENT_SECRET' },
+  ca: { did: 'NOTABENE_CA_DID', id: 'NOTABENE_CA_CLIENT_ID', secret: 'NOTABENE_CA_CLIENT_SECRET' },
+  eb: { did: 'NOTABENE_EB_DID', id: 'NOTABENE_EB_CLIENT_ID', secret: 'NOTABENE_EB_CLIENT_SECRET' },
+  cb: { did: 'NOTABENE_CB_DID', id: 'NOTABENE_CB_CLIENT_ID', secret: 'NOTABENE_CB_CLIENT_SECRET' }
+};
+
+// If frontend doesn't pass credentials, fall back to .env
+function resolveRoleCreds(role, frontendId, frontendSecret, frontendDid) {
+  const m = ROLE_ENV_MAP[role];
+  if (!m) return { clientId: frontendId, clientSecret: frontendSecret, did: frontendDid };
+  return {
+    clientId: (frontendId && frontendId.length > 5) ? frontendId : (process.env[m.id] || ''),
+    clientSecret: (frontendSecret && frontendSecret.length > 5) ? frontendSecret : (process.env[m.secret] || ''),
+    did: (frontendDid && frontendDid.startsWith('did:')) ? frontendDid : (process.env[m.did] || '')
+  };
+}
+
+// Helper: resolve creds from role + req (query or body)
+function credsFromReq(role, req) {
+  const fromQuery = req.query || {};
+  const fromBody = req.body || {};
+  return resolveRoleCreds(role, fromQuery.clientId || fromBody.clientId, fromQuery.clientSecret || fromBody.clientSecret, fromQuery.did || fromBody.did || fromBody.entityDid);
+}
+
 // Token cache (24h validity, refresh at 23h)
 let notabeneTokenCache = {}; // keyed by clientId
 
@@ -712,12 +738,12 @@ app.get('/api/notabene/network', async (req, res) => {
   }
 });
 
-// Get entity info
+// Get entity info (from Notabene network)
 app.get('/api/notabene/entity', async (req, res) => {
   const { clientId, clientSecret, did } = req.query;
   try {
     const token = await getNotabeneToken(clientId, clientSecret);
-    const data = await notabeneApi('GET', '/entity/' + did, token);
+    const data = await notabeneApi('GET', '/network/' + did, token);
     res.json(data);
   } catch(e) {
     res.status(500).json({ error: e.message });
@@ -807,6 +833,98 @@ app.get('/api/notabene/transfer/tap-policies', async (req, res) => {
   try {
     const token = await getNotabeneToken(clientId, clientSecret);
     const data = await notabeneApi('GET', '/entity/' + did + '/tx/' + txId + '/tap-policies', token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Discover address ownership (counterparty discovery)
+app.post('/api/notabene/discover', async (req, res) => {
+  const { role, address, asset } = req.body;
+  try {
+    const creds = credsFromReq(role || 'ea', req);
+    if (!creds.clientId || !creds.clientSecret) {
+      return res.status(400).json({ error: 'No Notabene credentials configured. Set in .env or Settings.' });
+    }
+    const token = await getNotabeneToken(creds.clientId, creds.clientSecret);
+    const path = '/entities/' + creds.did + '/address-ownership/discover';
+    const data = await notabeneApi('POST', path, token, { address, asset });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Check Travel Rule threshold (uses public jurisdiction-thresholds JSON)
+app.get('/api/notabene/travelrule', async (req, res) => {
+  const { originatorJurisdiction, beneficiaryJurisdiction, amount, currency } = req.query;
+  try {
+    // Fetch jurisdiction thresholds from Notabene's public presentation definitions
+    const thresholdsResp = await fetch('https://pd.notabene.id/ivms101/v2/jurisdiction-thresholds.json');
+    const allThresholds = await thresholdsResp.json();
+
+    // Find originator jurisdiction
+    const origJur = allThresholds.find(j => j.countryCode === originatorJurisdiction);
+    if (!origJur) {
+      return res.json({
+        isTravelRule: true,
+        reason: `Jurisdiction ${originatorJurisdiction} not in threshold list — FATF guidelines apply (threshold: 0)`,
+        presentationDefinitionURL: 'https://pd.notabene.id/ivms101/v2/FATF-0.json',
+        originatorJurisdiction,
+        beneficiaryJurisdiction,
+        amount,
+        currency
+      });
+    }
+
+    // Find applicable threshold (lowest threshold that the amount exceeds)
+    const amt = parseFloat(amount) || 0;
+    let applicableThreshold = null;
+    for (const t of origJur.thresholds) {
+      if (amt >= parseFloat(t.threshold)) {
+        if (!applicableThreshold || parseFloat(t.threshold) > parseFloat(applicableThreshold.threshold)) {
+          applicableThreshold = t;
+        }
+      }
+    }
+
+    if (applicableThreshold) {
+      res.json({
+        isTravelRule: true,
+        threshold: applicableThreshold.threshold,
+        currency: origJur.currency,
+        presentationDefinitionURL: applicableThreshold.presentationDefinitionURL,
+        originatorJurisdiction,
+        beneficiaryJurisdiction,
+        amount,
+        jurisdictionStatus: origJur.jurisdictionStatus || 'unknown'
+      });
+    } else {
+      res.json({
+        isTravelRule: false,
+        reason: `Amount ${amount} ${currency} below threshold (${origJur.thresholds.map(t => t.threshold).join(', ')} ${origJur.currency})`,
+        threshold: origJur.thresholds,
+        currency: origJur.currency,
+        originatorJurisdiction,
+        beneficiaryJurisdiction,
+        amount,
+        jurisdictionStatus: origJur.jurisdictionStatus || 'unknown'
+      });
+    }
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Validate PII against presentation definition
+app.post('/api/notabene/validate-pii', async (req, res) => {
+  const { presentationDefinitionUrl, ivms101 } = req.body;
+  try {
+    const creds = credsFromReq('ea', req);
+    const token = await getNotabeneToken(creds.clientId, creds.clientSecret);
+    const path = '/validate-pii?presentationDefinitionUrl=' + encodeURIComponent(presentationDefinitionUrl);
+    const data = await notabeneApi('POST', path, token, { ivms101 });
     res.json(data);
   } catch(e) {
     res.status(500).json({ error: e.message });
@@ -1226,7 +1344,207 @@ app.get('/sumsub/webhook', (req, res) => {
   res.status(200).send('OK');
 });
 
-// ─── Notabene webhook receiver ───
+// ═══════════════════════════════════════════════════════════════
+// Settings Management — unified .env-based config
+// ═══════════════════════════════════════════════════════════════
+
+const ENV_FILE = path.resolve(__dirname, '.env');
+
+// Load current settings from .env
+function loadEnvSettings() {
+  const env = {};
+  try {
+    const content = fs.readFileSync(ENV_FILE, 'utf8');
+    content.split('\n').forEach(line => {
+      const match = line.match(/^([A-Z_]+)=(.*)$/);
+      if (match) env[match[1]] = match[2];
+    });
+  } catch(e) { /* .env may not exist yet */ }
+  return env;
+}
+
+// Update .env file with new settings
+function updateEnvFile(updates) {
+  const env = loadEnvSettings();
+  Object.assign(env, updates);
+  
+  const lines = Object.entries(env).map(([k, v]) => `${k}=${v}`).join('\n');
+  fs.writeFileSync(ENV_FILE, lines + '\n');
+  
+  // Reload process.env
+  Object.assign(process.env, updates);
+}
+
+// Get settings for frontend (full values for demo environment)
+app.get('/api/settings', async (req, res) => {
+  const env = loadEnvSettings();
+  
+  // Load persisted wallets
+  let wallets = {};
+  try {
+    wallets = JSON.parse(fs.readFileSync(path.resolve(__dirname, '.wallets.json'), 'utf8'));
+  } catch(e) { /* no wallets file */ }
+  
+  // Fetch entity info and DID docs from Notabene API for all 4 roles
+  const roles = ['ea', 'ca', 'eb', 'cb'];
+  const fetchPromises = roles.map(async (role) => {
+    const did = env[`NOTABENE_${role.toUpperCase()}_DID`];
+    const clientId = env[`NOTABENE_${role.toUpperCase()}_CLIENT_ID`];
+    const clientSecret = env[`NOTABENE_${role.toUpperCase()}_CLIENT_SECRET`];
+    
+    if (!did || !clientId || !clientSecret) {
+      return { role, entityInfo: null, didDoc: null };
+    }
+    
+    try {
+      const token = await getNotabeneToken(clientId, clientSecret);
+      const [info, didDoc] = await Promise.all([
+        notabeneApi('GET', '/network/' + did, token),
+        notabeneApi('GET', '/entity/' + did + '/diddoc', token)
+      ]);
+      return { role, entityInfo: info, didDoc: didDoc };
+    } catch(e) {
+      console.error(`[SETTINGS] Failed to fetch data for ${role}:`, e.message);
+      return { role, entityInfo: null, didDoc: null };
+    }
+  });
+  
+  const fetchResults = await Promise.all(fetchPromises);
+  const entityInfoMap = {};
+  const didDocMap = {};
+  fetchResults.forEach(({ role, entityInfo, didDoc }) => {
+    entityInfoMap[role] = entityInfo;
+    didDocMap[role] = didDoc;
+  });
+  
+  res.json({
+    // Notabene credentials (full values)
+    notabene: {
+      ea: {
+        did: env.NOTABENE_EA_DID || '',
+        clientId: env.NOTABENE_EA_CLIENT_ID || '',
+        clientSecret: env.NOTABENE_EA_CLIENT_SECRET || '',
+        webhookSecret: env.NOTABENE_EA_WEBHOOK_SECRET || '',
+        didDoc: didDocMap.ea,
+        entityInfo: entityInfoMap.ea
+      },
+      ca: {
+        did: env.NOTABENE_CA_DID || '',
+        clientId: env.NOTABENE_CA_CLIENT_ID || '',
+        clientSecret: env.NOTABENE_CA_CLIENT_SECRET || '',
+        webhookSecret: env.NOTABENE_CA_WEBHOOK_SECRET || '',
+        didDoc: didDocMap.ca,
+        entityInfo: entityInfoMap.ca
+      },
+      eb: {
+        did: env.NOTABENE_EB_DID || '',
+        clientId: env.NOTABENE_EB_CLIENT_ID || '',
+        clientSecret: env.NOTABENE_EB_CLIENT_SECRET || '',
+        webhookSecret: env.NOTABENE_EB_WEBHOOK_SECRET || '',
+        didDoc: didDocMap.eb,
+        entityInfo: entityInfoMap.eb
+      },
+      cb: {
+        did: env.NOTABENE_CB_DID || '',
+        clientId: env.NOTABENE_CB_CLIENT_ID || '',
+        clientSecret: env.NOTABENE_CB_CLIENT_SECRET || '',
+        webhookSecret: env.NOTABENE_CB_WEBHOOK_SECRET || '',
+        didDoc: didDocMap.cb,
+        entityInfo: entityInfoMap.cb
+      }
+    },
+    // Sumsub credentials (full values)
+    sumsub: {
+      appToken: env.SUMSUB_APP_TOKEN || '',
+      apiSecret: env.SUMSUB_API_SECRET || '',
+      websdkSecret: env.SUMSUB_WEBSDK_SECRET || '',
+      baseUrl: env.SUMSUB_BASE_URL || 'https://api.sumsub.com'
+    },
+    // Elliptic credentials (full values)
+    elliptic: {
+      key: env.ELLIPTIC_KEY || '',
+      secret: env.ELLIPTIC_SECRET || '',
+      endpoint: env.ELLIPTIC_ENDPOINT || 'aml-api.elliptic.co'
+    },
+    // Wallet data (from .wallets.json)
+    wallets: {
+      ea: wallets.ea || {},
+      eb: wallets.eb || {}
+    },
+    // Non-sensitive config
+    config: {
+      baseUrl: env.BASE_URL || '',
+      webhookUrl: env.WEBHOOK_URL || '',
+      webhookSecret: env.WEBHOOK_SECRET || '',
+      docLevel: env.DOC_LEVEL || '',
+      nonDocLevel: env.NON_DOC_LEVEL || '',
+      kybLevel: env.KYB_LEVEL || '',
+      websdkDomains: env.WEBSDK_DOMAINS || 'localhost',
+      ellipticSign: env.ELLIPTIC_SIGN || 'HMAC-SHA256',
+      notabeneBaseUrl: env.NOTABENE_BASE_URL || 'https://api.eu1.notabene.id',
+      notabeneWebhookUrl: env.NOTABENE_WEBHOOK_URL || '',
+      assetContract: env.ASSET_CONTRACT || '0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868'
+    }
+  });
+});
+
+// Update settings (writes to .env)
+app.post('/api/settings', (req, res) => {
+  const updates = {};
+  
+  // Notabene credentials
+  if (req.body.notabene) {
+    ['ea', 'ca', 'eb', 'cb'].forEach(role => {
+      const r = req.body.notabene[role];
+      if (r) {
+        if (r.did) updates[`NOTABENE_${role.toUpperCase()}_DID`] = r.did;
+        if (r.clientId && !r.clientId.includes('...')) updates[`NOTABENE_${role.toUpperCase()}_CLIENT_ID`] = r.clientId;
+        if (r.clientSecret && !r.clientSecret.includes('...')) updates[`NOTABENE_${role.toUpperCase()}_CLIENT_SECRET`] = r.clientSecret;
+        if (r.webhookSecret && !r.webhookSecret.includes('...')) updates[`NOTABENE_${role.toUpperCase()}_WEBHOOK_SECRET`] = r.webhookSecret;
+      }
+    });
+  }
+  
+  // Sumsub credentials
+  if (req.body.sumsub) {
+    if (req.body.sumsub.appToken && !req.body.sumsub.appToken.includes('...')) updates.SUMSUB_APP_TOKEN = req.body.sumsub.appToken;
+    if (req.body.sumsub.apiSecret && !req.body.sumsub.apiSecret.includes('...')) updates.SUMSUB_API_SECRET = req.body.sumsub.apiSecret;
+    if (req.body.sumsub.websdkSecret && !req.body.sumsub.websdkSecret.includes('...')) updates.SUMSUB_WEBSDK_SECRET = req.body.sumsub.websdkSecret;
+    if (req.body.sumsub.baseUrl) updates.SUMSUB_BASE_URL = req.body.sumsub.baseUrl;
+  }
+  
+  // Elliptic credentials
+  if (req.body.elliptic) {
+    if (req.body.elliptic.key && !req.body.elliptic.key.includes('...')) updates.ELLIPTIC_KEY = req.body.elliptic.key;
+    if (req.body.elliptic.secret && !req.body.elliptic.secret.includes('...')) updates.ELLIPTIC_SECRET = req.body.elliptic.secret;
+    if (req.body.elliptic.endpoint) updates.ELLIPTIC_ENDPOINT = req.body.elliptic.endpoint;
+  }
+  
+  // Non-sensitive config
+  if (req.body.config) {
+    if (req.body.config.baseUrl) updates.BASE_URL = req.body.config.baseUrl;
+    if (req.body.config.webhookUrl) updates.WEBHOOK_URL = req.body.config.webhookUrl;
+    if (req.body.config.webhookSecret && !req.body.config.webhookSecret.includes('***')) updates.WEBHOOK_SECRET = req.body.config.webhookSecret;
+    if (req.body.config.docLevel) updates.DOC_LEVEL = req.body.config.docLevel;
+    if (req.body.config.nonDocLevel) updates.NON_DOC_LEVEL = req.body.config.nonDocLevel;
+    if (req.body.config.kybLevel) updates.KYB_LEVEL = req.body.config.kybLevel;
+    if (req.body.config.websdkDomains) updates.WEBSDK_DOMAINS = req.body.config.websdkDomains;
+    if (req.body.config.ellipticSign) updates.ELLIPTIC_SIGN = req.body.config.ellipticSign;
+    if (req.body.config.notabeneBaseUrl) updates.NOTABENE_BASE_URL = req.body.config.notabeneBaseUrl;
+    if (req.body.config.notabeneWebhookUrl) updates.NOTABENE_WEBHOOK_URL = req.body.config.notabeneWebhookUrl;
+    if (req.body.config.assetContract) updates.ASSET_CONTRACT = req.body.config.assetContract;
+  }
+  
+  try {
+    updateEnvFile(updates);
+    res.json({ ok: true, updated: Object.keys(updates) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Notabene webhook receiver ───
 // Per-role webhook secrets management.
 // Frontend (settings page) calls this to update secrets after user enters them.
 app.post('/api/notabene/webhook-secrets', (req, res) => {
@@ -1508,7 +1826,7 @@ app.post('/api/webhooks/clear', (req, res) => {
 // ─── Wallet Management (Sepolia / ERC-20) ───
 
 const SEPOLIA_RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
-const KLCC_CONTRACT = '0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66';
+const USDT_TEST_CONTRACT = '0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868';
 const WALLETS_FILE = path.resolve(__dirname, '.wallets.json');
 const ERC20_ABI = [
   'function name() view returns (string)',
@@ -1588,14 +1906,14 @@ app.post('/api/wallet/import', (req, res) => {
   }
 });
 
-// Get balances (ETH + KLCC token) for an address
+// Get balances (ETH + USDT-TEST token) for an address
 app.get('/api/wallet/balance', async (req, res) => {
   const { address } = req.query;
   if (!address) return res.status(400).json({ error: 'address required' });
   try {
     const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
     const ethBalance = await provider.getBalance(address);
-    const contract = new ethers.Contract(KLCC_CONTRACT, ERC20_ABI, provider);
+    const contract = new ethers.Contract(USDT_TEST_CONTRACT, ERC20_ABI, provider);
     let tokenInfo = {};
     let tokenBalance = 0n;
     try {
@@ -1626,7 +1944,7 @@ app.get('/api/wallet/balance', async (req, res) => {
 // Verify asset contract info (name, symbol, decimals)
 app.get('/api/wallet/asset-info', async (req, res) => {
   const { contract: contractAddr } = req.query;
-  const addr = contractAddr || KLCC_CONTRACT;
+  const addr = contractAddr || USDT_TEST_CONTRACT;
   try {
     const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
     const contract = new ethers.Contract(addr, ERC20_ABI, provider);
@@ -1648,7 +1966,7 @@ app.post('/api/wallet/transfer', async (req, res) => {
   if (!to)        return res.status(400).json({ error: 'to (recipient address) required' });
   if (!amount)    return res.status(400).json({ error: 'amount required' });
 
-  const tokenAddr = contractAddr || KLCC_CONTRACT;
+  const tokenAddr = contractAddr || USDT_TEST_CONTRACT;
   try {
     const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
     const signer = new ethers.Wallet(privateKey, provider);
@@ -1700,6 +2018,164 @@ app.post('/api/wallet/transfer', async (req, res) => {
     });
   } catch(e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Token Mint — permissionless test-token faucet (USDT-TEST style)
+// ═══════════════════════════════════════════════════════════════
+
+const MINTABLE_ABI = [
+  ...ERC20_ABI,
+  'function mintTo(address addr, uint256 amount) external',
+  'function mint(uint256 amount) external'
+];
+
+// Known permissionless test tokens on Sepolia
+// NOTE: keys MUST be lowercase — lookup uses tokenAddr.toLowerCase()
+const KNOWN_MINTABLE = {
+  '0xa2c7341dadb120aa638795dc73f7c74ebd35d868': {
+    symbol: 'USDT-TEST',
+    name: 'Tether USD (Test)',
+    multiplier: 6,        // contract does amount * 10^6 internally
+    decimals: 18          // but reports 18 decimals
+  }
+};
+
+app.post('/api/wallet/mint', async (req, res) => {
+  const { privateKey, to, amount, contract: contractAddr } = req.body;
+  if (!privateKey) return res.status(400).json({ error: 'privateKey required (minter wallet)' });
+  if (!to)         return res.status(400).json({ error: 'to (recipient address) required' });
+  if (!amount)     return res.status(400).json({ error: 'amount required' });
+
+  const tokenAddr = (contractAddr || Object.keys(KNOWN_MINTABLE)[0]).toLowerCase();
+  try {
+    const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+    const signer = new ethers.Wallet(privateKey, provider);
+
+    if (!ethers.isAddress(to))      return res.status(400).json({ error: 'Invalid recipient address' });
+    if (!ethers.isAddress(signer.address)) return res.status(400).json({ error: 'Invalid minter address (bad private key)' });
+
+    const contract = new ethers.Contract(tokenAddr, MINTABLE_ABI, signer);
+
+    // Read token metadata
+    let symbol = 'TOKEN', decimals = 18, name = '';
+    try {
+      [name, symbol, decimals] = await Promise.all([
+        contract.name(), contract.symbol(), contract.decimals()
+      ]);
+      decimals = Number(decimals);
+    } catch(_) { /* non-standard token */ }
+
+    // Determine internal mint multiplier.
+    // USDT-TEST style: mintTo(addr, n) mints n * 10^6 raw units (despite 18 decimals).
+    // Standard: mintTo(addr, n) mints n raw units.
+    const known = KNOWN_MINTABLE[tokenAddr];
+    const multiplier = known ? known.multiplier : 0;
+
+    // Compute the mint parameter.
+    // displayAmount (human) -> raw = displayAmount * 10^decimals
+    // If multiplier M: mintParam = raw / 10^M = displayAmount * 10^(decimals - M)
+    const displayAmount = String(amount);
+    const exp = decimals - multiplier;
+    let mintParam;
+    try {
+      if (exp >= 0) {
+        mintParam = ethers.parseUnits(displayAmount, exp);
+      } else {
+        // multiplier > decimals — rare; scale down
+        const raw = ethers.parseUnits(displayAmount, decimals);
+        mintParam = raw / (BigInt(10) ** BigInt(-exp));
+      }
+    } catch(e) {
+      return res.status(400).json({ error: 'Invalid amount: ' + e.message });
+    }
+
+    if (mintParam <= 0n) {
+      return res.status(400).json({ error: 'Computed mint parameter is zero — amount too small for this token\'s precision.' });
+    }
+
+    // Gas check
+    const ethBalance = await provider.getBalance(signer.address);
+    if (ethBalance === 0n) {
+      return res.status(400).json({ error: 'Minter has 0 ETH — cannot pay for gas. Fund with Sepolia ETH first.' });
+    }
+
+    // Pre-mint balance for delta report
+    const balBefore = await contract.balanceOf(to);
+
+    // Try mintTo(addr, amount); fall back to mint(amount)
+    let tx, usedFallback = false;
+    try {
+      tx = await contract.mintTo(to, mintParam);
+    } catch(e) {
+      try {
+        tx = await contract.mint(mintParam);
+        usedFallback = true;
+      } catch(e2) {
+        return res.status(400).json({
+          error: 'Mint failed — contract may not be permissionless, or uses a different mint signature.',
+          detail: e2.shortMessage || e2.message
+        });
+      }
+    }
+
+    // Respond immediately after broadcast — don't block on block confirmation.
+    // The frontend polls /api/wallet/tx-status for the result.
+    res.json({
+      ok: true,
+      broadcasted: true,
+      pending: true,
+      txHash: tx.hash,
+      from: signer.address,
+      to: to,
+      amount: displayAmount,
+      symbol,
+      name,
+      decimals,
+      multiplier,
+      mintParam: mintParam.toString(),
+      method: usedFallback ? 'mint(uint256)' : 'mintTo(address,uint256)',
+      explorerUrl: `https://eth-sepolia.blockscout.com/tx/${tx.hash}`
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.shortMessage || e.message });
+  }
+});
+
+// Check transaction status (polled by frontend after broadcast)
+app.get('/api/wallet/tx-status', async (req, res) => {
+  const { txhash, address, contract: contractAddr } = req.query;
+  if (!txhash) return res.status(400).json({ error: 'txhash required' });
+  try {
+    const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+    const receipt = await provider.getTransactionReceipt(txhash);
+    if (!receipt) return res.json({ status: 'pending' });
+
+    // Fetch updated balance if address + contract provided
+    let newBalance = null, symbol = null, decimals = null;
+    if (address && contractAddr) {
+      try {
+        const contract = new ethers.Contract(contractAddr, ERC20_ABI, provider);
+        const [bal, sym, dec] = await Promise.all([
+          contract.balanceOf(address),
+          contract.symbol(),
+          contract.decimals()
+        ]);
+        decimals = Number(dec);
+        newBalance = ethers.formatUnits(bal, decimals);
+        symbol = sym;
+      } catch(_) {}
+    }
+
+    res.json({
+      status: receipt.status === 1 ? 'success' : 'reverted',
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
+      newBalance, symbol, decimals
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.shortMessage || e.message });
   }
 });
 
