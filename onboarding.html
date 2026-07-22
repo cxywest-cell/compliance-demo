@@ -593,29 +593,36 @@
 <script>
 var kycMode = 'real'; // default: real API
 
-function loadSettings() {
-  var s = localStorage.getItem('compliance-demo-settings');
-  if (s) {
-    try { return JSON.parse(s); } catch(e) {}
+// Load settings from server API (.env) — cached after first fetch
+var _settings = null;
+async function loadSettings() {
+  if (_settings) return _settings;
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    _settings = {
+      baseUrl: data.config?.baseUrl || window.location.origin,
+      docLevel: data.config?.docLevel || 'kyc-test-daniel-260618',
+      nonDocLevel: data.config?.nonDocLevel || 'non-doc-kyc-level'
+    };
+  } catch (e) {
+    console.error('Failed to load settings:', e);
+    _settings = {
+      baseUrl: window.location.origin,
+      docLevel: 'kyc-test-daniel-260618',
+      nonDocLevel: 'non-doc-kyc-level'
+    };
   }
-  return {
-    baseUrl: 'https://localhost:8000',
-    docLevel: 'kyc-test-daniel-260618',
-    nonDocLevel: 'non-doc-kyc-level'
-  };
+  return _settings;
 }
 function getBaseUrl() {
-  var settings = loadSettings();
-  var origin = window.location.origin;
-  // Auto-sync: if we're on a cloudflared tunnel and settings has a different URL, update it
-  if (origin.includes('trycloudflare.com') && settings.baseUrl !== origin) {
-    settings.baseUrl = origin;
-    localStorage.setItem('compliance-demo-settings', JSON.stringify(settings));
-  }
-  return settings.baseUrl || origin;
+  return _settings?.baseUrl || window.location.origin;
 }
-function getDocLevel() { return loadSettings().docLevel || 'kyc-test-daniel-260618'; }
-function getNonDocLevel() { return loadSettings().nonDocLevel || 'non-doc-kyc-level'; }
+function getDocLevel() { return _settings?.docLevel || 'kyc-test-daniel-260618'; }
+function getNonDocLevel() { return _settings?.nonDocLevel || 'non-doc-kyc-level'; }
+
+// Initialize settings on page load
+loadSettings();
 
 function setMode(m) {
   kycMode = m;

@@ -271,21 +271,35 @@ var DEFAULTS = {
   ]
 };
 
-// Load settings from localStorage (synced from settings page which reads from .env)
-function loadSettings() {
-  const saved = localStorage.getItem('compliance-demo-settings');
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (e) {
-      console.error('Failed to parse settings:', e);
-    }
+// Load settings from server API (.env) — cached after first fetch
+var _settings = null;
+var _loadPromise = null;
+async function loadSettings() {
+  if (_settings) return _settings;
+  if (!_loadPromise) _loadPromise = fetchSettings();
+  return _loadPromise;
+}
+async function fetchSettings() {
+  try {
+    const res = await fetch('/api/settings');
+    const data = await res.json();
+    _settings = {
+      ellipticKey: data.elliptic?.key || '',
+      ellipticSecret: data.elliptic?.secret || '',
+      ellipticEndpoint: data.elliptic?.endpoint || 'aml-api.elliptic.co'
+    };
+  } catch (e) {
+    console.error('Failed to load settings:', e);
+    _settings = {};
   }
-  return {};
+  return _settings;
 }
 
+// Initialize settings on page load
+loadSettings();
+
 function getSettings() {
-  return loadSettings();
+  return _settings || {};
 }
 
 function ellipticHeaders() {
@@ -298,8 +312,8 @@ function ellipticHeaders() {
   };
 }
 
-function checkCreds(logId) {
-  var s = getSettings();
+async function checkCreds(logId) {
+  var s = await loadSettings();
   if (!s.ellipticKey || !s.ellipticSecret) {
     log(logId, 'log-err', 'ERROR: No Elliptic API credentials. Go to Settings → Elliptic AML tab to configure.');
     return false;
@@ -492,7 +506,7 @@ async function runScenario(n) {
   if (n === 1) {
     // ═══ S1: Batch TX Screening ═══
     logClear('s1');
-    if (!checkCreds('s1')) { resetBtn(n); return; }
+    if (!await checkCreds('s1')) { resetBtn(n); return; }
 
     var txs = [];
     for (var i = 0; i < DEFAULTS.batchTx.length; i++) {
@@ -625,7 +639,7 @@ async function runScenario(n) {
   } else if (n === 2) {
     // ═══ S2: Batch Wallet Monitoring ═══
     logClear('s2');
-    if (!checkCreds('s2')) { resetBtn(n); return; }
+    if (!await checkCreds('s2')) { resetBtn(n); return; }
 
     var addrs = [];
     for (var i = 0; i < DEFAULTS.batchWallet.length; i++) {
@@ -743,7 +757,7 @@ async function runScenario(n) {
   } else if (n === 3) {
     // ═══ S3: Sync TX Screening (Withdraw) ═══
     logClear('s3');
-    if (!checkCreds('s3')) { resetBtn(n); return; }
+    if (!await checkCreds('s3')) { resetBtn(n); return; }
 
     var hash = document.getElementById('s3-tx').value;
     var addr = document.getElementById('s3-addr').value;
@@ -803,7 +817,7 @@ async function runScenario(n) {
   } else if (n === 4) {
     // ═══ S4: Sync Wallet Screening (Deposit) ═══
     logClear('s4');
-    if (!checkCreds('s4')) { resetBtn(n); return; }
+    if (!await checkCreds('s4')) { resetBtn(n); return; }
 
     var addr = document.getElementById('s4-addr').value;
     var cust = document.getElementById('s4-cust').value || 'entity_a';

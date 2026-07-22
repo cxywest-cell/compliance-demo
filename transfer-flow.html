@@ -574,11 +574,14 @@ function updateEbCustomerEA() {
   fill('eb-customer-hit-ea', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
 }
 
+// Load settings from server API (.env) — cached after first fetch
+var _settings = null;
 async function loadSettings() {
+  if (_settings) return _settings;
   try {
     const res = await fetch('/api/settings');
     const data = await res.json();
-    return {
+    _settings = {
       notabeneBaseUrl: data.config?.notabeneBaseUrl || 'https://api.eu1.notabene.id',
       eaDid: data.notabene?.ea?.did || '',
       eaApikey: data.notabene?.ea?.clientId || '',
@@ -595,7 +598,7 @@ async function loadSettings() {
     };
   } catch(e) {
     console.error('Failed to load settings:', e);
-    return {
+    _settings = {
       notabeneBaseUrl: 'https://api.eu1.notabene.id',
       eaDid: '', eaApikey: '', eaApisecret: '',
       caDid: '', caApikey: '', caApisecret: '',
@@ -603,7 +606,11 @@ async function loadSettings() {
       cbDid: '', cbApikey: '', cbApisecret: ''
     };
   }
+  return _settings;
 }
+
+// Initialize settings on page load
+loadSettings();
 
 function fill(id, val) {
   var el = document.getElementById(id);
