@@ -416,6 +416,32 @@
           </div>
         </div>
       </div>
+
+      <!-- Step 6: On-Chain Transfer -->
+      <div class="section-title" id="ea-onchain-title" style="opacity:0.4">Step 6 · On-Chain Transfer <span style="font-size:10px;font-weight:400;color:#888">🔒 Authorize to unlock</span></div>
+      <div id="ea-onchain-section" style="display:none">
+        <div class="card">
+          <div class="card-header">Broadcast USDT-TEST Transfer</div>
+          <div class="card-body">
+            <p class="hint" style="margin-bottom:8px">Sign and broadcast the actual USDT-TEST transfer from Entity A's wallet to Entity B's wallet on Sepolia.</p>
+            <button class="btn btn-primary" id="ea-onchain-btn" onclick="broadcastOnchainTransfer()">⚡ Broadcast Transfer</button>
+            <div id="ea-onchain-result" style="display:none;margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: Settle on Notabene -->
+      <div class="section-title" id="ea-settle-title" style="opacity:0.4">Step 7 · Settle on Notabene <span style="font-size:10px;font-weight:400;color:#888">🔒 Broadcast on-chain tx to unlock</span></div>
+      <div id="ea-settle-section" style="display:none">
+        <div class="card">
+          <div class="card-header">Settle Transfer on Notabene</div>
+          <div class="card-body">
+            <p class="hint" style="margin-bottom:8px">Submit the on-chain transaction hash to Notabene to complete the Travel Rule settlement.</p>
+            <button class="btn btn-primary" id="ea-settle-btn" onclick="settleTransfer()">Settle Transfer</button>
+            <div id="ea-settle-result" style="display:none;margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ Custodian A ═══ -->
@@ -521,19 +547,6 @@
           <div class="role-actions" id="eb-action-bar">
             <button class="btn btn-success" onclick="authorizeTransfer()">✓ Authorize</button>
             <button class="btn btn-danger" onclick="rejectTransfer()">✗ Reject</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 6: Settle -->
-      <div class="section-title" id="eb-settle-title" style="opacity:0.4">Step 6 · On-Chain Settlement <span style="font-size:10px;font-weight:400;color:#888">🔒 Authorize to unlock</span></div>
-      <div id="eb-settle-section" style="display:none">
-        <div class="card">
-          <div class="card-header">Settle Transfer</div>
-          <div class="card-body">
-            <p class="hint" style="margin-bottom:8px">Confirm the on-chain transaction has been broadcast, then settle.</p>
-            <button class="btn btn-primary" id="eb-settle-btn" onclick="settleTransfer()">Settle Transfer</button>
-            <div id="eb-settle-result" style="display:none;margin-top:12px"></div>
           </div>
         </div>
       </div>
@@ -1549,14 +1562,10 @@ async function fetchTransferDetails() {
 
     // Update action bar visibility based on status
     var actionBar = document.getElementById('eb-action-bar');
-    var settleSection = document.getElementById('eb-settle-section');
-    var settleTitle = document.getElementById('eb-settle-title');
     if (status === 'INCOMING' || status === 'OUTGOING') {
       actionBar.style.display = 'flex';
     } else if (status === 'AUTHORIZED') {
       actionBar.style.display = 'none';
-      settleSection.style.display = 'block';
-      if (settleTitle) { settleTitle.style.opacity = '1'; settleTitle.innerHTML = settleTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
     } else {
       actionBar.style.display = 'none';
     }
@@ -1740,7 +1749,13 @@ async function authorizeOutgoingTransfer() {
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    actionsEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✓ Authorized — transfer sent to Entity B</div>';
+    actionsEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✓ Authorized — ready for on-chain transfer</div>';
+    
+    // Unlock Step 6: On-Chain Transfer
+    document.getElementById('ea-onchain-section').style.display = 'block';
+    var onchainTitle = document.getElementById('ea-onchain-title');
+    if (onchainTitle) { onchainTitle.style.opacity = '1'; onchainTitle.innerHTML = onchainTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+    
     // Refresh the transfer detail
     selectOutgoingTransfer(selectedTxId);
   } catch(e) {
@@ -1791,11 +1806,8 @@ async function authorizeTransfer() {
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    document.getElementById('eb-settle-section').style.display = 'block';
-    var settleTitle = document.getElementById('eb-settle-title');
-    if (settleTitle) { settleTitle.style.opacity = '1'; settleTitle.innerHTML = settleTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
     document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
-      '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✓ Authorized — ready for settlement</div>');
+      '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✓ Authorized — Entity A can now broadcast on-chain transfer</div>');
     // Refresh the transfer detail
     selectIncomingTransfer(selectedTxId);
   } catch(e) {
@@ -1827,21 +1839,108 @@ async function rejectTransfer() {
   }
 }
 
-// Settle transfer
+// Global variable to store on-chain tx hash for settlement
+var onchainTxHash = null;
+
+// Step 6: Broadcast on-chain USDT-TEST transfer
+async function broadcastOnchainTransfer() {
+  var s = await loadSettings();
+  var btn = document.getElementById('ea-onchain-btn');
+  var result = document.getElementById('ea-onchain-result');
+  
+  // Fetch custody wallets
+  var wallets = {};
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
+  } catch(e) {}
+  
+  var eaWallet = wallets.ea || {};
+  var ebWallet = wallets.eb || {};
+  
+  if (!eaWallet.privateKey) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ Entity A private key not found. Generate wallet in Settings first.</div>';
+    return;
+  }
+  
+  if (!ebWallet.address) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ Entity B wallet address not found. Generate wallet in Settings first.</div>';
+    return;
+  }
+  
+  // Get amount from the selected transfer
+  var amount = '1'; // Default
+  if (selectedTxData && selectedTxData.amount) {
+    amount = selectedTxData.amount;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Broadcasting...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Signing and broadcasting transaction...</div>';
+  
+  try {
+    var res = await fetch('/api/wallet/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        privateKey: eaWallet.privateKey,
+        to: ebWallet.address,
+        amount: amount,
+        contract: '0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868' // USDT-TEST
+      })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+    
+    onchainTxHash = data.txHash;
+    
+    result.innerHTML =
+      '<div style="background:#d1fae5;color:#047857;padding:10px;border-radius:6px;font-size:12px">' +
+        '<div style="font-weight:600;margin-bottom:4px">✓ Transaction Broadcast</div>' +
+        '<div class="mono" style="font-size:10px;word-break:break-all">Tx Hash: ' + esc(data.txHash) + '</div>' +
+        '<div style="margin-top:4px">From: ' + esc(data.from) + '</div>' +
+        '<div>To: ' + esc(data.to) + '</div>' +
+        '<div>Amount: ' + esc(data.amount) + ' ' + esc(data.symbol) + '</div>' +
+        '<div style="margin-top:6px"><a href="' + esc(data.explorerUrl) + '" target="_blank" style="color:#2563eb;font-size:10px">↗ View on Etherscan</a></div>' +
+      '</div>';
+    
+    btn.textContent = '✓ Broadcast';
+    btn.className = 'btn btn-success';
+    
+    // Unlock Step 7: Settle on Notabene
+    document.getElementById('ea-settle-section').style.display = 'block';
+    var settleTitle = document.getElementById('ea-settle-title');
+    if (settleTitle) { settleTitle.style.opacity = '1'; settleTitle.innerHTML = settleTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+    
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '⚡ Broadcast Transfer';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Step 7: Settle transfer on Notabene using on-chain tx hash
 async function settleTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;
-  var btn = document.getElementById('eb-settle-btn');
-  var result = document.getElementById('eb-settle-result');
+  var btn = document.getElementById('ea-settle-btn');
+  var result = document.getElementById('ea-settle-result');
+  
+  if (!onchainTxHash) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ No on-chain transaction hash found. Broadcast transfer first.</div>';
+    return;
+  }
+  
   btn.disabled = true; btn.textContent = 'Settling...';
-
-  var settlementId = '0x' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
-    .map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
 
   try {
     var res = await fetch('/api/notabene/transfer/settle', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, settlementId: settlementId })
+      body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId, settlementId: onchainTxHash })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -1849,15 +1948,15 @@ async function settleTransfer() {
     result.style.display = 'block';
     result.innerHTML =
       '<div style="background:#d1fae5;color:#047857;padding:10px;border-radius:6px;font-size:12px">' +
-        '<div style="font-weight:600;margin-bottom:4px">✓ Transfer Settled</div>' +
-        '<div class="mono" style="font-size:10px;word-break:break-all">Settlement ID: ' + esc(settlementId) + '</div>' +
+        '<div style="font-weight:600;margin-bottom:4px">✓ Transfer Settled on Notabene</div>' +
+        '<div class="mono" style="font-size:10px;word-break:break-all">Settlement ID: ' + esc(onchainTxHash) + '</div>' +
       '</div>';
     btn.textContent = '✓ Settled'; btn.className = 'btn btn-success';
 
     // Refresh transfer detail
     selectIncomingTransfer(selectedTxId);
   } catch(e) {
-    btn.disabled = false; btn.textContent = 'Retry';
+    btn.disabled = false; btn.textContent = 'Settle Transfer';
     result.style.display = 'block';
     result.innerHTML = '<div style="color:#dc2626">✗ ' + esc(e.message) + '</div>';
   }
