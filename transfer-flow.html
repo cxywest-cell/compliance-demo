@@ -265,7 +265,29 @@
       <!-- Step 2: Pre-Transfer Validation -->
       <div class="section-title">Step 2 · Pre-Transfer Validation</div>
 
-      <!-- 2a: Counterparty Discovery -->
+      <!-- 2a: Address Registration -->
+      <div class="card">
+        <div class="card-header">
+          Address Registration (Relationships)
+          <button class="btn btn-primary btn-sm" id="ea-register-addr-btn" onclick="registerAddress('ea')">Register</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">POST /entities/:did/relationships — Register the source address so it's discoverable by counterparties.</p>
+          <div class="transfer-form">
+            <div class="form-group">
+              <label>Source Address (did:pkh)</label>
+              <div id="ea-register-address-display" style="font-size:11px;background:#f8f8f8;padding:6px 10px;border-radius:4px;font-family:monospace;color:#333">Loading...</div>
+            </div>
+            <div class="form-group">
+              <label>Custodian (optional)</label>
+              <input type="text" id="ea-register-custodian" placeholder="did:web:custodian-a..." style="font-size:11px">
+            </div>
+          </div>
+          <div id="ea-register-result" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- 2b: Counterparty Discovery -->
       <div class="card">
         <div class="card-header">
           Counterparty Discovery
@@ -287,7 +309,7 @@
         </div>
       </div>
 
-      <!-- 2b: Travel Rule Threshold -->
+      <!-- 2c: Travel Rule Threshold -->
       <div class="card">
         <div class="card-header">
           Travel Rule Threshold Check
@@ -316,7 +338,7 @@
         </div>
       </div>
 
-      <!-- 2c: PII Validation -->
+      <!-- 2d: PII Validation -->
       <div class="card">
         <div class="card-header">
           PII Validation (IVMS101)
@@ -353,12 +375,12 @@
               <input type="text" id="ea-tx-destaddr" readonly style="background:#f8f8f8;font-size:11px">
             </div>
             <div class="form-group">
-              <label>Amount (KLCC)</label>
+              <label>Amount (USDT-TEST)</label>
               <input type="text" id="ea-tx-amount" value="1">
             </div>
             <div class="form-group">
               <label>Asset</label>
-              <input type="text" value="KLCC · Sepolia Testnet" readonly style="background:#f8f8f8;font-size:12px">
+              <input type="text" value="USDT-TEST · Sepolia Testnet" readonly style="background:#f8f8f8;font-size:12px">
             </div>
           </div>
           <div class="hint" style="margin-top:8px">Agent chain (6 hops) and custody wallets are auto-constructed from Settings.</div>
@@ -393,6 +415,29 @@
           <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
           <button class="btn btn-primary" id="eb-verify-btn" onclick="verifyConnection('eb')">Verify Connection</button>
           <div id="eb-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- Address Registration for Entity B -->
+      <div class="section-title">Register Settlement Address</div>
+      <div class="card">
+        <div class="card-header">
+          Address Registration (Relationships)
+          <button class="btn btn-primary btn-sm" id="eb-register-addr-btn" onclick="registerAddress('eb')">Register</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">POST /entities/:did/relationships — Register the settlement address so counterparties can discover it.</p>
+          <div class="transfer-form">
+            <div class="form-group">
+              <label>Settlement Address (did:pkh)</label>
+              <div id="eb-register-address-display" style="font-size:11px;background:#f8f8f8;padding:6px 10px;border-radius:4px;font-family:monospace;color:#333">Loading...</div>
+            </div>
+            <div class="form-group">
+              <label>Custodian (optional)</label>
+              <input type="text" id="eb-register-custodian" placeholder="did:web:custodian-b..." style="font-size:11px">
+            </div>
+          </div>
+          <div id="eb-register-result" style="display:none;margin-top:10px"></div>
         </div>
       </div>
 
@@ -665,7 +710,7 @@ function esc(s) {
 var CASES = {
   case1: {
     name: 'Happy Path — Successful Transfer',
-    desc: 'Entity A sends 1 KLCC → Entity B authorizes → settles. Standard compliant flow.',
+    desc: 'Entity A sends 1 USDT-TEST → Entity B authorizes → settles. Standard compliant flow.',
     activeRoles: ['entity-a', 'entity-b'],
     passiveRoles: ['custodian-a', 'custodian-b'],
     passiveNote: 'Passive role in agent chain — no action needed.'
@@ -757,25 +802,127 @@ document.querySelectorAll('.role-tab').forEach(function(tab) {
 var selectedTxId = null;
 var selectedTxData = null;
 
-// Auto-fill transfer form from settings + persisted wallets
+// Auto-fill transfer form from settings + custody wallets
 async function autoFillTransferForm() {
   var s = await loadSettings();
+  
+  // Fetch custody wallets from settings
+  var wallets = {};
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
+  } catch(e) {}
+  
+  var ebDid = s.ebDid || '';
+  var ebWallet = wallets.eb ? wallets.eb.address : '';
+  var eaWallet = wallets.ea ? wallets.ea.address : '';
+  
   var benEl = document.getElementById('ea-tx-beneficiary');
-  if (benEl) benEl.value = s.ebDid || '';
+  if (benEl) benEl.value = ebDid;
 
-  // Fetch persisted wallets for destination address
-  fetch('/api/wallet/persisted').then(function(r) { return r.json(); }).then(function(data) {
-    var destEl = document.getElementById('ea-tx-destaddr');
-    if (destEl && data.eb && data.eb.address) destEl.value = data.eb.address;
-    // Also fill discover address
-    var discEl = document.getElementById('ea-discover-address');
-    if (discEl && data.eb && data.eb.address) discEl.value = data.eb.address;
-  }).catch(function() {});
+  var destEl = document.getElementById('ea-tx-destaddr');
+  if (destEl) destEl.value = ebWallet;
+  
+  var discEl = document.getElementById('ea-discover-address');
+  if (discEl) discEl.value = ebWallet;
+  
+  // Populate address registration displays
+  var eaDisplay = document.getElementById('ea-register-address-display');
+  if (eaDisplay) eaDisplay.textContent = eaWallet ? 'did:pkh:eip155:11155111:' + eaWallet : 'No wallet configured';
+  
+  var ebDisplay = document.getElementById('eb-register-address-display');
+  if (ebDisplay) ebDisplay.textContent = ebWallet ? 'did:pkh:eip155:11155111:' + ebWallet : 'No wallet configured';
 }
 
 // ─── Pre-Transfer Validation ───
 
-// 2a: Counterparty Discovery
+// 2a: Address Registration (Relationships)
+async function registerAddress(role) {
+  var s = await loadSettings();
+  var btn = document.getElementById(role + '-register-addr-btn');
+  var result = document.getElementById(role + '-register-result');
+  var custodianEl = document.getElementById(role + '-register-custodian');
+
+  // Fetch custody wallets from settings
+  var wallets = {};
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
+  } catch(e) {}
+
+  var walletAddr = wallets[role] ? wallets[role].address : '';
+  if (!walletAddr) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">No wallet found for ' + role.toUpperCase() + '. Generate one in Settings first.</div>';
+    return;
+  }
+
+  // Build did:pkh address
+  var didPkh = 'did:pkh:eip155:11155111:' + walletAddr;
+
+  // Get entity DID from settings
+  var entityDid = s[role + 'Did'];
+  var custodian = custodianEl.value.trim() || '';
+
+  // Get role credentials
+  var clientId = s[role + 'Apikey'];
+  var clientSecret = s[role + 'Apisecret'];
+
+  if (!clientId || !clientSecret || !entityDid) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">Missing credentials for ' + role.toUpperCase() + '. Configure in Settings.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Registering...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Registering address relationship...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/register-address', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientId: clientId,
+        clientSecret: clientSecret,
+        entityDid: entityDid,
+        address: didPkh,
+        custodian: custodian || undefined
+      })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var html = '<div style="background:#f0fdf4;border-radius:6px;padding:10px;border:1px solid #bbf7d0">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<span style="font-size:10px;font-weight:600;color:#059669;text-transform:uppercase">Address Registered</span>' +
+        '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:#059669;color:#fff">CONFIRMED</span>' +
+      '</div>';
+    html += '<div class="cred-row"><span class="k">Address</span><span class="v mono" style="font-size:9px;word-break:break-all">' + esc(didPkh) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Entity</span><span class="v mono" style="font-size:9px">' + esc(entityDid) + '</span></div>';
+    if (custodian) {
+      html += '<div class="cred-row"><span class="k">Custodian</span><span class="v mono" style="font-size:9px">' + esc(custodian) + '</span></div>';
+    }
+    if (data.id) {
+      html += '<div class="cred-row"><span class="k">Relationship ID</span><span class="v mono" style="font-size:9px">' + esc(data.id) + '</span></div>';
+    }
+    html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#059669;font-weight:600">Raw Response</summary>' +
+      '<pre class="mono" style="font-size:9px;max-height:150px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:4px;border:1px solid #e8e8e8">' + esc(JSON.stringify(data, null, 2)) + '</pre></details>';
+    html += '</div>';
+
+    result.innerHTML = html;
+    btn.textContent = '✓ Registered';
+    btn.className = 'btn btn-success btn-sm';
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+    btn.disabled = false;
+    btn.textContent = 'Retry';
+    btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+// 2b: Counterparty Discovery
 async function discoverCounterparty() {
   var s = await loadSettings();
   var address = document.getElementById('ea-discover-address').value.trim();
@@ -926,13 +1073,16 @@ async function validatePII() {
 
   // Build IVMS101 from selected customers
   var ivms101 = {};
-  var eaWallet = '', ebWallet = '';
+  
+  // Fetch custody wallets from settings
+  var wallets = {};
   try {
-    var wRes = await fetch('/api/wallet/persisted');
-    var wallets = await wRes.json();
-    eaWallet = wallets.ea ? wallets.ea.address : '';
-    ebWallet = wallets.eb ? wallets.eb.address : '';
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
   } catch(e) {}
+  
+  var eaWallet = wallets.ea ? wallets.ea.address : '';
+  var ebWallet = wallets.eb ? wallets.eb.address : '';
 
   if (eaCust) {
     ivms101.originator = {
@@ -1029,7 +1179,7 @@ async function createTransfer() {
   var btn = document.getElementById('ea-create-btn');
   var result = document.getElementById('ea-tx-result');
 
-  // Read persisted wallets for source address
+  // Fetch custody wallets from settings
   var wallets = {};
   try {
     var res = await fetch('/api/wallet/persisted');
@@ -1039,16 +1189,20 @@ async function createTransfer() {
   var eaWallet = wallets.ea ? wallets.ea.address : '';
   var ebWallet = wallets.eb ? wallets.eb.address : '';
 
-  if (!s.eaDid || !s.eaApikey || !s.eaApisecret) {
+  if (!eaWallet || !ebWallet) {
+    result.style.display = 'block';
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ Missing wallet addresses. Generate wallets in Settings first.</div></div>';
+    return;
+  }
+
+  if (!s.eaApikey || !s.eaApisecret) {
     result.style.display = 'block';
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ Missing Entity A credentials. Configure in Settings first.</div></div>';
     return;
   }
-  if (!s.ebDid) {
-    result.style.display = 'block';
-    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ Missing Entity B DID. Configure in Settings first.</div></div>';
-    return;
-  }
+
+  var eaDid = s.eaDid;
+  var ebDid = s.ebDid;
 
   btn.disabled = true; btn.textContent = 'Creating...';
   result.style.display = 'block';
@@ -1058,7 +1212,7 @@ async function createTransfer() {
   var ref = 'TR-' + Date.now().toString(36).toUpperCase();
   var origId = 'urn:uuid:' + crypto.randomUUID();
   var beneId = 'urn:uuid:' + crypto.randomUUID();
-  var KLCC = 'eip155:11155111/erc20:0x0136dE66891c0fb433C157A50f8CC796b0Fd0c66';
+  var USDT_TEST = 'eip155:11155111/erc20:0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868';
 
   // Read customer PII from selectors
   var eaCustIdx = document.getElementById('ea-customer-select').value;
@@ -1076,14 +1230,14 @@ async function createTransfer() {
     ref: ref,
     originator: originator,
     beneficiary: beneficiary,
-    asset: KLCC,
+    asset: USDT_TEST,
     amount: String(amount),
     transactionValue: { amount: String(amount), currency: 'USD' },
     agents: [
-      { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': s.eaDid, role: 'SourceAddress' },
-      { '@id': s.eaDid, 'for': origId, role: 'VASP' },
-      { '@id': s.ebDid, 'for': beneId, role: 'VASP' },
-      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': s.ebDid, role: 'SettlementAddress' }
+      { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': eaDid, role: 'SourceAddress' },
+      { '@id': eaDid, 'for': origId, role: 'VASP' },
+      { '@id': ebDid, 'for': beneId, role: 'VASP' },
+      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': ebDid, role: 'SettlementAddress' }
     ]
   };
 
@@ -1093,7 +1247,7 @@ async function createTransfer() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         clientId: s.eaApikey, clientSecret: s.eaApisecret,
-        entityDid: s.eaDid, transferBody: transferBody
+        entityDid: eaDid, transferBody: transferBody
       })
     });
     var data = await res2.json();
@@ -1165,7 +1319,7 @@ async function createTransfer() {
         '<div class="card-body">' +
           '<div class="cred-row"><span class="k">Transfer ID</span><span class="v mono">' + esc(txId) + '</span></div>' +
           '<div class="cred-row"><span class="k">Reference</span><span class="v mono">' + esc(ref) + '</span></div>' +
-          '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' KLCC</span></div>' +
+          '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(amount) + ' USDT-TEST</span></div>' +
           '<div class="cred-row"><span class="k">Route</span><span class="v">Entity A <span class="hl">→</span> Entity B</span></div>' +
         '</div>' +
         '<div class="card-header" style="border-top:1px solid #e0e0e0;background:#f8f9fa;font-size:10px">Travel Rule PII Transmitted via IVMS101 ' + piiBadge + '</div>' +

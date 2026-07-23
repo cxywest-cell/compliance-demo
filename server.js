@@ -673,15 +673,16 @@ async function getNotabeneToken(clientId, clientSecret) {
   }
 
   console.log(`[NOTABENE AUTH] Getting token for ${clientId}`);
+  const params = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: 'client_credentials',
+    audience: NOTABENE_API_BASE
+  });
   const resp = await fetch(NOTABENE_AUTH_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: 'client_credentials',
-      audience: NOTABENE_API_BASE
-    })
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params
   });
   const data = await resp.json();
   if (!data.access_token) {
@@ -731,6 +732,25 @@ app.get('/api/notabene/entity', async (req, res) => {
   try {
     const token = await getNotabeneToken(clientId, clientSecret);
     const data = await notabeneApi('GET', '/network/' + did, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Register address (V2 Relationships API)
+app.post('/api/notabene/register-address', async (req, res) => {
+  const { clientId, clientSecret, entityDid, address, custodian } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const body = {
+      from: address,
+      to: entityDid
+    };
+    if (custodian) {
+      body.custodian = custodian;
+    }
+    const data = await notabeneApi('POST', '/entities/' + entityDid + '/relationships', token, body);
     res.json(data);
   } catch(e) {
     res.status(500).json({ error: e.message });
