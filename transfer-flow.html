@@ -550,6 +550,31 @@
           </div>
         </div>
       </div>
+
+      <!-- Step 6: Match On-Chain Deposit (txMatch) -->
+      <div class="section-title" id="eb-match-title" style="opacity:0.4">Step 6 · Match On-Chain Deposit <span style="font-size:10px;font-weight:400;color:#888">🔒 Wait for Entity A to broadcast on-chain tx</span></div>
+      <div id="eb-match-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            GET /entities/:did/tx/match
+            <button class="btn btn-primary btn-sm" id="eb-match-btn" onclick="matchOnchainDeposit()">Match Deposit</button>
+          </div>
+          <div class="card-body">
+            <p class="hint" style="margin-bottom:8px">When Entity A broadcasts the on-chain transfer, use the blockchain details to match it to the corresponding travel rule message. Based on the matched message, decide whether to release funds to the customer or withhold for further checks.</p>
+            <div class="transfer-form">
+              <div class="form-group">
+                <label>Settlement ID (Tx Hash)</label>
+                <input type="text" id="eb-match-txhash" placeholder="0x..." style="font-size:11px;font-family:monospace">
+              </div>
+              <div class="form-group">
+                <label>Settlement Address (your wallet)</label>
+                <div id="eb-match-address" style="font-size:11px;background:#f8f8f8;padding:6px 10px;border-radius:4px;font-family:monospace;color:#333">Loading...</div>
+              </div>
+            </div>
+            <div id="eb-match-result" style="display:none;margin-top:10px"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ Custodian B ═══ -->
@@ -752,7 +777,7 @@ function esc(s) {
 var CASES = {
   case1: {
     name: 'Happy Path — Successful Transfer',
-    desc: 'Entity A sends 1 USDT-TEST → Entity B authorizes → settles. Standard compliant flow.',
+    desc: 'Entity A sends 1 USDT-TEST → Entity B authorizes → settles → txMatch. Standard compliant flow.',
     activeRoles: ['entity-a', 'entity-b'],
     passiveRoles: ['custodian-a', 'custodian-b'],
     passiveNote: 'Passive role in agent chain — no action needed.'
@@ -874,6 +899,10 @@ async function autoFillTransferForm() {
   
   var ebDisplay = document.getElementById('eb-register-address-display');
   if (ebDisplay) ebDisplay.textContent = ebWallet ? 'did:pkh:eip155:11155111:' + ebWallet : 'No wallet configured';
+  
+  // Populate match address display (Entity B Step 6)
+  var ebMatchDisplay = document.getElementById('eb-match-address');
+  if (ebMatchDisplay) ebMatchDisplay.textContent = ebWallet ? ebWallet : 'No wallet configured';
 }
 
 // ─── Pre-Transfer Validation ───
@@ -1915,6 +1944,14 @@ async function broadcastOnchainTransfer() {
     var settleTitle = document.getElementById('ea-settle-title');
     if (settleTitle) { settleTitle.style.opacity = '1'; settleTitle.innerHTML = settleTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
     
+    // Unlock Entity B Step 6: Match On-Chain Deposit
+    document.getElementById('eb-match-section').style.display = 'block';
+    var matchTitle = document.getElementById('eb-match-title');
+    if (matchTitle) { matchTitle.style.opacity = '1'; matchTitle.innerHTML = matchTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+    // Pre-fill the tx hash input
+    var txHashInput = document.getElementById('eb-match-txhash');
+    if (txHashInput) txHashInput.value = onchainTxHash;
+    
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '⚡ Broadcast Transfer';
@@ -1959,6 +1996,82 @@ async function settleTransfer() {
     btn.disabled = false; btn.textContent = 'Settle Transfer';
     result.style.display = 'block';
     result.innerHTML = '<div style="color:#dc2626">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Step 8 (Entity B Step 6): Match on-chain deposit to travel rule message using txMatch
+async function matchOnchainDeposit() {
+  var s = await loadSettings();
+  var btn = document.getElementById('eb-match-btn');
+  var result = document.getElementById('eb-match-result');
+  var txHashInput = document.getElementById('eb-match-txhash');
+  var txHash = txHashInput.value.trim() || onchainTxHash;
+  
+  if (!txHash) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ No tx hash provided. Enter the on-chain tx hash or wait for Entity A to broadcast.</div>';
+    return;
+  }
+  
+  // Fetch custody wallets for settlement address
+  var wallets = {};
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
+  } catch(e) {}
+  
+  var ebWallet = wallets.eb || {};
+  var settlementAddress = ebWallet.address;
+  
+  if (!settlementAddress) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ Entity B wallet address not found. Generate wallet in Settings first.</div>';
+    return;
+  }
+  
+  btn.disabled = true; btn.textContent = 'Matching...';
+
+  try {
+    var params = new URLSearchParams({
+      clientId: s.ebApikey,
+      clientSecret: s.ebApisecret,
+      did: s.ebDid,
+      settlement_id: txHash,
+      settlement_address: 'eip155:11155111:' + settlementAddress.toLowerCase(),
+      asset: 'USDT-TEST'
+    });
+    
+    var res = await fetch('/api/notabene/transfer/match?' + params.toString());
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var transfers = data.transfers || data || [];
+    var matchCount = Array.isArray(transfers) ? transfers.length : 0;
+    
+    result.style.display = 'block';
+    if (matchCount > 0) {
+      var matchedTx = transfers[0];
+      result.innerHTML =
+        '<div style="background:#d1fae5;color:#047857;padding:10px;border-radius:6px;font-size:12px">' +
+          '<div style="font-weight:600;margin-bottom:4px">✓ Match Found — ' + matchCount + ' transfer(s)</div>' +
+          '<div class="mono" style="font-size:10px;word-break:break-all">Transfer ID: ' + esc(matchedTx.id || matchedTx.txId || 'N/A') + '</div>' +
+          '<div style="margin-top:4px">Status: ' + esc(matchedTx.status || 'N/A') + '</div>' +
+          '<div style="margin-top:4px">Direction: ' + esc(matchedTx.direction || 'N/A') + '</div>' +
+          '<div style="margin-top:8px;font-size:11px">Based on this travel rule message, you can now decide whether to release the funds to the customer or withhold for further checks.</div>' +
+        '</div>';
+      btn.textContent = '✓ Matched'; btn.className = 'btn btn-success';
+    } else {
+      result.innerHTML =
+        '<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:6px;font-size:12px">' +
+          '<div style="font-weight:600;margin-bottom:4px">⚠ No Match Found</div>' +
+          '<div style="font-size:11px">No travel rule message matches this on-chain deposit. This could be a deposit from an unhosted wallet or a VASP not sending travel rule data.</div>' +
+        '</div>';
+      btn.disabled = false; btn.textContent = 'Match Deposit';
+    }
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Match Deposit';
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
   }
 }
 

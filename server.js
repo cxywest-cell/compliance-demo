@@ -995,6 +995,21 @@ app.post('/api/notabene/transfer/settle', async (req, res) => {
   }
 });
 
+// ─── Match transfers by settlement identifiers (txMatch) ───
+app.get('/api/notabene/transfer/match', async (req, res) => {
+  const { clientId, clientSecret, did, settlement_id, settlement_address, source_address, asset } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    let path = '/entities/' + did + '/tx/match?settlement_id=' + encodeURIComponent(settlement_id) + '&settlement_address=' + encodeURIComponent(settlement_address);
+    if (source_address) path += '&source_address=' + encodeURIComponent(source_address);
+    if (asset) path += '&asset=' + encodeURIComponent(asset);
+    const data = await notabeneApi('GET', path, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── Cloudflare Tunnel Management ───
 let tunnelProcess = null;
 let tunnelUrl = null;
