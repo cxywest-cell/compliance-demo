@@ -388,9 +388,9 @@
       </div>
       <div id="ea-tx-result" style="display:none"></div>
 
-      <!-- Step 4: Authorize Outgoing Transfer -->
-      <div class="section-title" id="ea-authorize-title" style="opacity:0.4">Step 4 · Authorize Outgoing Transfer <span style="font-size:10px;font-weight:400;color:#888">🔒 Create a transfer to unlock</span></div>
-      <div id="ea-authorize-section" style="display:none">
+      <!-- Step 4: Outgoing Transfers -->
+      <div class="section-title" id="ea-outgoing-title" style="opacity:0.4">Step 4 · Outgoing Transfers <span style="font-size:10px;font-weight:400;color:#888">🔒 Create a transfer to unlock</span></div>
+      <div id="ea-outgoing-section" style="display:none">
         <div class="card">
           <div class="card-header">
             Outgoing Transfers
@@ -402,13 +402,17 @@
             </div>
           </div>
         </div>
-        <div id="ea-authorize-detail" style="display:none;margin-top:12px">
-          <div class="card">
-            <div class="card-header">Transfer Details</div>
-            <div class="card-body" id="ea-authorize-body"></div>
-            <div class="role-actions" id="ea-authorize-actions">
-              <button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>
-            </div>
+      </div>
+
+      <!-- Step 5: Compliance Decision -->
+      <div class="section-title" id="ea-review-title" style="opacity:0.4">Step 5 · Compliance Decision <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
+      <div id="ea-review-section" style="display:none">
+        <div class="card">
+          <div class="card-header">Travel Rule PII Review</div>
+          <div class="card-body" id="ea-review-body"></div>
+          <div class="role-actions" id="ea-action-bar">
+            <button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>
+            <button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>
           </div>
         </div>
       </div>
@@ -1359,18 +1363,18 @@ async function createTransfer() {
           '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(ebDob) + '</span></div>' +
         '</div>' +
         '<div class="card-body" style="border-top:1px solid #e0e0e0">' +
-          '<div class="hint">Switch to Step 4 below to authorize this transfer, or switch to Entity B tab to review.</div>' +
+          '<div class="hint">Transfer created. Review in Step 4, then make compliance decision in Step 5.</div>' +
         '</div>' +
       '</div>';
     btn.textContent = '✓ Created'; btn.className = 'btn btn-success btn-sm';
     
-    // Unlock Step 4: Authorize Outgoing Transfer
-    var authorizeSection = document.getElementById('ea-authorize-section');
-    var authorizeTitle = document.getElementById('ea-authorize-title');
-    if (authorizeSection) authorizeSection.style.display = 'block';
-    if (authorizeTitle) {
-      authorizeTitle.style.opacity = '1';
-      authorizeTitle.innerHTML = 'Step 4 · Authorize Outgoing Transfer';
+    // Unlock Step 4: Outgoing Transfers
+    var outgoingSection = document.getElementById('ea-outgoing-section');
+    var outgoingTitle = document.getElementById('ea-outgoing-title');
+    if (outgoingSection) outgoingSection.style.display = 'block';
+    if (outgoingTitle) {
+      outgoingTitle.style.opacity = '1';
+      outgoingTitle.innerHTML = 'Step 4 · Outgoing Transfers';
     }
     // Auto-load the outgoing transfers list
     fetchOutgoingTransfers();
@@ -1655,12 +1659,20 @@ async function fetchOutgoingTransfers() {
   }
 }
 
-// Select outgoing transfer for authorization
+// Select outgoing transfer for compliance decision
 async function selectOutgoingTransfer(txId) {
   selectedTxId = txId;
-  var detailEl = document.getElementById('ea-authorize-detail');
-  detailEl.style.display = 'block';
-  var body = document.getElementById('ea-authorize-body');
+  
+  // Unlock Step 5: Compliance Decision
+  var reviewSection = document.getElementById('ea-review-section');
+  var reviewTitle = document.getElementById('ea-review-title');
+  if (reviewSection) reviewSection.style.display = 'block';
+  if (reviewTitle) {
+    reviewTitle.style.opacity = '1';
+    reviewTitle.innerHTML = 'Step 5 · Compliance Decision';
+  }
+  
+  var body = document.getElementById('ea-review-body');
   body.innerHTML = '<div style="color:#888;padding:8px">Loading transfer details...</div>';
 
   var s = await loadSettings();
@@ -1700,12 +1712,13 @@ async function selectOutgoingTransfer(txId) {
 
     body.innerHTML = html;
 
-    // Show/hide authorize button based on status
-    var actionsEl = document.getElementById('ea-authorize-actions');
+    // Show/hide action bar based on status
+    var actionsEl = document.getElementById('ea-action-bar');
     if (internalAuth === 'AUTHORIZED') {
       actionsEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✓ Already authorized</div>';
     } else {
-      actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>';
+      actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
+        '<button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>';
     }
   } catch(e) {
     body.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
@@ -1716,7 +1729,7 @@ async function selectOutgoingTransfer(txId) {
 async function authorizeOutgoingTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;
-  var actionsEl = document.getElementById('ea-authorize-actions');
+  var actionsEl = document.getElementById('ea-action-bar');
   actionsEl.innerHTML = '<div style="color:#888;font-size:11px">Authorizing...</div>';
 
   try {
@@ -1732,6 +1745,33 @@ async function authorizeOutgoingTransfer() {
     selectOutgoingTransfer(selectedTxId);
   } catch(e) {
     actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
+      '<button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>' +
+      '<div style="color:#dc2626;font-size:11px;margin-top:8px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Reject outgoing transfer from Entity A
+async function rejectOutgoingTransfer() {
+  var s = await loadSettings();
+  if (!selectedTxId) return;
+  var reason = prompt('Rejection reason:', 'COMPLIANCE_CONCERN');
+  if (!reason) return;
+
+  var actionsEl = document.getElementById('ea-action-bar');
+  actionsEl.innerHTML = '<div style="color:#888;font-size:11px">Rejecting...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfer/reject', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId, reason: reason })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    actionsEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(reason) + '</div>';
+  } catch(e) {
+    actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
+      '<button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>' +
       '<div style="color:#dc2626;font-size:11px;margin-top:8px">✗ ' + esc(e.message) + '</div>';
   }
 }
