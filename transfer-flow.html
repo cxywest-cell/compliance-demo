@@ -387,6 +387,31 @@
         </div>
       </div>
       <div id="ea-tx-result" style="display:none"></div>
+
+      <!-- Step 4: Authorize Outgoing Transfer -->
+      <div class="section-title" id="ea-authorize-title" style="opacity:0.4">Step 4 · Authorize Outgoing Transfer <span style="font-size:10px;font-weight:400;color:#888">🔒 Create a transfer to unlock</span></div>
+      <div id="ea-authorize-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            Outgoing Transfers
+            <button class="btn btn-outline btn-sm" onclick="fetchOutgoingTransfers()">↻ Refresh</button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div id="ea-outgoing-list" style="max-height:300px;overflow-y:auto">
+              <div class="placeholder" style="padding:20px"><p>Click Refresh to view outgoing transfers</p></div>
+            </div>
+          </div>
+        </div>
+        <div id="ea-authorize-detail" style="display:none;margin-top:12px">
+          <div class="card">
+            <div class="card-header">Transfer Details</div>
+            <div class="card-body" id="ea-authorize-body"></div>
+            <div class="role-actions" id="ea-authorize-actions">
+              <button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ Custodian A ═══ -->
@@ -1334,10 +1359,21 @@ async function createTransfer() {
           '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(ebDob) + '</span></div>' +
         '</div>' +
         '<div class="card-body" style="border-top:1px solid #e0e0e0">' +
-          '<div class="hint">Switch to Entity B tab → Refresh to review this transfer.</div>' +
+          '<div class="hint">Switch to Step 4 below to authorize this transfer, or switch to Entity B tab to review.</div>' +
         '</div>' +
       '</div>';
     btn.textContent = '✓ Created'; btn.className = 'btn btn-success btn-sm';
+    
+    // Unlock Step 4: Authorize Outgoing Transfer
+    var authorizeSection = document.getElementById('ea-authorize-section');
+    var authorizeTitle = document.getElementById('ea-authorize-title');
+    if (authorizeSection) authorizeSection.style.display = 'block';
+    if (authorizeTitle) {
+      authorizeTitle.style.opacity = '1';
+      authorizeTitle.innerHTML = 'Step 4 · Authorize Outgoing Transfer';
+    }
+    // Auto-load the outgoing transfers list
+    fetchOutgoingTransfers();
   } catch(e) {
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ ' + esc(e.message) + '</div></div>';
     btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
@@ -1574,6 +1610,133 @@ async function fetchTapPolicies() {
 }
 
 // Authorize transfer
+// Fetch outgoing transfers for Entity A
+async function fetchOutgoingTransfers() {
+  var s = await loadSettings();
+  var listEl = document.getElementById('ea-outgoing-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>Loading...</p></div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfers?clientId=' + encodeURIComponent(s.eaApikey) +
+      '&clientSecret=' + encodeURIComponent(s.eaApisecret) +
+      '&did=' + encodeURIComponent(s.eaDid));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var transfers = data.data || [];
+    var outgoing = transfers.filter(function(t) { return t.direction === 'OUTGOING'; });
+
+    if (outgoing.length === 0) {
+      listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>No outgoing transfers found</p></div>';
+      return;
+    }
+
+    var html = '';
+    outgoing.forEach(function(tx) {
+      var status = tx.status || 'UNKNOWN';
+      var statusColor = status === 'PENDING' ? '#f59e0b' : status === 'AUTHORIZED' ? '#10b981' : '#6b7280';
+      html += '<div style="padding:12px;border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="selectOutgoingTransfer(\'' + tx['@id'] + '\')">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<div>' +
+            '<div style="font-size:12px;font-weight:600">' + esc(tx.ref || 'No ref') + '</div>' +
+            '<div style="font-size:10px;color:#666;margin-top:2px">' + esc(tx.amount || '0') + ' ' + esc(tx.asset || '') + '</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div style="font-size:10px;color:' + statusColor + ';font-weight:600">' + esc(status) + '</div>' +
+            '<div style="font-size:9px;color:#999;margin-top:2px">' + esc(new Date(tx.createdAt).toLocaleString()) + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = '<div style="color:#dc2626;padding:12px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Select outgoing transfer for authorization
+async function selectOutgoingTransfer(txId) {
+  selectedTxId = txId;
+  var detailEl = document.getElementById('ea-authorize-detail');
+  detailEl.style.display = 'block';
+  var body = document.getElementById('ea-authorize-body');
+  body.innerHTML = '<div style="color:#888;padding:8px">Loading transfer details...</div>';
+
+  var s = await loadSettings();
+  try {
+    var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(s.eaApikey) +
+      '&clientSecret=' + encodeURIComponent(s.eaApisecret) +
+      '&did=' + encodeURIComponent(s.eaDid) + '&txId=' + encodeURIComponent(txId) +
+      '&decrypt=true&sanitize=false');
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var tx = data.transfer || data;
+    var status = tx.status || 'UNKNOWN';
+    var internalAuth = tx.internalAuthorization || 'PENDING';
+
+    var html = '<div class="cred-row"><span class="k">Transfer ID</span><span class="v mono">' + esc(tx['@id']) + '</span></div>' +
+      '<div class="cred-row"><span class="k">Reference</span><span class="v mono">' + esc(tx.ref || '—') + '</span></div>' +
+      '<div class="cred-row"><span class="k">Amount</span><span class="v">' + esc(tx.amount || '0') + ' ' + esc(tx.asset || '') + '</span></div>' +
+      '<div class="cred-row"><span class="k">Status</span><span class="v">' + esc(status) + '</span></div>' +
+      '<div class="cred-row"><span class="k">Internal Auth</span><span class="v">' + esc(internalAuth) + '</span></div>';
+
+    if (tx.originator && tx.originator.originatorPerson) {
+      var pii = extractPII(tx.originator.originatorPerson, 'originator');
+      html += '<div style="margin-top:12px;font-size:10px;font-weight:600;color:#5b4cdb">ORIGINATOR</div>' +
+        '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(pii.name) + '</span></div>' +
+        '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">' + esc(pii.account) + '</span></div>' +
+        '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(pii.dob) + '</span></div>';
+    }
+
+    if (tx.beneficiary && tx.beneficiary.beneficiaryPerson) {
+      var pii = extractPII(tx.beneficiary.beneficiaryPerson, 'beneficiary');
+      html += '<div style="margin-top:12px;font-size:10px;font-weight:600;color:#06b6d4">BENEFICIARY</div>' +
+        '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(pii.name) + '</span></div>' +
+        '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">' + esc(pii.account) + '</span></div>' +
+        '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(pii.dob) + '</span></div>';
+    }
+
+    body.innerHTML = html;
+
+    // Show/hide authorize button based on status
+    var actionsEl = document.getElementById('ea-authorize-actions');
+    if (internalAuth === 'AUTHORIZED') {
+      actionsEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✓ Already authorized</div>';
+    } else {
+      actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>';
+    }
+  } catch(e) {
+    body.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Authorize outgoing transfer from Entity A
+async function authorizeOutgoingTransfer() {
+  var s = await loadSettings();
+  if (!selectedTxId) return;
+  var actionsEl = document.getElementById('ea-authorize-actions');
+  actionsEl.innerHTML = '<div style="color:#888;font-size:11px">Authorizing...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfer/authorize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    actionsEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✓ Authorized — transfer sent to Entity B</div>';
+    // Refresh the transfer detail
+    selectOutgoingTransfer(selectedTxId);
+  } catch(e) {
+    actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
+      '<div style="color:#dc2626;font-size:11px;margin-top:8px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// Authorize transfer from Entity B (beneficiary VASP)
 async function authorizeTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;

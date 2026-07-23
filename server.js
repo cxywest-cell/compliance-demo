@@ -846,6 +846,18 @@ app.get('/api/notabene/transfer/tap-policies', async (req, res) => {
   }
 });
 
+// Get individual policy details
+app.get('/api/notabene/transfer/policy', async (req, res) => {
+  const { clientId, clientSecret, did, txId, policyId } = req.query;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('GET', '/entity/' + did + '/tx/' + txId + '/tap-policies/' + policyId, token);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Discover address ownership (counterparty discovery)
 app.post('/api/notabene/discover', async (req, res) => {
   const { role, address, asset } = req.body;
