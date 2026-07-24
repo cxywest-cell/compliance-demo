@@ -1928,14 +1928,13 @@ async function fetchTransferDetails() {
       '</div>' +
     '</div>';
 
-    // Update action bar visibility based on status
+    // Update action bar visibility based on authorization status
     var actionBar = document.getElementById('eb-action-bar');
-    if (status === 'INCOMING' || status === 'OUTGOING') {
-      actionBar.style.display = 'flex';
-    } else if (status === 'AUTHORIZED') {
+    // Show authorize/reject buttons unless already authorized, rejected, or settled
+    if (status === 'AUTHORIZED' || status === 'SETTLED' || status === 'REJECTED') {
       actionBar.style.display = 'none';
     } else {
-      actionBar.style.display = 'none';
+      actionBar.style.display = 'flex';
     }
   } catch(e) {
     body.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
