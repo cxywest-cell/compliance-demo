@@ -2045,19 +2045,28 @@ async function matchOnchainDeposit() {
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    var transfers = data.transfers || data || [];
-    var matchCount = Array.isArray(transfers) ? transfers.length : 0;
+    var transfers = data.data || data.transfers || data || [];
+    if (!Array.isArray(transfers)) transfers = transfers ? [transfers] : [];
+    var matchCount = transfers.length;
     
     result.style.display = 'block';
     if (matchCount > 0) {
       var matchedTx = transfers[0];
+      var matchedHtml = transfers.map(function(tx, i) {
+        return '<div style="' + (i > 0 ? 'border-top:1px solid #a7f3d0;margin-top:8px;padding-top:8px;' : '') + '">' +
+          '<div class="mono" style="font-size:10px;word-break:break-all">Transfer ID: ' + esc(tx.id || tx.txId || 'N/A') + '</div>' +
+          '<div style="margin-top:4px">Status: <strong>' + esc(tx.status || 'N/A') + '</strong></div>' +
+          '<div>Direction: ' + esc(tx.direction || 'N/A') + '</div>' +
+          '<div>Amount: ' + esc(tx.amount || 'N/A') + ' ' + esc(tx.notabeneAsset || '') + '</div>' +
+          '<div>Travel Rule: ' + (tx.isTravelRule ? '✓ Yes' : '✗ No') + '</div>' +
+          '<div class="mono" style="font-size:10px;word-break:break-all;margin-top:2px">Settlement ID: ' + esc(tx.settlementId || 'N/A') + '</div>' +
+        '</div>';
+      }).join('');
       result.innerHTML =
         '<div style="background:#d1fae5;color:#047857;padding:10px;border-radius:6px;font-size:12px">' +
-          '<div style="font-weight:600;margin-bottom:4px">✓ Match Found — ' + matchCount + ' transfer(s)</div>' +
-          '<div class="mono" style="font-size:10px;word-break:break-all">Transfer ID: ' + esc(matchedTx.id || matchedTx.txId || 'N/A') + '</div>' +
-          '<div style="margin-top:4px">Status: ' + esc(matchedTx.status || 'N/A') + '</div>' +
-          '<div style="margin-top:4px">Direction: ' + esc(matchedTx.direction || 'N/A') + '</div>' +
-          '<div style="margin-top:8px;font-size:11px">Based on this travel rule message, you can now decide whether to release the funds to the customer or withhold for further checks.</div>' +
+          '<div style="font-weight:600;margin-bottom:6px">✓ Match Found — ' + matchCount + ' transfer(s)</div>' +
+          matchedHtml +
+          '<div style="margin-top:8px;font-size:11px;border-top:1px solid #a7f3d0;padding-top:8px">Based on this travel rule message, you can now decide whether to release the funds to the customer or withhold for further checks.</div>' +
         '</div>';
       btn.textContent = '✓ Matched'; btn.className = 'btn btn-success';
     } else {
