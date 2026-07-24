@@ -1166,6 +1166,9 @@ async function checkTravelRule() {
 }
 
 // 2c: Validate PII
+// Global: store the last validated IVMS101 so createTransfer uses exactly what was validated
+var lastValidatedIVMS101 = null;
+
 async function validatePII() {
   var s = await loadSettings();
   var pdUrl = document.getElementById('ea-pd-url').value.trim();
@@ -1219,6 +1222,9 @@ async function validatePII() {
       }]
     };
   }
+
+  // Store the validated IVMS101 so createTransfer uses exactly what was validated
+  lastValidatedIVMS101 = JSON.parse(JSON.stringify(ivms101));
 
   btn.disabled = true; btn.textContent = 'Validating...';
   result.style.display = 'block';
@@ -1487,6 +1493,9 @@ async function revalidatePII() {
     ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
   }
 
+  // Store the validated IVMS101 so createTransfer uses exactly what was validated
+  lastValidatedIVMS101 = JSON.parse(JSON.stringify(ivms101));
+
   btn.disabled = true; btn.textContent = 'Validating...';
   result.style.display = 'block';
   result.innerHTML = '<div style="color:#888;font-size:11px">Re-validating with updated PII...</div>';
@@ -1646,15 +1655,14 @@ async function createTransfer() {
     selectedTxId = txId;
 
     // Submit PII via IVMS101 /append endpoint
-    // Use editor fields if available, otherwise fall back to customer data
+    // Always use the exact IVMS101 that was validated by the PII Validation step
     var piiStatus = 'pending';
     var ivms101 = null;
-    var editorVisible = document.getElementById('ea-pii-editor-card').style.display !== 'none';
 
-    if (editorVisible) {
-      // Use rich PII from the editor
-      ivms101 = buildIVMS101FromEditor();
-      // Patch wallet addresses
+    if (lastValidatedIVMS101) {
+      // Use the validated IVMS101 — this includes ALL fields that passed validation
+      ivms101 = JSON.parse(JSON.stringify(lastValidatedIVMS101));
+      // Patch wallet addresses in case they changed
       if (ivms101.originator && ivms101.originator.originatorPerson) {
         ivms101.originator.originatorPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + eaWallet];
       }
@@ -1662,10 +1670,11 @@ async function createTransfer() {
         ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
       }
     } else if (eaCust || ebCust) {
+      // Fallback: build minimal PII from customer data (should not happen if validation was done)
       ivms101 = {};
       if (eaCust) {
         ivms101.originator = {
-          originatorPersons: [{
+          originatorPerson: [{
             naturalPerson: {
               name: { nameIdentifier: [{ primaryIdentifier: eaCust.lastName, secondaryIdentifier: eaCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
               ...(eaCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: eaCust.dob } } : {})
@@ -1676,7 +1685,7 @@ async function createTransfer() {
       }
       if (ebCust) {
         ivms101.beneficiary = {
-          beneficiaryPersons: [{
+          beneficiaryPerson: [{
             naturalPerson: {
               name: { nameIdentifier: [{ primaryIdentifier: ebCust.lastName, secondaryIdentifier: ebCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
               ...(ebCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: ebCust.dob } } : {})
