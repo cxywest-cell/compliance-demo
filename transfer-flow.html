@@ -1598,6 +1598,13 @@ async function createTransfer() {
     return;
   }
 
+  // Warn if PII validation was not done — PII won't be attached to the transfer
+  if (!lastValidatedIVMS101) {
+    result.style.display = 'block';
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#d97706">⚠ PII Validation was not completed. The transfer will be created without Travel Rule PII data. Click "Validate" in the PII Validation step above first.</div></div>';
+    return;
+  }
+
   var eaDid = s.eaDid;
   var ebDid = s.ebDid;
 
