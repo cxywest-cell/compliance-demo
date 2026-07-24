@@ -834,6 +834,18 @@ app.post('/api/notabene/transfer/reject', async (req, res) => {
   }
 });
 
+// Beneficiary name matching check
+app.post('/api/notabene/transfer/checks/beneficiary-name-matching', async (req, res) => {
+  const { clientId, clientSecret, did, txId } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entities/' + did + '/tx/' + txId + '/checks/beneficiary-name-matching', token, {});
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Get TAP policies for a transfer
 app.get('/api/notabene/transfer/tap-policies', async (req, res) => {
   const { clientId, clientSecret, did, txId } = req.query;
