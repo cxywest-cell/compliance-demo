@@ -1825,32 +1825,81 @@ async function selectIncomingTransfer(txId) {
   await fetchTapPolicies();
 }
 
+// Helper: render a PII block with all IVMS101 fields
+function piiBlock(title, color, pii) {
+  var rows = '';
+  if (pii.name !== '—') rows += piiRow('Name', pii.name);
+  if (pii.dob !== '—') rows += piiRow('DOB', pii.dob);
+  if (pii.pob !== '—') rows += piiRow('Place of Birth', pii.pob);
+  if (pii.nationalId !== '—') rows += piiRow('National ID (' + pii.nationalIdType + ')', pii.nationalId);
+  if (pii.address !== '—') rows += piiRow('Address', pii.address);
+  if (pii.account !== '—') rows += piiRow('Account', pii.account, true);
+  if (!rows) rows = '<div style="font-size:10px;color:#999;padding:4px 0">No PII data received</div>';
+  return '<div>' +
+    '<div style="font-size:9px;font-weight:600;color:' + color + ';margin-bottom:4px">' + title + '</div>' +
+    rows +
+  '</div>';
+}
+function piiRow(label, value, mono) {
+  return '<div style="margin-bottom:3px">' +
+    '<div style="font-size:9px;color:#888">' + esc(label) + '</div>' +
+    '<div style="font-size:11px' + (mono ? ';font-family:monospace;font-size:9px;word-break:break-all' : '') + '">' + esc(value) + '</div>' +
+  '</div>';
+}
+
 // Helper: extract PII from IVMS101 or flat format
 function extractPII(person, kind) {
-  if (!person) return { name: '—', account: '—', dob: '—' };
-  // Try flat fields first (what we sent)
-  var name = person.name || person.legalName;
-  var account = person.account && person.account[0];
-  var dob = person.dateOfBirth;
-  
-  // Try IVMS101 nested format (originatorPersons / beneficiaryPersons)
-  if (!name && person[kind + 'Persons']) {
-    var persons = person[kind + 'Persons'];
-    if (Array.isArray(persons) && persons.length > 0) {
-      var np = persons[0].naturalPerson || persons[0].legalPerson || persons[0];
-      if (np && np.name && np.name.nameIdentifier) {
+  var empty = { name: '—', account: '—', dob: '—', pob: '—', nationalId: '—', nationalIdType: '—', address: '—' };
+  if (!person) return empty;
+
+  // Try flat fields first
+  var result = {
+    name: person.name || person.legalName || '—',
+    account: (person.account && person.account[0]) || '—',
+    dob: person.dateOfBirth || '—',
+    pob: '—',
+    nationalId: '—',
+    nationalIdType: '—',
+    address: '—'
+  };
+
+  // Try IVMS101 nested format — handle both singular and plural keys
+  var personKey = kind + 'Person';   // originatorPerson (v2)
+  var personsKey = kind + 'Persons'; // originatorPersons (v1/legacy)
+  var persons = person[personKey] || person[personsKey];
+
+  if (persons && Array.isArray(persons) && persons.length > 0) {
+    var np = persons[0].naturalPerson || persons[0].legalPerson || persons[0];
+    if (np) {
+      // Name
+      if (np.name && np.name.nameIdentifier) {
         var ids = np.name.nameIdentifier;
         if (Array.isArray(ids) && ids.length > 0) {
-          name = [ids[0].secondaryIdentifier, ids[0].primaryIdentifier].filter(Boolean).join(' ');
-          if (!name) name = ids[0].nameIdentifier || ids[0].primaryIdentifier;
+          result.name = [ids[0].secondaryIdentifier, ids[0].primaryIdentifier].filter(Boolean).join(' ') ||
+                        ids[0].nameIdentifier || ids[0].primaryIdentifier || '—';
         }
       }
-      if (!dob && np && np.dateAndPlaceOfBirth) {
-        dob = np.dateAndPlaceOfBirth.dateOfBirth || np.dateAndPlaceOfBirth;
+      // Date and place of birth
+      if (np.dateAndPlaceOfBirth) {
+        result.dob = np.dateAndPlaceOfBirth.dateOfBirth || result.dob;
+        result.pob = np.dateAndPlaceOfBirth.placeOfBirth || '—';
+      }
+      // National identification
+      if (np.nationalIdentification) {
+        result.nationalId = np.nationalIdentification.nationalIdentifierValue || '—';
+        result.nationalIdType = np.nationalIdentification.nationalIdentifier || '—';
+      }
+      // Address
+      if (np.address && np.address.addressLine) {
+        result.address = Array.isArray(np.address.addressLine) ? np.address.addressLine.join(', ') : np.address.addressLine;
+      }
+      // Account number
+      if (persons[0].accountNumber && persons[0].accountNumber[0]) {
+        result.account = persons[0].accountNumber[0];
       }
     }
   }
-  return { name: name || '—', account: account || '—', dob: dob || '—' };
+  return result;
 }
 
 // Fetch full transfer details
@@ -1864,7 +1913,7 @@ async function fetchTransferDetails() {
     var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(s.ebApikey) +
       '&clientSecret=' + encodeURIComponent(s.ebApisecret) +
       '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(selectedTxId) +
-      '&decrypt=true');
+      '&decrypt=true&sanitize=false');
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
@@ -1906,27 +1955,18 @@ async function fetchTransferDetails() {
 
     body.innerHTML = summaryHtml + detailHtml;
 
-    // Populate PII panel in Step 5 using IVMS101-aware extraction
+    // Populate PII panel in Step 5 with full IVMS101 data
     var origPii = extractPII(t.originator, 'originator');
     var benePii = extractPII(t.beneficiary, 'beneficiary');
     var reviewBody = document.getElementById('eb-review-body');
-    reviewBody.innerHTML = '<div style="padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
-      '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-        '<div>' +
-          '<div style="font-size:9px;font-weight:600;color:#5b4cdb;margin-bottom:2px">ORIGINATOR</div>' +
-          '<div style="font-size:11px">' + esc(origPii.name) + '</div>' +
-          '<div class="mono" style="font-size:9px;color:#888">' + esc(origPii.account) + '</div>' +
-          (origPii.dob !== '—' ? '<div style="font-size:10px;color:#888">DOB: ' + esc(origPii.dob) + '</div>' : '') +
+    reviewBody.innerHTML =
+      '<div style="padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
+        '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+          piiBlock('ORIGINATOR', '#5b4cdb', origPii) +
+          piiBlock('BENEFICIARY', '#06b6d4', benePii) +
         '</div>' +
-        '<div>' +
-          '<div style="font-size:9px;font-weight:600;color:#06b6d4;margin-bottom:2px">BENEFICIARY</div>' +
-          '<div style="font-size:11px">' + esc(benePii.name) + '</div>' +
-          '<div class="mono" style="font-size:9px;color:#888">' + esc(benePii.account) + '</div>' +
-          (benePii.dob !== '—' ? '<div style="font-size:10px;color:#888">DOB: ' + esc(benePii.dob) + '</div>' : '') +
-        '</div>' +
-      '</div>' +
-    '</div>';
+      '</div>';
 
     // Update action bar visibility based on authorization status
     var actionBar = document.getElementById('eb-action-bar');
