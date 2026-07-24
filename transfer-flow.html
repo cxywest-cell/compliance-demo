@@ -358,6 +358,42 @@
         </div>
       </div>
 
+      <!-- 2e: PII Editor (shown when validation has missing fields) -->
+      <div id="ea-pii-editor-card" class="card" style="display:none">
+        <div class="card-header">
+          PII Field Editor — Fill Missing Fields
+          <button class="btn btn-primary btn-sm" onclick="fillPIIDefaults()">Fill Defaults</button>
+          <button class="btn btn-success btn-sm" onclick="revalidatePII()" style="margin-left:4px">Re-validate</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Fill the missing fields below, then re-validate. Fields marked with ⚠ were reported as missing by IVMS101 validation.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <!-- Originator -->
+            <div>
+              <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator</div>
+              <div class="form-group"><label>First Name <span id="pii-warn-orig-fn" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-fn" style="font-size:11px"></div>
+              <div class="form-group"><label>Last Name <span id="pii-warn-orig-ln" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-ln" style="font-size:11px"></div>
+              <div class="form-group"><label>Date of Birth <span id="pii-warn-orig-dob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-dob" placeholder="1990-01-01" style="font-size:11px"></div>
+              <div class="form-group"><label>Place of Birth <span id="pii-warn-orig-pob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-pob" placeholder="AE" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID <span id="pii-warn-orig-nid" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-nid" placeholder="Passport number" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID Type</label><input type="text" id="pii-orig-nidtype" placeholder="PASSPORT" style="font-size:11px"></div>
+              <div class="form-group"><label>Address <span id="pii-warn-orig-addr" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-addr" placeholder="Street, City, Country" style="font-size:11px"></div>
+            </div>
+            <!-- Beneficiary -->
+            <div>
+              <div style="font-size:10px;font-weight:600;color:#06b6d4;text-transform:uppercase;margin-bottom:6px">Beneficiary</div>
+              <div class="form-group"><label>First Name <span id="pii-warn-bene-fn" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-bene-fn" style="font-size:11px"></div>
+              <div class="form-group"><label>Last Name <span id="pii-warn-bene-ln" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-bene-ln" style="font-size:11px"></div>
+              <div class="form-group"><label>Date of Birth <span id="pii-warn-bene-dob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-bene-dob" placeholder="1990-01-01" style="font-size:11px"></div>
+              <div class="form-group"><label>Place of Birth</label><input type="text" id="pii-bene-pob" placeholder="AE" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID</label><input type="text" id="pii-bene-nid" placeholder="Passport number" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID Type</label><input type="text" id="pii-bene-nidtype" placeholder="PASSPORT" style="font-size:11px"></div>
+              <div class="form-group"><label>Address</label><input type="text" id="pii-bene-addr" placeholder="Street, City, Country" style="font-size:11px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Step 3: Create Transfer -->
       <div class="section-title">Step 3 · Create Travel Rule Transfer</div>
       <div class="card">
@@ -1242,7 +1278,282 @@ async function validatePII() {
     html += '</div>';
 
     result.innerHTML = html;
+
+    // Show PII editor with prefilled values, highlight missing fields
+    if (!isValid) {
+      showPIIEditor(eaCust, ebCust, eaWallet, ebWallet, missing);
+    } else {
+      document.getElementById('ea-pii-editor-card').style.display = 'none';
+    }
+
     btn.textContent = '✓ Done'; btn.className = 'btn btn-success btn-sm';
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+    btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
+  }
+}
+
+// ─── PII Editor helpers ───
+
+function showPIIEditor(eaCust, ebCust, eaWallet, ebWallet, missingFields) {
+  var card = document.getElementById('ea-pii-editor-card');
+  card.style.display = '';
+
+  // Prefill from customer data
+  setVal('pii-orig-fn', eaCust ? eaCust.firstName : '');
+  setVal('pii-orig-ln', eaCust ? eaCust.lastName : '');
+  setVal('pii-orig-dob', eaCust ? (eaCust.dob || '') : '');
+  setVal('pii-orig-pob', '');
+  setVal('pii-orig-nid', '');
+  setVal('pii-orig-nidtype', 'PASSPORT');
+  setVal('pii-orig-addr', '');
+
+  setVal('pii-bene-fn', ebCust ? ebCust.firstName : '');
+  setVal('pii-bene-ln', ebCust ? ebCust.lastName : '');
+  setVal('pii-bene-dob', ebCust ? (ebCust.dob || '') : '');
+  setVal('pii-bene-pob', '');
+  setVal('pii-bene-nid', '');
+  setVal('pii-bene-nidtype', 'PASSPORT');
+  setVal('pii-bene-addr', '');
+
+  // Reset all warnings
+  ['pii-warn-orig-fn','pii-warn-orig-ln','pii-warn-orig-dob','pii-warn-orig-pob','pii-warn-orig-nid','pii-warn-orig-addr',
+   'pii-warn-bene-fn','pii-warn-bene-ln','pii-warn-bene-dob'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  // Highlight missing fields
+  var missingStr = missingFields.join(' ').toLowerCase();
+  if (missingStr.indexOf('originator') >= 0) {
+    if (missingStr.indexOf('primaryidentifier') >= 0 || missingStr.indexOf('nameidentifier') >= 0) {
+      var warnEl = document.getElementById('pii-warn-orig-ln'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('secondaryidentifier') >= 0) {
+      var warnEl = document.getElementById('pii-warn-orig-fn'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('dateofbirth') >= 0 || missingStr.indexOf('date_and_place_of_birth') >= 0) {
+      var warnEl = document.getElementById('pii-warn-orig-dob'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('placeofbirth') >= 0) {
+      var warnEl = document.getElementById('pii-warn-orig-pob'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('nationalidentification') >= 0 || missingStr.indexOf('national_identification') >= 0) {
+      var warnEl = document.getElementById('pii-warn-orig-nid'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('address') >= 0 || missingStr.indexOf('geographic') >= 0) {
+      var warnEl = document.getElementById('pii-warn-orig-addr'); if (warnEl) warnEl.style.display = '';
+    }
+  }
+  if (missingStr.indexOf('beneficiary') >= 0) {
+    if (missingStr.indexOf('primaryidentifier') >= 0 || missingStr.indexOf('nameidentifier') >= 0) {
+      var warnEl = document.getElementById('pii-warn-bene-ln'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('secondaryidentifier') >= 0) {
+      var warnEl = document.getElementById('pii-warn-bene-fn'); if (warnEl) warnEl.style.display = '';
+    }
+    if (missingStr.indexOf('dateofbirth') >= 0) {
+      var warnEl = document.getElementById('pii-warn-bene-dob'); if (warnEl) warnEl.style.display = '';
+    }
+  }
+
+  function setVal(id, v) { var el = document.getElementById(id); if (el) el.value = v; }
+}
+
+function fillPIIDefaults() {
+  // Fill empty fields with demo defaults
+  fillEmpty('pii-orig-dob', '1990-01-15');
+  fillEmpty('pii-orig-pob', 'AE');
+  fillEmpty('pii-orig-nid', 'P12345678');
+  fillEmpty('pii-orig-nidtype', 'PASSPORT');
+  fillEmpty('pii-orig-addr', 'Sheikh Zayed Road, Dubai, AE');
+  fillEmpty('pii-bene-dob', '1992-03-22');
+  fillEmpty('pii-bene-pob', 'AE');
+  fillEmpty('pii-bene-nid', 'P87654321');
+  fillEmpty('pii-bene-nidtype', 'PASSPORT');
+  fillEmpty('pii-bene-addr', 'Khalifa Street, Abu Dhabi, AE');
+
+  function fillEmpty(id, v) {
+    var el = document.getElementById(id);
+    if (el && !el.value.trim()) el.value = v;
+  }
+}
+
+function buildIVMS101FromEditor() {
+  var ivms101 = {};
+  var eaCustIdx = document.getElementById('ea-customer-select').value;
+  var ebCustIdx = document.getElementById('eb-customer-select-ea').value;
+  var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+  var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
+
+  var wallets = {};
+  // Use cached wallet addresses if available
+  var eaWallet = '';
+  var ebWallet = '';
+
+  // Build originator from editor fields
+  var origFn = getVal('pii-orig-fn');
+  var origLn = getVal('pii-orig-ln');
+  if (origLn || origFn) {
+    var np = {
+      name: { nameIdentifier: [{ primaryIdentifier: origLn, secondaryIdentifier: origFn, naturalPersonNameIdentifierType: 'LEGL' }] }
+    };
+    var dob = getVal('pii-orig-dob');
+    var pob = getVal('pii-orig-pob');
+    if (dob || pob) {
+      np.dateAndPlaceOfBirth = {};
+      if (dob) np.dateAndPlaceOfBirth.dateOfBirth = dob;
+      if (pob) np.dateAndPlaceOfBirth.placeOfBirth = pob;
+    }
+    var nid = getVal('pii-orig-nid');
+    if (nid) {
+      np.nationalIdentification = {
+        nationalIdentifier: getVal('pii-orig-nidtype') || 'PASSPORT',
+        nationalIdentifierValue: nid
+      };
+    }
+    var addr = getVal('pii-orig-addr');
+    if (addr) {
+      np.address = { addressLine: [addr] };
+    }
+    ivms101.originator = {
+      originatorPerson: [{
+        naturalPerson: np,
+        accountNumber: ['did:pkh:eip155:11155111:' + eaWallet]
+      }]
+    };
+  }
+
+  // Build beneficiary from editor fields
+  var beneFn = getVal('pii-bene-fn');
+  var beneLn = getVal('pii-bene-ln');
+  if (beneLn || beneFn) {
+    var np = {
+      name: { nameIdentifier: [{ primaryIdentifier: beneLn, secondaryIdentifier: beneFn, naturalPersonNameIdentifierType: 'LEGL' }] }
+    };
+    var dob = getVal('pii-bene-dob');
+    var pob = getVal('pii-bene-pob');
+    if (dob || pob) {
+      np.dateAndPlaceOfBirth = {};
+      if (dob) np.dateAndPlaceOfBirth.dateOfBirth = dob;
+      if (pob) np.dateAndPlaceOfBirth.placeOfBirth = pob;
+    }
+    var nid = getVal('pii-bene-nid');
+    if (nid) {
+      np.nationalIdentification = {
+        nationalIdentifier: getVal('pii-bene-nidtype') || 'PASSPORT',
+        nationalIdentifierValue: nid
+      };
+    }
+    var addr = getVal('pii-bene-addr');
+    if (addr) {
+      np.address = { addressLine: [addr] };
+    }
+    ivms101.beneficiary = {
+      beneficiaryPerson: [{
+        naturalPerson: np,
+        accountNumber: ['did:pkh:eip155:11155111:' + ebWallet]
+      }]
+    };
+  }
+
+  return ivms101;
+
+  function getVal(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+}
+
+async function revalidatePII() {
+  var s = await loadSettings();
+  var pdUrl = document.getElementById('ea-pd-url').value.trim();
+  var btn = document.getElementById('ea-validate-pii-btn');
+  var result = document.getElementById('ea-validate-pii-result');
+
+  // Fetch wallets for account numbers
+  var wallets = {};
+  try {
+    var res = await fetch('/api/wallet/persisted');
+    wallets = await res.json();
+  } catch(e) {}
+
+  // Build IVMS101 from editor with wallet addresses
+  var ivms101 = buildIVMS101FromEditor();
+  // Patch wallet addresses
+  var eaWallet = wallets.ea ? wallets.ea.address : '';
+  var ebWallet = wallets.eb ? wallets.eb.address : '';
+  if (ivms101.originator && ivms101.originator.originatorPerson) {
+    ivms101.originator.originatorPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + eaWallet];
+  }
+  if (ivms101.beneficiary && ivms101.beneficiary.beneficiaryPerson) {
+    ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
+  }
+
+  btn.disabled = true; btn.textContent = 'Validating...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Re-validating with updated PII...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/validate-pii', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        role: 'ea',
+        presentationDefinitionUrl: pdUrl, ivms101: ivms101
+      })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var isValid = data.isValid;
+    var errors = data.errors || [];
+    var missing = data.missingFields || [];
+    var validPaths = data.validPaths || [];
+
+    var valColor = isValid ? '#059669' : '#dc2626';
+    var valBg = isValid ? '#f0fdf4' : '#fef2f2';
+    var valBorder = isValid ? '#bbf7d0' : '#fecaca';
+
+    var html = '<div style="background:' + valBg + ';border-radius:6px;padding:10px;border:1px solid ' + valBorder + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<span style="font-size:10px;font-weight:600;color:' + valColor + ';text-transform:uppercase">PII Re-Validation Result</span>' +
+        '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:' + valColor + ';color:#fff">' + (isValid ? 'VALID ✓' : 'INVALID ✗') + '</span>' +
+      '</div>';
+
+    if (errors.length > 0) {
+      html += '<div style="font-size:10px;font-weight:600;color:#dc2626;margin-bottom:4px">Errors:</div>';
+      errors.forEach(function(err) {
+        html += '<div style="font-size:10px;color:#991b1b;padding:1px 0">• ' + esc(err) + '</div>';
+      });
+    }
+
+    if (missing.length > 0) {
+      html += '<div style="font-size:10px;font-weight:600;color:#d97706;margin:6px 0 4px">Missing Fields (' + missing.length + '):</div>';
+      missing.forEach(function(f) {
+        html += '<div class="mono" style="font-size:9px;color:#92400e;padding:1px 0;word-break:break-all">' + esc(f) + '</div>';
+      });
+    }
+
+    if (validPaths.length > 0) {
+      html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#059669;font-weight:600">Valid Paths (' + validPaths.length + ')</summary>';
+      validPaths.forEach(function(p) {
+        html += '<div class="mono" style="font-size:9px;color:#065f46;padding:1px 0;word-break:break-all">' + esc(p) + '</div>';
+      });
+      html += '</details>';
+    }
+
+    html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10px;color:#5b4cdb;font-weight:600">Raw Response</summary>' +
+      '<pre class="mono" style="font-size:9px;max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;margin-top:4px;border:1px solid #e8e8e8">' + esc(JSON.stringify(data, null, 2)) + '</pre></details>';
+    html += '</div>';
+
+    result.innerHTML = html;
+
+    // Update editor visibility
+    if (isValid) {
+      document.getElementById('ea-pii-editor-card').style.display = 'none';
+      btn.textContent = '✓ Valid'; btn.className = 'btn btn-success btn-sm';
+    } else {
+      btn.textContent = '✓ Done'; btn.className = 'btn btn-success btn-sm';
+    }
+
   } catch(e) {
     result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
     btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
@@ -1335,10 +1646,22 @@ async function createTransfer() {
     selectedTxId = txId;
 
     // Submit PII via IVMS101 /append endpoint
+    // Use editor fields if available, otherwise fall back to customer data
     var piiStatus = 'pending';
     var ivms101 = null;
+    var editorVisible = document.getElementById('ea-pii-editor-card').style.display !== 'none';
 
-    if (eaCust || ebCust) {
+    if (editorVisible) {
+      // Use rich PII from the editor
+      ivms101 = buildIVMS101FromEditor();
+      // Patch wallet addresses
+      if (ivms101.originator && ivms101.originator.originatorPerson) {
+        ivms101.originator.originatorPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + eaWallet];
+      }
+      if (ivms101.beneficiary && ivms101.beneficiary.beneficiaryPerson) {
+        ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
+      }
+    } else if (eaCust || ebCust) {
       ivms101 = {};
       if (eaCust) {
         ivms101.originator = {
@@ -1362,11 +1685,12 @@ async function createTransfer() {
           }]
         };
       }
+    }
 
+    if (ivms101) {
       try {
         var piiRes = await fetch('/api/notabene/transfer/append', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: txId, ivms101: ivms101 })
         });
         var piiData = await piiRes.json();
