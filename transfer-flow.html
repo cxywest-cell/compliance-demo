@@ -1237,9 +1237,6 @@ async function validatePII() {
     };
   }
 
-  // Store the validated IVMS101 so createTransfer uses exactly what was validated
-  lastValidatedIVMS101 = JSON.parse(JSON.stringify(ivms101));
-
   btn.disabled = true; btn.textContent = 'Validating...';
   result.style.display = 'block';
   result.innerHTML = '<div style="color:#888;font-size:11px">Validating PII against ' + esc(pdUrl) + '...</div>';
@@ -1257,6 +1254,8 @@ async function validatePII() {
     if (data.error) throw new Error(data.error);
 
     var isValid = data.isValid;
+    // Only store IVMS101 if validation PASSED — prevents incomplete PII from being used
+    lastValidatedIVMS101 = isValid ? JSON.parse(JSON.stringify(ivms101)) : null;
     var errors = data.errors || [];
     var missing = data.missingFields || [];
     var validPaths = data.validPaths || [];
@@ -1507,9 +1506,6 @@ async function revalidatePII() {
     ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
   }
 
-  // Store the validated IVMS101 so createTransfer uses exactly what was validated
-  lastValidatedIVMS101 = JSON.parse(JSON.stringify(ivms101));
-
   btn.disabled = true; btn.textContent = 'Validating...';
   result.style.display = 'block';
   result.innerHTML = '<div style="color:#888;font-size:11px">Re-validating with updated PII...</div>';
@@ -1527,6 +1523,8 @@ async function revalidatePII() {
     if (data.error) throw new Error(data.error);
 
     var isValid = data.isValid;
+    // Only store IVMS101 if validation PASSED — prevents incomplete PII from being used
+    lastValidatedIVMS101 = isValid ? JSON.parse(JSON.stringify(ivms101)) : null;
     var errors = data.errors || [];
     var missing = data.missingFields || [];
     var validPaths = data.validPaths || [];
@@ -1612,10 +1610,10 @@ async function createTransfer() {
     return;
   }
 
-  // Warn if PII validation was not done — PII won't be attached to the transfer
+  // Block transfer creation if PII validation was not completed successfully
   if (!lastValidatedIVMS101) {
     result.style.display = 'block';
-    result.innerHTML = '<div class="card"><div class="card-body" style="color:#d97706">⚠ PII Validation was not completed. The transfer will be created without Travel Rule PII data. Click "Validate" in the PII Validation step above first.</div></div>';
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
     return;
   }
 
