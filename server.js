@@ -898,63 +898,6 @@ app.post('/api/notabene/discover', async (req, res) => {
   }
 });
 
-// Check Travel Rule threshold (uses public jurisdiction-thresholds JSON)
-app.get('/api/notabene/travelrule', async (req, res) => {
-  const { originatorJurisdiction, amount } = req.query;
-  try {
-    // Fetch jurisdiction thresholds from Notabene's public presentation definitions
-    const thresholdsResp = await fetch('https://pd.notabene.id/ivms101/v2/jurisdiction-thresholds.json');
-    const allThresholds = await thresholdsResp.json();
-
-    // Find originator jurisdiction
-    const origJur = allThresholds.find(j => j.countryCode === originatorJurisdiction);
-    if (!origJur) {
-      return res.json({
-        isTravelRule: true,
-        reason: `Jurisdiction ${originatorJurisdiction} not in threshold list — FATF guidelines apply (threshold: 0)`,
-        presentationDefinitionURL: 'https://pd.notabene.id/ivms101/v2/FATF-0.json',
-        originatorJurisdiction,
-        amount
-      });
-    }
-
-    // Find applicable threshold (lowest threshold that the amount exceeds)
-    const amt = parseFloat(amount) || 0;
-    let applicableThreshold = null;
-    for (const t of origJur.thresholds) {
-      if (amt >= parseFloat(t.threshold)) {
-        if (!applicableThreshold || parseFloat(t.threshold) > parseFloat(applicableThreshold.threshold)) {
-          applicableThreshold = t;
-        }
-      }
-    }
-
-    if (applicableThreshold) {
-      res.json({
-        isTravelRule: true,
-        threshold: applicableThreshold.threshold,
-        currency: origJur.currency,
-        presentationDefinitionURL: applicableThreshold.presentationDefinitionURL,
-        originatorJurisdiction,
-        amount,
-        jurisdictionStatus: origJur.jurisdictionStatus || 'unknown'
-      });
-    } else {
-      res.json({
-        isTravelRule: false,
-        reason: `Amount ${amount} ${origJur.currency} below threshold (${origJur.thresholds.map(t => t.threshold).join(', ')} ${origJur.currency})`,
-        threshold: origJur.thresholds,
-        currency: origJur.currency,
-        originatorJurisdiction,
-        amount,
-        jurisdictionStatus: origJur.jurisdictionStatus || 'unknown'
-      });
-    }
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // Validate PII against presentation definition
 app.post('/api/notabene/validate-pii', async (req, res) => {
   const { presentationDefinitionUrl, ivms101 } = req.body;
