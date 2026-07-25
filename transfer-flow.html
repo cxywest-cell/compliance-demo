@@ -350,7 +350,7 @@
           <div class="transfer-form">
             <div class="form-group full">
               <label>Presentation Definition URL</label>
-              <input type="text" id="ea-pd-url" value="https://pd.notabene.id/ivms101/v2/AM-0.json" style="font-size:11px">
+              <input type="text" id="ea-pd-url" value="https://pd.notabene.id/ivms101/v2/AE-0.json" style="font-size:11px">
             </div>
           </div>
           <div class="hint" style="margin-top:4px">PII is auto-constructed from the selected originator/beneficiary customers above.</div>
@@ -1428,13 +1428,13 @@ function buildIVMS101FromEditor() {
     var nid = getVal('pii-orig-nid');
     if (nid) {
       np.nationalIdentification = {
-        nationalIdentifier: getVal('pii-orig-nidtype') || 'PASSPORT',
-        nationalIdentifierValue: nid
+        nationalIdentifierType: getVal('pii-orig-nidtype') || 'PASSPORT',
+        nationalIdentifier: nid
       };
     }
     var addr = getVal('pii-orig-addr');
     if (addr) {
-      np.address = { addressLine: [addr] };
+      np.geographicAddress = [{ addressLine: [addr] }];
     }
     ivms101.originator = {
       originatorPerson: [{
@@ -1461,13 +1461,13 @@ function buildIVMS101FromEditor() {
     var nid = getVal('pii-bene-nid');
     if (nid) {
       np.nationalIdentification = {
-        nationalIdentifier: getVal('pii-bene-nidtype') || 'PASSPORT',
-        nationalIdentifierValue: nid
+        nationalIdentifierType: getVal('pii-bene-nidtype') || 'PASSPORT',
+        nationalIdentifier: nid
       };
     }
     var addr = getVal('pii-bene-addr');
     if (addr) {
-      np.address = { addressLine: [addr] };
+      np.geographicAddress = [{ addressLine: [addr] }];
     }
     ivms101.beneficiary = {
       beneficiaryPerson: [{
@@ -1992,14 +1992,23 @@ async function fetchTransferDetails() {
     var origPii = extractPII(t.originator, 'originator');
     var benePii = extractPII(t.beneficiary, 'beneficiary');
     var reviewBody = document.getElementById('eb-review-body');
-    reviewBody.innerHTML =
-      '<div style="padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
-        '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>' +
+    var hasOrigPii = !!(t.originator && t.originator.originatorPerson);
+    var hasBenePii = !!(t.beneficiary && t.beneficiary.beneficiaryPerson);
+    var reviewHeader = '<div style="padding:10px;background:#f0f7ff;border-radius:6px;border:1px solid #dbeafe">' +
+        '<div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;margin-bottom:6px">Travel Rule PII Received</div>';
+    if (!hasOrigPii && !hasBenePii) {
+      reviewBody.innerHTML = reviewHeader +
+        '<div style="font-size:11px;color:#d97706;padding:4px 0">No PII received yet — relationship confirmation may still be pending (~4s).</div>' +
+        '<button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="fetchTransferDetails()">↻ Retry</button>' +
+        '</div>';
+    } else {
+      reviewBody.innerHTML = reviewHeader +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
           piiBlock('ORIGINATOR', '#5b4cdb', origPii) +
           piiBlock('BENEFICIARY', '#06b6d4', benePii) +
         '</div>' +
       '</div>';
+    }
 
     // Enable beneficiary name matching button if PII is present
     var hasPii = !!(t.originator && t.originator.originatorPerson);
@@ -2017,7 +2026,8 @@ async function fetchTransferDetails() {
       }
     } else if (nameMatchBtn) {
       nameMatchBtn.disabled = true;
-      nameMatchBody.innerHTML = '<p class="hint" style="color:#d97706">No PII received yet — waiting for Entity A to send.</p>';
+      nameMatchBody.innerHTML = '<p class="hint" style="color:#d97706">No PII received yet — relationship confirmation may still be pending (~4s). Click retry:</p>' +
+        '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="fetchTransferDetails()">↻ Retry</button>';
     }
 
     // Update action bar visibility based on authorization status
