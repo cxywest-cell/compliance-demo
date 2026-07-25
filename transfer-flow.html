@@ -2220,7 +2220,7 @@ async function authorizeOutgoingTransfer() {
 }
 
 // Show rejection reason picker (inline panel replacing action bar)
-// onComplete(reason) is called when user confirms
+// onComplete(reason, comment) is called when user confirms
 function showRejectPanel(actionBarId, onComplete) {
   var el = document.getElementById(actionBarId);
   if (!el) return;
@@ -2237,16 +2237,26 @@ function showRejectPanel(actionBarId, onComplete) {
     ['OTHER', 'Other']
   ];
   var opts = options.map(function(o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+  var idPrefix = actionBarId;
   el.innerHTML =
     '<div style="width:100%">' +
-      '<select id="' + actionBarId + '-reason" style="width:100%;font-size:12px;margin-bottom:6px">' + opts + '</select>' +
+      '<select id="' + idPrefix + '-reason" style="width:100%;font-size:12px;margin-bottom:6px" onchange="' +
+        'var c=document.getElementById(\'' + idPrefix + '-comment-wrap\'); ' +
+        'c.style.display=(this.value===\'OTHER\')?\'block\':\'none\'; ' +
+        'if(this.value===\'OTHER\'){document.getElementById(\'' + idPrefix + '-comment\').focus();}">' + opts + '</select>' +
+      '<div id="' + idPrefix + '-comment-wrap" style="display:none;margin-bottom:6px">' +
+        '<input type="text" id="' + idPrefix + '-comment" placeholder="Comment (required for Other)" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid #d0d0d0;border-radius:4px">' +
+      '</div>' +
       '<div style="display:flex;gap:6px">' +
-        '<button class="btn btn-danger btn-sm" onclick="var s=document.getElementById(\'' + actionBarId + '-reason\'); ' +
-          'window.__rejectConfirm(\'' + actionBarId + '\', s.value, s.options[s.selectedIndex].text)">✗ Confirm Reject</button>' +
-        '<button class="btn btn-outline btn-sm" onclick="window.__rejectCancel(\'' + actionBarId + '\')">Cancel</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="' +
+          'var s=document.getElementById(\'' + idPrefix + '-reason\'); ' +
+          'var c=document.getElementById(\'' + idPrefix + '-comment\'); ' +
+          'if(s.value===\'OTHER\'&&!c.value.trim()){c.focus();c.style.borderColor=\'#dc2626\';return;} ' +
+          'window.__rejectConfirm(\'' + idPrefix + '\', s.value, s.options[s.selectedIndex].text, c.value.trim())">✗ Confirm Reject</button>' +
+        '<button class="btn btn-outline btn-sm" onclick="window.__rejectCancel(\'' + idPrefix + '\')">Cancel</button>' +
       '</div>' +
     '</div>';
-  window.__rejectConfirm = function(id, reason, label) { onComplete(reason, label); };
+  window.__rejectConfirm = function(id, reason, label, comment) { onComplete(reason, label, comment); };
   window.__rejectCancel = function(id) { document.getElementById(id).style.display = 'flex'; };
 }
 
@@ -2254,17 +2264,17 @@ function showRejectPanel(actionBarId, onComplete) {
 async function rejectOutgoingTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;
-  showRejectPanel('ea-action-bar', async function(reason, label) {
+  showRejectPanel('ea-action-bar', async function(reason, label, comment) {
     var actionsEl = document.getElementById('ea-action-bar');
     actionsEl.innerHTML = '<div style="color:#888;font-size:11px">Rejecting...</div>';
     try {
       var res = await fetch('/api/notabene/transfer/reject', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId, reason: reason })
+        body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId, reason: reason, comment: comment })
       });
       var data = await res.json();
       if (data.error) throw new Error(data.error);
-      actionsEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + '</div>';
+      actionsEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + (comment ? ' (' + esc(comment) + ')' : '') + '</div>';
     } catch(e) {
       actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
         '<button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>' +
@@ -2345,17 +2355,17 @@ async function authorizeTransfer() {
 async function rejectTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;
-  showRejectPanel('eb-action-bar', async function(reason, label) {
+  showRejectPanel('eb-action-bar', async function(reason, label, comment) {
     try {
       var res = await fetch('/api/notabene/transfer/reject', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, reason: reason })
+        body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, reason: reason, comment: comment })
       });
       var data = await res.json();
       if (data.error) throw new Error(data.error);
       document.getElementById('eb-action-bar').style.display = 'none';
       document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
-        '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + '</div>');
+        '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + (comment ? ' (' + esc(comment) + ')' : '') + '</div>');
     } catch(e) {
       alert('Reject failed: ' + e.message);
     }
