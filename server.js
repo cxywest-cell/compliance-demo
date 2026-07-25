@@ -45,16 +45,15 @@ const SUMSUB_WEBSDK_SECRET = process.env.SUMSUB_WEBSDK_SECRET;
 const SUMSUB_APP_TOKEN = process.env.SUMSUB_APP_TOKEN;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || '';
 const NOTABENE_WEBHOOK_SECRET = process.env.NOTABENE_WEBHOOK_SECRET || '';
-const NOTABENE_SECRETS_FILE = path.resolve(__dirname, '.notabene-secrets.json');
-
 // Per-role webhook secrets (each VASP workspace has its own).
-// Updated from the settings page via POST /api/notabene/webhook-secrets.
-let notabeneSecrets = { ea: '', ca: '', eb: '', cb: '' };
-try {
-  if (fs.existsSync(NOTABENE_SECRETS_FILE)) {
-    notabeneSecrets = Object.assign(notabeneSecrets, JSON.parse(fs.readFileSync(NOTABENE_SECRETS_FILE, 'utf8')));
-  }
-} catch(e) { /* ignore */ }
+// Single source of truth: .env (process.env). The POST /api/notabene/webhook-secrets
+// endpoint can update these in-memory for live testing, but .env is the persistent source.
+let notabeneSecrets = {
+  ea: process.env.NOTABENE_EA_WEBHOOK_SECRET || '',
+  ca: process.env.NOTABENE_CA_WEBHOOK_SECRET || '',
+  eb: process.env.NOTABENE_EB_WEBHOOK_SECRET || '',
+  cb: process.env.NOTABENE_CB_WEBHOOK_SECRET || ''
+};
 const BASE_URL = 'api.sumsub.com';
 const LEVEL_NAME = 'kyb-test-daniel-0626';
 
@@ -1628,17 +1627,13 @@ app.post('/api/settings', (req, res) => {
 // Frontend (settings page) calls this to update secrets after user enters them.
 app.post('/api/notabene/webhook-secrets', (req, res) => {
   const { ea, ca, eb, cb } = req.body;
-  // Never overwrite an existing secret with an empty string — prevents accidental wipes
+  // Update in-memory secrets (live testing without restart).
+  // .env is the persistent source of truth — updated via POST /api/settings.
   if (ea) notabeneSecrets.ea = ea;
   if (ca) notabeneSecrets.ca = ca;
   if (eb) notabeneSecrets.eb = eb;
   if (cb) notabeneSecrets.cb = cb;
-  try {
-    fs.writeFileSync(NOTABENE_SECRETS_FILE, JSON.stringify(notabeneSecrets, null, 2));
-    res.json({ ok: true, saved: notabeneSecrets });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
+  res.json({ ok: true });
 });
 
 app.get('/api/notabene/webhook-secrets', (req, res) => {
