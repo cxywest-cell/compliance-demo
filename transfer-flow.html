@@ -31,6 +31,10 @@
 
   /* Case selector */
   .case-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 100; }
+  .tx-inspector { background: #faf9ff; border-bottom: 1px solid #e0dffa; }
+  .tx-inspector-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; cursor: pointer; user-select: none; }
+  .tx-inspector-header:hover { background: #f3f0ff; }
+  .tx-inspector-body { padding: 12px 16px; }
   .case-bar .case-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
   .case-select { padding: 5px 10px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 12px; font-weight: 500; color: #1a1a1a; background: #fff; cursor: pointer; }
   .case-select:focus { outline: none; border-color: #5b4cdb; }
@@ -143,6 +147,9 @@
   .wh-console-bar:hover { background: #f0efff; }
   .wh-console-panel { display: none; flex: 1; min-height: 0; background: #f5f5f5; border-top: 1px solid #e0e0e0; }
   .wh-list { display: flex; flex-direction: column; gap: 4px; }
+  .wh-tab { padding: 6px 14px; font-size: 11px; font-weight: 600; color: #888; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .wh-tab:hover { color: #5b4cdb; background: #faf9ff; }
+  .wh-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
   .wh-item { display: flex; align-items: center; gap: 6px; padding: 7px 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 11px; }
   .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
   .wh-item.selected { background: #f0efff; border-color: #5b4cdb; }
@@ -650,7 +657,14 @@
     </div>
   </div>
   <div class="wh-console-panel" id="wh-panel">
-    <div style="display:flex;height:100%;min-height:280px">
+    <!-- Tab bar -->
+    <div style="display:flex;border-bottom:1px solid #e0e0e0;background:#fff">
+      <div class="wh-tab active" data-wh-tab="webhooks" onclick="whSwitchTab('webhooks')">📡 Webhooks</div>
+      <div class="wh-tab" data-wh-tab="inspector" onclick="whSwitchTab('inspector')">🔍 Inspector</div>
+    </div>
+
+    <!-- Tab: Webhooks -->
+    <div id="wh-tab-webhooks" class="wh-tab-content" style="display:flex;height:100%;min-height:280px">
       <div style="width:340px;overflow-y:auto;background:#fff;border-right:1px solid #e0e0e0">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #e0e0e0">
           <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Events</span>
@@ -665,6 +679,25 @@
         </div>
         <div id="wh-json" class="json-viewer" style="flex:1">// Click an event to see full payload</div>
       </div>
+    </div>
+
+    <!-- Tab: Inspector -->
+    <div id="wh-tab-inspector" class="wh-tab-content" style="display:none;height:100%;min-height:280px;overflow-y:auto;padding:14px">
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
+        <div class="form-group" style="flex:1;min-width:280px;margin-bottom:0">
+          <label style="font-size:10px;color:#888;text-transform:uppercase">Transfer ID</label>
+          <input type="text" id="tx-inspector-id" placeholder="e.g. 5d4467ff-..." style="width:100%;font-size:12px;font-family:monospace">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label style="font-size:10px;color:#888;text-transform:uppercase">View as</label>
+          <select id="tx-inspector-role" style="font-size:12px">
+            <option value="ea">Entity A (Originator)</option>
+            <option value="eb">Entity B (Beneficiary)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="inspectTransfer()">Look Up</button>
+      </div>
+      <div id="tx-inspector-result"></div>
     </div>
   </div>
 
@@ -2564,6 +2597,115 @@ function whToggle() {
     panel.style.display = 'none';
     arrow.style.transform = 'rotate(0deg)';
   }
+}
+
+function whSwitchTab(tab) {
+  document.querySelectorAll('.wh-tab-content').forEach(function(el) { el.style.display = 'none'; });
+  document.getElementById('wh-tab-' + tab).style.display = (tab === 'webhooks') ? 'flex' : 'block';
+  document.querySelectorAll('.wh-tab').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelector('.wh-tab[data-wh-tab="' + tab + '"]').classList.add('active');
+}
+
+// ─── Transaction Inspector ───
+async function inspectTransfer() {
+  var s = await loadSettings();
+  var txId = document.getElementById('tx-inspector-id').value.trim();
+  var role = document.getElementById('tx-inspector-role').value;
+  var result = document.getElementById('tx-inspector-result');
+
+  if (!txId) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">Enter a Transfer ID</div>';
+    return;
+  }
+
+  var creds = role === 'eb'
+    ? { id: s.ebApikey, secret: s.ebApisecret, did: s.ebDid }
+    : { id: s.eaApikey, secret: s.eaApisecret, did: s.eaDid };
+
+  if (!creds.id || !creds.secret) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">No credentials for ' + role.toUpperCase() + '. Configure in Settings.</div>';
+    return;
+  }
+
+  result.innerHTML = '<div style="color:#888;font-size:11px">Looking up ' + esc(txId) + ' as ' + role.toUpperCase() + '...</div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(creds.id) +
+      '&clientSecret=' + encodeURIComponent(creds.secret) +
+      '&did=' + encodeURIComponent(creds.did) +
+      '&txId=' + encodeURIComponent(txId) + '&decrypt=true');
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var tx = data.transfer || data;
+    result.innerHTML = renderTxDetail(tx, role);
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderTxDetail(tx, role) {
+  var status = tx.status || '—';
+  var statusColor = { SETTLED: '#059669', AUTHORIZED: '#059669', REJECTED: '#dc2626', CANCELLED: '#dc2626', SENT: '#d97706', RECEIVED: '#d97706', INCOMING: '#d97706', OUTGOING: '#d97706' }[status] || '#888';
+
+  var html = '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden">';
+
+  // Header
+  html += '<div style="padding:10px 12px;border-bottom:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center">';
+  html += '<span style="font-size:12px;font-weight:700;font-family:monospace">' + esc(tx['@id'] || tx.id || '—') + '</span>';
+  html += '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:' + statusColor + ';color:#fff">' + esc(status) + '</span>';
+  html += '</div>';
+
+  // Key-value rows
+  var rows = [
+    ['Direction', tx.transactionDirection || tx.direction || '—'],
+    ['Amount', (tx.amount || '—') + ' ' + (tx.notabeneAsset || '')],
+    ['Asset', tx.asset || '—'],
+    ['Initiator', tx.initiator || '—'],
+    ['isTravelRule', tx.isTravelRule === true ? '✓ Yes' : tx.isTravelRule === false ? '✗ No' : '—'],
+    ['Settlement ID', tx.settlementId ? tx.settlementId.substring(0, 30) + '...' : '—'],
+    ['Created', tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '—'],
+    ['Authorized', tx.authorizedTime ? new Date(tx.authorizedTime).toLocaleString() : '—'],
+    ['Settled', tx.settledTime ? new Date(tx.settledTime).toLocaleString() : '—'],
+    ['Rejected', tx.rejectedTime ? new Date(tx.rejectedTime).toLocaleString() : '—'],
+  ];
+
+  html += '<div style="padding:6px 12px">';
+  for (var i = 0; i < rows.length; i++) {
+    html += '<div class="cred-row"><span class="k">' + esc(rows[i][0]) + '</span><span class="v" style="font-family:monospace;font-size:10px">' + esc(rows[i][1]) + '</span></div>';
+  }
+  html += '</div>';
+
+  // Agents
+  if (tx.agents && tx.agents.length) {
+    html += '<div style="padding:6px 12px;border-top:1px solid #e8e8e8">';
+    html += '<div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px">Agents & Policies</div>';
+    for (var j = 0; j < tx.agents.length; j++) {
+      var a = tx.agents[j];
+      html += '<div style="font-size:10px;padding:3px 0;border-bottom:1px solid #f0f0f0">';
+      html += '<strong>' + esc(a.role || '—') + '</strong>';
+      if (a.jurisdiction) html += ' <span style="color:#5b4cdb">[' + esc(a.jurisdiction) + ']</span>';
+      html += ' <span style="color:#888">' + esc((a.agent && a.agent['@id'] || '').substring(0, 40)) + '</span>';
+      if (a.status) html += ' → <span style="font-weight:600">' + esc(a.status) + '</span>';
+      if (a.policies && a.policies.length) {
+        for (var k = 0; k < a.policies.length; k++) {
+          var p = a.policies[k];
+          var pColor = p.status === 'COMPLETED' ? '#059669' : '#d97706';
+          html += '<div style="margin-left:16px;font-size:9px;color:' + pColor + '">▸ ' + esc(p['@type'].replace('REQUIRE_', '').replace('_', ' ')) + ': ' + esc(p.status) + '</div>';
+        }
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // Full JSON
+  html += '<details style="border-top:1px solid #e0e0e0"><summary style="cursor:pointer;font-size:10px;font-weight:600;color:#5b4cdb;padding:8px 12px">Raw JSON</summary>';
+  html += '<pre class="mono" style="font-size:9px;max-height:300px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:0 0 6px 6px">' + esc(JSON.stringify(tx, null, 2)) + '</pre>';
+  html += '</details>';
+
+  html += '</div>';
+  return html;
 }
 
 function whRoleClass(role) {
