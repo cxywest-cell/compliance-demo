@@ -2188,30 +2188,58 @@ async function authorizeOutgoingTransfer() {
   }
 }
 
+// Show rejection reason picker (inline panel replacing action bar)
+// onComplete(reason) is called when user confirms
+function showRejectPanel(actionBarId, onComplete) {
+  var el = document.getElementById(actionBarId);
+  if (!el) return;
+  var options = [
+    ['COUNTERPARTY_RISK', 'Counterparty Risk'],
+    ['COUNTERPARTY_DUE_DILIGENCE', 'Counterparty Due Diligence'],
+    ['SANCTION_SCREENING', 'Sanction Screening'],
+    ['BLOCKCHAIN_RISK_SCORE', 'Blockchain Risk Score'],
+    ['SUSPICIOUS_TRANSACTION', 'Suspicious Transaction'],
+    ['COMPLIANCE_POLICIES', 'Compliance Policies'],
+    ['BENEFICIARY_NOT_FOUND', 'Beneficiary Not Found'],
+    ['BENEFICIARY_REJECT_INCOMING', 'Beneficiary Reject Incoming'],
+    ['ORIGINATOR_REJECT_OUTGOING', 'Originator Reject Outgoing'],
+    ['OTHER', 'Other']
+  ];
+  var opts = options.map(function(o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+  el.innerHTML =
+    '<div style="width:100%">' +
+      '<select id="' + actionBarId + '-reason" style="width:100%;font-size:12px;margin-bottom:6px">' + opts + '</select>' +
+      '<div style="display:flex;gap:6px">' +
+        '<button class="btn btn-danger btn-sm" onclick="var s=document.getElementById(\'' + actionBarId + '-reason\'); ' +
+          'window.__rejectConfirm(\'' + actionBarId + '\', s.value, s.options[s.selectedIndex].text)">✗ Confirm Reject</button>' +
+        '<button class="btn btn-outline btn-sm" onclick="window.__rejectCancel(\'' + actionBarId + '\')">Cancel</button>' +
+      '</div>' +
+    '</div>';
+  window.__rejectConfirm = function(id, reason, label) { onComplete(reason, label); };
+  window.__rejectCancel = function(id) { document.getElementById(id).style.display = 'flex'; };
+}
+
 // Reject outgoing transfer from Entity A
 async function rejectOutgoingTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;
-  var reason = prompt('Rejection reason:', 'COMPLIANCE_CONCERN');
-  if (!reason) return;
-
-  var actionsEl = document.getElementById('ea-action-bar');
-  actionsEl.innerHTML = '<div style="color:#888;font-size:11px">Rejecting...</div>';
-
-  try {
-    var res = await fetch('/api/notabene/transfer/reject', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId, reason: reason })
-    });
-    var data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    actionsEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(reason) + '</div>';
-  } catch(e) {
-    actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
-      '<button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>' +
-      '<div style="color:#dc2626;font-size:11px;margin-top:8px">✗ ' + esc(e.message) + '</div>';
-  }
+  showRejectPanel('ea-action-bar', async function(reason, label) {
+    var actionsEl = document.getElementById('ea-action-bar');
+    actionsEl.innerHTML = '<div style="color:#888;font-size:11px">Rejecting...</div>';
+    try {
+      var res = await fetch('/api/notabene/transfer/reject', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: selectedTxId, reason: reason })
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      actionsEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + '</div>';
+    } catch(e) {
+      actionsEl.innerHTML = '<button class="btn btn-success" onclick="authorizeOutgoingTransfer()">✓ Authorize</button>' +
+        '<button class="btn btn-danger" onclick="rejectOutgoingTransfer()">✗ Reject</button>' +
+        '<div style="color:#dc2626;font-size:11px;margin-top:8px">✗ ' + esc(e.message) + '</div>';
+    }
+  });
 }
 
 // Complete beneficiary name matching check
@@ -2286,23 +2314,21 @@ async function authorizeTransfer() {
 async function rejectTransfer() {
   var s = await loadSettings();
   if (!selectedTxId) return;
-  var reason = prompt('Rejection reason:', 'COMPLIANCE_CONCERN');
-  if (!reason) return;
-
-  try {
-    var res = await fetch('/api/notabene/transfer/reject', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, reason: reason })
-    });
-    var data = await res.json();
-    if (data.error) throw new Error(data.error);
-
-    document.getElementById('eb-action-bar').style.display = 'none';
-    document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
-      '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(reason) + '</div>');
-  } catch(e) {
-    alert('Reject failed: ' + e.message);
-  }
+  showRejectPanel('eb-action-bar', async function(reason, label) {
+    try {
+      var res = await fetch('/api/notabene/transfer/reject', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, did: s.ebDid, txId: selectedTxId, reason: reason })
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      document.getElementById('eb-action-bar').style.display = 'none';
+      document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
+        '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + '</div>');
+    } catch(e) {
+      alert('Reject failed: ' + e.message);
+    }
+  });
 }
 
 // Global variable to store on-chain tx hash for settlement
