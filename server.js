@@ -781,20 +781,6 @@ app.post('/api/notabene/transfer/append', async (req, res) => {
   }
 });
 
-// Present PII to counterparty — delivers encrypted PII to the beneficiary VASP
-// POST /entities/{entityDID}/transfers/{txId}/policies/{policyId}/presentation
-app.post('/api/notabene/transfer/present', async (req, res) => {
-  const { clientId, clientSecret, did, txId, policyId, ivms101 } = req.body;
-  try {
-    const token = await getNotabeneToken(clientId, clientSecret);
-    const path = '/entities/' + did + '/transfers/' + txId + '/policies/' + policyId + '/presentation';
-    const data = await notabeneApi('POST', path, token, { ivms101 });
-    res.json(data);
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // List transfers for entity
 app.get('/api/notabene/transfers', async (req, res) => {
   const { clientId, clientSecret, did } = req.query;

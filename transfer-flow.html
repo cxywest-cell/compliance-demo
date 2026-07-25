@@ -1428,23 +1428,13 @@ function buildIVMS101FromEditor() {
     if (nid) {
       np.nationalIdentification = {
         nationalIdentifierType: getVal('pii-orig-nidtype') || 'PASSPORT',
-        nationalIdentifier: nid,
-        countryOfIssue: 'AE',
-        registrationAuthority: 'N/A'
+        nationalIdentifier: nid
       };
     }
     var addr = getVal('pii-orig-addr');
     if (addr) {
-      np.geographicAddress = [{
-        addressType: 'RES',
-        addressLine: [addr],
-        townName: 'Dubai',
-        country: 'AE',
-        postCode: '00000',
-        countrySubDivision: 'Dubai'
-      }];
+      np.geographicAddress = [{ addressLine: [addr] }];
     }
-    np.customerIdentification = 'CUST-' + Date.now().toString(36).toUpperCase();
     ivms101.originator = {
       originatorPerson: [{
         naturalPerson: np,
@@ -1742,59 +1732,10 @@ async function createTransfer() {
         if (piiData.error) {
           piiStatus = 'error: ' + piiData.error;
         } else {
-          piiStatus = 'appended';
+          piiStatus = 'success';
         }
       } catch(piiErr) {
         piiStatus = 'error: ' + piiErr.message;
-      }
-    }
-
-    // Present PII to counterparty (EB) — this delivers encrypted PII to EB
-    // Requires REQUIRE_RELATIONSHIP_CONFIRMATION to be COMPLETED first
-    if (piiStatus === 'appended' && ivms101) {
-      try {
-        // Poll for relationship confirmation (async, takes a few seconds)
-        var presentationPolicyId = null;
-        var relConfirmed = false;
-        for (var poll = 0; poll < 10; poll++) {
-          await new Promise(r => setTimeout(r, 2000));
-          var polRes = await fetch('/api/notabene/transfer/tap-policies?clientId=' + encodeURIComponent(s.eaApikey) +
-            '&clientSecret=' + encodeURIComponent(s.eaApisecret) + '&did=' + encodeURIComponent(s.eaDid) + '&txId=' + encodeURIComponent(txId));
-          var polData = await polRes.json();
-          if (polData.policies) {
-            for (var pi = 0; pi < polData.policies.length; pi++) {
-              if (polData.policies[pi]['@type'] === 'REQUIRE_PRESENTATION') {
-                presentationPolicyId = polData.policies[pi]['@id'];
-              }
-              if (polData.policies[pi]['@type'] === 'REQUIRE_RELATIONSHIP_CONFIRMATION' &&
-                  polData.policies[pi]['status'] === 'COMPLETED') {
-                relConfirmed = true;
-              }
-            }
-          }
-          if (relConfirmed && presentationPolicyId) break;
-        }
-
-        if (relConfirmed && presentationPolicyId) {
-          var presentRes = await fetch('/api/notabene/transfer/present', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientId: s.eaApikey, clientSecret: s.eaApisecret,
-              did: s.eaDid, txId: txId, policyId: presentationPolicyId,
-              ivms101: ivms101
-            })
-          });
-          var presentData = await presentRes.json();
-          if (presentData.error) {
-            piiStatus = 'present error: ' + presentData.error;
-          } else {
-            piiStatus = 'success';
-          }
-        } else {
-          piiStatus = 'success (append ok, presentation deferred — relationship not confirmed yet)';
-        }
-      } catch(presentErr) {
-        piiStatus = 'success (append ok, present failed: ' + presentErr.message + ')';
       }
     }
 
