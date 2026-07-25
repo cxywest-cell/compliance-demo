@@ -337,8 +337,12 @@
           <p class="hint" style="margin-bottom:8px">POST /validate-pii — Validate collected PII against jurisdictional requirements before submission.</p>
           <div class="transfer-form">
             <div class="form-group full">
-              <label>Presentation Definition URL</label>
-              <input type="text" id="ea-pd-url" value="https://pd.notabene.id/ivms101/v2/AE-0.json" style="font-size:11px">
+              <label>Presentation Definitions (dual-jurisdiction)</label>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <input type="text" id="ea-pd-url" value="https://pd.notabene.id/ivms101/v2/AE-0.json" style="font-size:11px;flex:1;min-width:200px">
+                <input type="text" id="ea-pd-url-2" value="https://pd.notabene.id/ivms101/v2/FA-1000.json" style="font-size:11px;flex:1;min-width:200px">
+              </div>
+              <div style="font-size:10px;color:#888;margin-top:2px">AE-0 = UAE/VARA jurisdiction · FA-1000 = FATF baseline</div>
             </div>
           </div>
           <div class="hint" style="margin-top:4px">PII is auto-constructed from the selected originator/beneficiary customers above.</div>
@@ -854,7 +858,7 @@ function esc(s) {
 var CASES = {
   case1: {
     name: 'Happy Path — Successful Transfer',
-    desc: 'Entity A sends 3,500 USDT-TEST → Entity B authorizes → settles → txMatch. Standard compliant flow.',
+    desc: 'Entity A sends 3,500 USDT-TEST with dual-jurisdiction PII (AE + FATF) → Entity B authorizes → settles → txMatch.',
     activeRoles: ['entity-a', 'entity-b'],
     passiveRoles: ['custodian-a', 'custodian-b'],
     passiveNote: 'Passive role in agent chain — no action needed.'
@@ -1218,37 +1222,62 @@ async function validatePII(isRevalidate) {
 
   btn.disabled = true; btn.textContent = 'Validating...';
   result.style.display = 'block';
-  result.innerHTML = '<div style="color:#888;font-size:11px">' + (isRevalidate ? 'Re-validating' : 'Validating') + ' PII against ' + esc(pdUrl) + '...</div>';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Validating PII against dual jurisdiction PDs...</div>';
 
   try {
-    var res = await fetch('/api/notabene/validate-pii', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        role: 'ea',
-        presentationDefinitionUrl: pdUrl, ivms101: ivms101
-      })
-    });
-    var data = await res.json();
-    if (data.error) throw new Error(data.error);
+    var pdUrl2 = document.getElementById('ea-pd-url-2').value.trim();
+    var pdUrls = [pdUrl];
+    if (pdUrl2) pdUrls.push(pdUrl2);
 
-    var isValid = data.isValid;
-    // Only store IVMS101 if validation PASSED — prevents incomplete PII from being used
+    var allErrors = [];
+    var allMissing = [];
+    var allValidPaths = [];
+    var allValid = true;
+    var pdResults = [];
+
+    for (var pi = 0; pi < pdUrls.length; pi++) {
+      var res = await fetch('/api/notabene/validate-pii', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'ea', presentationDefinitionUrl: pdUrls[pi], ivms101: ivms101 })
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      var pdLabel = pdUrls[pi].split('/').pop();
+      var pdValid = data.isValid;
+      if (!pdValid) allValid = false;
+      pdResults.push({ label: pdLabel, valid: pdValid });
+      allErrors = allErrors.concat((data.errors || []).map(function(e) { return '[' + pdLabel + '] ' + e; }));
+      (data.missingFields || []).forEach(function(f) { if (allMissing.indexOf(f) === -1) allMissing.push(f); });
+      (data.validPaths || []).forEach(function(p) { if (allValidPaths.indexOf(p) === -1) allValidPaths.push(p); });
+    }
+
+    var isValid = allValid;
+    var errors = allErrors;
+    var missing = allMissing;
+    var validPaths = allValidPaths;
+    // Only store IVMS101 if ALL PDs passed — prevents incomplete PII from being used
     lastValidatedIVMS101 = isValid ? JSON.parse(JSON.stringify(ivms101)) : null;
-    var errors = data.errors || [];
-    var missing = data.missingFields || [];
-    var validPaths = data.validPaths || [];
 
     var valColor = isValid ? '#059669' : '#dc2626';
     var valBg = isValid ? '#f0fdf4' : '#fef2f2';
     var valBorder = isValid ? '#bbf7d0' : '#fecaca';
     var label = isRevalidate ? 'PII Re-Validation Result' : 'PII Validation Result';
 
+    // Per-PD badges
+    var pdBadgesHtml = pdResults.map(function(r) {
+      var c = r.valid ? '#059669' : '#dc2626';
+      var bg = r.valid ? '#d1fae5' : '#fee2e2';
+      return '<span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;background:' + bg + ';color:' + c + '">' + esc(r.label) + (r.valid ? ' ✓' : ' ✗') + '</span>';
+    }).join(' ');
+
     var html = '<div style="background:' + valBg + ';border-radius:6px;padding:10px;border:1px solid ' + valBorder + '">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
         '<span style="font-size:10px;font-weight:600;color:' + valColor + ';text-transform:uppercase">' + label + '</span>' +
         '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:' + valColor + ';color:#fff">' + (isValid ? 'VALID ✓' : 'INVALID ✗') + '</span>' +
-      '</div>';
+      '</div>' +
+      '<div style="margin-bottom:6px">' + pdBadgesHtml + '</div>';
 
     if (errors.length > 0) {
       html += '<div style="font-size:10px;font-weight:600;color:#dc2626;margin-bottom:4px">Errors:</div>';
@@ -1504,13 +1533,6 @@ async function createTransfer() {
     return;
   }
 
-  // Block transfer creation if PII validation was not completed successfully
-  if (!lastValidatedIVMS101) {
-    result.style.display = 'block';
-    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
-    return;
-  }
-
   var eaDid = s.eaDid;
   var ebDid = s.ebDid;
 
@@ -1536,15 +1558,22 @@ async function createTransfer() {
   // Build beneficiary — only @id
   var beneficiary = { '@id': beneId };
 
-  // REQUIRE_PRESENTATION belongs on EB's (beneficiary) agent, not EA's.
-  // Semantics: "EB requires EA to present originator PII" — from=EA, for=EB.
-  // Attached to EB's agent because EB is the party that needs to receive the PII.
-  // Proven by A/B test: with this construction, BOTH EA and EB see status=COMPLETED.
-  var requirePresentation = {
+  // Dual REQUIRE_PRESENTATION policies — both from=EA, for=EB.
+  // Policy 1: AE-0.json (EA's jurisdiction — UAE/VARA rules)
+  // Policy 2: FA-1000.json (FATF baseline — cross-jurisdiction fallback)
+  // Both are on EB's agent. EA must satisfy the UNION of both PDs in one PII append.
+  // Proven: both evaluate independently to COMPLETED when full PII is sent.
+  var requirePresentationAE = {
     '@type': 'REQUIRE_PRESENTATION',
     'from': eaDid,
     'for': ebDid,
     'presentationDefinition': 'https://pd.notabene.id/ivms101/v2/AE-0.json'
+  };
+  var requirePresentationFA = {
+    '@type': 'REQUIRE_PRESENTATION',
+    'from': eaDid,
+    'for': ebDid,
+    'presentationDefinition': 'https://pd.notabene.id/ivms101/v2/FA-1000.json'
   };
 
   var transferBody = {
@@ -1557,7 +1586,7 @@ async function createTransfer() {
     agents: [
       { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': eaDid, role: 'SourceAddress' },
       { '@id': eaDid, 'for': origId, role: 'VASP' },
-      { '@id': ebDid, 'for': beneId, role: 'VASP', policies: [requirePresentation] },
+      { '@id': ebDid, 'for': beneId, role: 'VASP', policies: [requirePresentationAE, requirePresentationFA] },
       { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': ebDid, role: 'SettlementAddress' }
     ]
   };
@@ -1639,7 +1668,7 @@ async function createTransfer() {
 
     // Display result
     var piiBadge = piiStatus === 'success'
-      ? '<span class="tag" style="background:#d1fae5;color:#065f46">PII Sent ✓</span>'
+      ? '<span class="tag" style="background:#d1fae5;color:#065f46">PII Sent ✓ (AE-0 + FA-1000)</span>'
       : '<span class="tag" style="background:#fee2e2;color:#991b1b">PII: ' + esc(piiStatus) + '</span>';
 
     var eaName = eaCust ? eaCust.firstName + ' ' + eaCust.lastName : '—';
