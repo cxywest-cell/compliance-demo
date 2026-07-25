@@ -2303,10 +2303,10 @@ async function authorizeTransfer() {
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
+    // Refresh the transfer detail first, THEN show the success banner
+    await selectIncomingTransfer(selectedTxId);
     document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
       '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✓ Authorized — Entity A can now broadcast on-chain transfer</div>');
-    // Refresh the transfer detail
-    selectIncomingTransfer(selectedTxId);
   } catch(e) {
     actionBar.style.display = 'flex';
     alert('Authorize failed: ' + e.message);
