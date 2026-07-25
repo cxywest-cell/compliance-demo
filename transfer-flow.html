@@ -1915,14 +1915,21 @@ async function fetchTransferDetails() {
     // Update action bar visibility based on authorization status
     var actionBar = document.getElementById('eb-action-bar');
     var actionHeader = actionBar.closest('.card').querySelector('.card-header');
-    // Show authorize/reject buttons unless already authorized, rejected, or settled
+    var authBtn = actionBar.querySelector('.btn-success');
+    var rejectBtn = actionBar.querySelector('.btn-danger');
+    // Hide all buttons if already authorized, rejected, or settled
     if (status === 'AUTHORIZED' || status === 'SETTLED' || status === 'REJECTED') {
       actionBar.style.display = 'none';
     } else if (nameMatchRequired) {
-      actionBar.style.display = 'none';
-      if (actionHeader) actionHeader.firstChild.textContent = 'Authorization Decision (via Name Matching above)';
+      // Name matching = authorization path, but Reject is always available
+      actionBar.style.display = 'flex';
+      if (authBtn) authBtn.style.display = 'none';
+      if (rejectBtn) rejectBtn.style.display = '';
+      if (actionHeader) actionHeader.firstChild.textContent = 'Reject Transfer';
     } else {
       actionBar.style.display = 'flex';
+      if (authBtn) authBtn.style.display = '';
+      if (rejectBtn) rejectBtn.style.display = '';
       if (actionHeader) actionHeader.firstChild.textContent = 'Authorization Decision';
     }
   } catch(e) {
