@@ -147,9 +147,9 @@
   .wh-console-bar:hover { background: #f0efff; }
   .wh-console-panel { display: none; flex: 1; min-height: 0; background: #f5f5f5; border-top: 1px solid #e0e0e0; }
   .wh-list { display: flex; flex-direction: column; gap: 4px; }
-  .wh-tab { padding: 6px 14px; font-size: 11px; font-weight: 600; color: #888; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
-  .wh-tab:hover { color: #5b4cdb; background: #faf9ff; }
-  .wh-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .wh-tab { padding: 3px 10px; font-size: 10px; font-weight: 600; color: #888; cursor: pointer; border-radius: 4px; transition: all 0.15s; user-select: none; }
+  .wh-tab:hover { color: #5b4cdb; background: rgba(91,76,219,0.08); }
+  .wh-tab.active { color: #fff; background: #5b4cdb; }
   .wh-item { display: flex; align-items: center; gap: 6px; padding: 7px 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 11px; }
   .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
   .wh-item.selected { background: #f0efff; border-color: #5b4cdb; }
@@ -654,15 +654,13 @@
       <span style="font-size:11px;font-weight:600;color:#5b4cdb">📡 Notabene Webhook Console</span>
       <span id="wh-count" style="font-size:10px;font-weight:600;color:#5b4cdb;background:#f0efff;padding:2px 8px;border-radius:10px;border:1px solid #5b4cdb">0 events</span>
       <span id="wh-latest" style="font-size:10px;color:#888;margin-left:auto"></span>
+      <div style="display:flex;gap:2px;margin-left:8px">
+        <div class="wh-tab active" data-wh-tab="webhooks" onclick="event.stopPropagation(); whSwitchTab('webhooks', true)">📡 Webhooks</div>
+        <div class="wh-tab" data-wh-tab="inspector" onclick="event.stopPropagation(); whSwitchTab('inspector', true)">🔍 Inspector</div>
+      </div>
     </div>
   </div>
   <div class="wh-console-panel" id="wh-panel">
-    <!-- Tab bar -->
-    <div style="display:flex;border-bottom:1px solid #e0e0e0;background:#fff">
-      <div class="wh-tab active" data-wh-tab="webhooks" onclick="whSwitchTab('webhooks')">📡 Webhooks</div>
-      <div class="wh-tab" data-wh-tab="inspector" onclick="whSwitchTab('inspector')">🔍 Inspector</div>
-    </div>
-
     <!-- Tab: Webhooks -->
     <div id="wh-tab-webhooks" class="wh-tab-content" style="display:flex;height:100%;min-height:280px">
       <div style="width:340px;overflow-y:auto;background:#fff;border-right:1px solid #e0e0e0">
@@ -2599,11 +2597,17 @@ function whToggle() {
   }
 }
 
-function whSwitchTab(tab) {
+function whSwitchTab(tab, openPanel) {
+  if (openPanel) {
+    var panel = document.getElementById('wh-panel');
+    var arrow = document.getElementById('wh-arrow');
+    panel.style.display = 'flex';
+    arrow.style.transform = 'rotate(90deg)';
+  }
   document.querySelectorAll('.wh-tab-content').forEach(function(el) { el.style.display = 'none'; });
   document.getElementById('wh-tab-' + tab).style.display = (tab === 'webhooks') ? 'flex' : 'block';
   document.querySelectorAll('.wh-tab').forEach(function(el) { el.classList.remove('active'); });
-  document.querySelector('.wh-tab[data-wh-tab="' + tab + '"]').classList.add('active');
+  document.querySelectorAll('.wh-tab[data-wh-tab="' + tab + '"]').forEach(function(el) { el.classList.add('active'); });
 }
 
 // ─── Transaction Inspector ───
