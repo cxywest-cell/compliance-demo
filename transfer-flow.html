@@ -316,7 +316,7 @@
           Travel Rule Threshold
         </div>
         <div class="card-body">
-          <p class="hint">The Travel Rule threshold is evaluated implicitly by the Notabene network when Entity A creates a transfer in <strong>Step 3</strong>. The resulting <code>isTravelRule</code> flag on the transfer reflects the jurisdiction's regulatory requirements — no separate API call is needed from the originator.</p>
+          <p class="hint">Transfers with an amount equal to or surpassing <strong>3,500 USD</strong> are subject to the Travel Rule. This threshold is evaluated implicitly by the Notabene network when Entity A creates a transfer in <strong>Step 3</strong> — the resulting <code>isTravelRule</code> flag reflects this determination.</p>
         </div>
       </div>
 
@@ -393,8 +393,8 @@
               <input type="text" id="ea-tx-destaddr" readonly style="background:#f8f8f8;font-size:11px">
             </div>
             <div class="form-group">
-              <label>Amount (USDT-TEST)</label>
-              <input type="text" id="ea-tx-amount" value="1">
+              <label>Amount (USDT-TEST) — min 3,500</label>
+              <input type="number" id="ea-tx-amount" value="3500" min="3500" step="1">
             </div>
             <div class="form-group">
               <label>Asset</label>
@@ -823,7 +823,7 @@ function esc(s) {
 var CASES = {
   case1: {
     name: 'Happy Path — Successful Transfer',
-    desc: 'Entity A sends 1 USDT-TEST → Entity B authorizes → settles → txMatch. Standard compliant flow.',
+    desc: 'Entity A sends 3,500 USDT-TEST → Entity B authorizes → settles → txMatch. Standard compliant flow.',
     activeRoles: ['entity-a', 'entity-b'],
     passiveRoles: ['custodian-a', 'custodian-b'],
     passiveNote: 'Passive role in agent chain — no action needed.'
@@ -1440,9 +1440,16 @@ async function revalidatePII() {
 // Create Travel Rule transfer
 async function createTransfer() {
   var s = await loadSettings();
-  var amount = document.getElementById('ea-tx-amount').value || '1';
+  var amount = document.getElementById('ea-tx-amount').value || '3500';
   var btn = document.getElementById('ea-create-btn');
   var result = document.getElementById('ea-tx-result');
+
+  // Enforce Travel Rule minimum threshold
+  if (parseFloat(amount) < 3500) {
+    result.style.display = 'block';
+    result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ Amount must be at least 3,500 USDT-TEST to trigger the Travel Rule. Current: ' + esc(amount) + '</div></div>';
+    return;
+  }
 
   // Fetch custody wallets from settings
   var wallets = {};
@@ -2323,7 +2330,7 @@ async function broadcastOnchainTransfer() {
   }
   
   // Get amount from the selected transfer
-  var amount = '1'; // Default
+  var amount = '3500'; // Default
   if (selectedTxData && selectedTxData.amount) {
     amount = selectedTxData.amount;
   }
