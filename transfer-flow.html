@@ -1949,6 +1949,17 @@ async function fetchTransferDetails() {
     var hasPii = !!(t.originator && t.originator.originatorPerson);
     var nameMatchBtn = document.getElementById('eb-name-match-btn');
     var nameMatchBody = document.getElementById('eb-name-match-body');
+    var nameMatchHeader = document.querySelector('#eb-name-match-btn').closest('.card').querySelector('.card-header');
+
+    // Fetch entity settings to check if name matching policy is ON or OFF
+    var ebSettings = {};
+    try {
+      var sres = await fetch('/api/notabene/entity-settings?clientId=' + encodeURIComponent(s.ebApikey) +
+        '&clientSecret=' + encodeURIComponent(s.ebApisecret) + '&did=' + encodeURIComponent(s.ebDid));
+      ebSettings = await sres.json();
+    } catch(e) {}
+    var nameMatchRequired = !!ebSettings.requireBeneficiaryNameMatching;
+
     if (hasPii && nameMatchBtn) {
       if (status === 'AUTHORIZED' || status === 'SETTLED' || status === 'REJECTED') {
         nameMatchBtn.disabled = true;
@@ -1957,7 +1968,13 @@ async function fetchTransferDetails() {
       } else {
         nameMatchBtn.disabled = false;
         nameMatchBtn.style.display = '';
-        nameMatchBody.innerHTML = '<p class="hint">Compare beneficiary name from PII against your KYC database, then confirm.</p>';
+        if (nameMatchRequired) {
+          if (nameMatchHeader) nameMatchHeader.firstChild.textContent = 'Beneficiary Name Matching (Authorization Policy)';
+          nameMatchBody.innerHTML = '<p class="hint">Name matching is enabled as authorization policy — confirming the match will authorize this transfer.</p>';
+        } else {
+          if (nameMatchHeader) nameMatchHeader.firstChild.textContent = 'Beneficiary Name Matching (Optional)';
+          nameMatchBody.innerHTML = '<p class="hint">Compare beneficiary name from PII against your KYC database, then confirm. This is a verification step — authorization requires the Authorize button below.</p>';
+        }
       }
     } else if (nameMatchBtn) {
       nameMatchBtn.disabled = true;
@@ -1967,11 +1984,16 @@ async function fetchTransferDetails() {
 
     // Update action bar visibility based on authorization status
     var actionBar = document.getElementById('eb-action-bar');
+    var actionHeader = actionBar.closest('.card').querySelector('.card-header');
     // Show authorize/reject buttons unless already authorized, rejected, or settled
     if (status === 'AUTHORIZED' || status === 'SETTLED' || status === 'REJECTED') {
       actionBar.style.display = 'none';
+    } else if (nameMatchRequired) {
+      actionBar.style.display = 'none';
+      if (actionHeader) actionHeader.firstChild.textContent = 'Authorization Decision (via Name Matching above)';
     } else {
       actionBar.style.display = 'flex';
+      if (actionHeader) actionHeader.firstChild.textContent = 'Authorization Decision';
     }
   } catch(e) {
     body.innerHTML = '<div style="color:#dc2626;padding:8px">✗ ' + esc(e.message) + '</div>';
@@ -2271,16 +2293,26 @@ async function completeNameMatch() {
     });
     var data = await res.json();
 
-    // "not found" means name matching policy isn't enabled in EB dashboard — gracefully
-    // treat as a demo step so the flow doesn't hard-fail if the dashboard toggle is off.
+    // "not found" means name matching policy is OFF in EB dashboard.
+    // Authorization must then be done explicitly via the Authorize button.
     var isNotEnforced = data.error && data.error.indexOf('not found') >= 0;
     if (data.error && !isNotEnforced) throw new Error(data.error);
 
     btn.style.display = 'none';
-    var msg = isNotEnforced
-      ? '✓ Name verification complete (matching policy not enforced in sandbox — demo step only)'
-      : '✓ Beneficiary name matched — KYC record confirmed';
-    body.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">' + msg + '</div>';
+
+    if (isNotEnforced) {
+      // Name matching policy is OFF — explicit Authorize is required
+      body.innerHTML = '<div style="background:#f0fdf4;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">○ Name matching not required — use Authorize below to approve this transfer</div>';
+    } else {
+      // Name matching policy is ON — completing it auto-authorizes the transfer
+      // Re-fetch transfer to confirm, then update the action bar
+      await selectIncomingTransfer(selectedTxId);
+      var actionBar = document.getElementById('eb-action-bar');
+      if (actionBar) actionBar.style.display = 'none';
+      document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
+        '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✓ Beneficiary name matched — transfer authorized</div>');
+      body.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;font-size:12px;font-weight:600">✓ Beneficiary name matched — transfer authorized</div>';
+    }
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '✓ Confirm Match';
