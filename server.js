@@ -912,6 +912,21 @@ app.post('/api/notabene/validate-pii', async (req, res) => {
   }
 });
 
+// Proxy for fetching Presentation Definition JSON (CORS workaround)
+app.get('/api/pd-proxy', async (req, res) => {
+  try {
+    const url = req.query.url;
+    if (!url || !url.startsWith('https://pd.notabene.id/')) {
+      return res.status(400).json({ error: 'Invalid PD URL' });
+    }
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // List entities in the Notabene network
 app.get('/api/notabene/network', async (req, res) => {
   const { q, jurisdictions, listing, regulatoryStatus, page, per_page } = req.query;

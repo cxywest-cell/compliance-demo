@@ -2719,9 +2719,9 @@ async function selectRFITransfer(txId) {
       return;
     }
 
-    // Fetch PD JSON to display required fields
+    // Fetch PD JSON via server proxy (CORS workaround)
     var pdName = String(pdUrl).split('/').pop();
-    var pdRes = await fetch(pdUrl);
+    var pdRes = await fetch('/api/pd-proxy?url=' + encodeURIComponent(pdUrl));
     var pdData = await pdRes.json();
 
     var descriptors = pdData.input_descriptors || [];
@@ -2733,7 +2733,20 @@ async function selectRFITransfer(txId) {
     for (var d = 0; d < descriptors.length; d++) {
       var desc = descriptors[d];
       var fields = (desc.constraints && desc.constraints.fields) || [];
-      var fieldPaths = fields.map(function(f) { return (f.path || []).map(function(p) { return p.replace('$.originator.originatorPersons[0].naturalPerson.', '').replace('$.originator.', '').replace('$.beneficiary.', 'bene.'); }).join(', '); });
+      var fieldPaths = fields.map(function(f) {
+        var paths = [];
+        if (Array.isArray(f.path)) {
+          paths = f.path;
+        } else if (f.path && typeof f.path === 'object') {
+          if (f.path.natural) paths = paths.concat(f.path.natural);
+          if (f.path.legal) paths = paths.concat(f.path.legal);
+        }
+        return paths.map(function(p) {
+          return p.replace('$.originator.originatorPerson[0].naturalPerson.', '')
+                  .replace('$.originator.originatorPersons[0].naturalPerson.', '')
+                  .replace('$.originator.', '').replace('$.beneficiary.', 'bene.');
+        }).join(', ');
+      });
       html += '<div class="cred-row"><span class="k" style="font-size:10px">' + esc(desc.name || desc.id) + '</span><span class="v" style="font-size:10px">' + esc(fieldPaths.join('; ')) + '</span></div>';
     }
 
