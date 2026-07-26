@@ -856,7 +856,8 @@ async function createTransfer() {
         ivms101.originator.originatorPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + eaWallet];
       }
       if (ivms101.beneficiary && ivms101.beneficiary.beneficiaryPerson) {
-        ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
+        var beneWallet = (CASE === 'case6' && window.case6UnregisteredAddress) ? window.case6UnregisteredAddress : ebWallet;
+        ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + beneWallet];
       }
     } else if (eaCust || ebCust) {
       // Fallback: build minimal PII from customer data (should not happen if validation was done)
