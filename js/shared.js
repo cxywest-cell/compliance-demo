@@ -1113,6 +1113,14 @@ async function fetchTransferDetails() {
     var initiator = t.initiator || '—';
     var direction = t.direction || '—';
 
+    // Case 4: If transfer is REVERT-REQUESTED, unlock refund section
+    if (CASE === 'case4' && status === 'REVERT-REQUESTED') {
+      var refundSection = document.getElementById('eb-refund-section');
+      var refundTitle = document.getElementById('eb-refund-title');
+      if (refundSection) refundSection.style.display = 'block';
+      if (refundTitle) { refundTitle.style.opacity = '1'; refundTitle.innerHTML = refundTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+    }
+
     var summaryHtml =
       '<div class="tx-summary">' +
         '<div class="tx-id mono">' + esc(selectedTxId) + '</div>' +
@@ -1772,6 +1780,14 @@ async function settleTransfer() {
       '</div>';
     btn.textContent = '✓ Settled'; btn.className = 'btn btn-success';
 
+    // Case 4: Unlock EA Step 8 (Revert) after settle
+    if (CASE === 'case4') {
+      var revertSection = document.getElementById('ea-revert-section');
+      var revertTitle = document.getElementById('ea-revert-title');
+      if (revertSection) revertSection.style.display = 'block';
+      if (revertTitle) { revertTitle.style.opacity = '1'; revertTitle.innerHTML = revertTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+    }
+
     // Refresh transfer detail
     selectIncomingTransfer(selectedTxId);
   } catch(e) {
@@ -1856,6 +1872,12 @@ async function matchOnchainDeposit() {
       if (CASE === 'case3') {
         var flagSection = document.getElementById('eb-flag-section');
         if (flagSection) flagSection.style.display = 'block';
+      }
+
+      // Case 4: Show refund section after match (stays locked until EB refreshes and sees REVERT-REQUESTED)
+      if (CASE === 'case4') {
+        var refundSection = document.getElementById('eb-refund-section');
+        if (refundSection) refundSection.style.display = 'block';
       }
     } else {
       result.innerHTML =
