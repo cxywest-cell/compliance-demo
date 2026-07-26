@@ -218,6 +218,14 @@ async function autoFillTransferForm() {
   // Populate match address display (Entity B Step 6)
   var ebMatchDisplay = document.getElementById('eb-match-address');
   if (ebMatchDisplay) ebMatchDisplay.textContent = ebWallet ? ebWallet : 'No wallet configured';
+  
+  // Case 5: Auto-fill custodian DIDs in address registration
+  if (typeof CASE !== 'undefined' && CASE === 'case5') {
+    var eaCustEl = document.getElementById('ea-register-custodian');
+    if (eaCustEl && !eaCustEl.value && s.caDid) eaCustEl.value = s.caDid;
+    var ebCustEl = document.getElementById('eb-register-custodian');
+    if (ebCustEl && !ebCustEl.value && s.cbDid) ebCustEl.value = s.cbDid;
+  }
 }
 
 // ─── Pre-Transfer Validation ───
@@ -739,7 +747,7 @@ async function createTransfer() {
 
   // Block transfer creation if PII validation was not completed successfully
   // (Cases 2,3 skip this — EA doesn't know EB's requirements yet)
-  var requiresPII = CASE === 'case1' || CASE === 'case4';
+  var requiresPII = CASE === 'case1' || CASE === 'case4' || CASE === 'case5';
   if (requiresPII && !lastValidatedIVMS101) {
     result.style.display = 'block';
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
@@ -777,7 +785,7 @@ async function createTransfer() {
   // Proven by A/B test: with this construction, BOTH EA and EB see status=COMPLETED.
   // Case 2: EA does NOT attach policies — EA doesn't know EB's requirements yet.
   var requirePresentation = null;
-  if (CASE === 'case1' || CASE === 'case4') {
+  if (CASE === 'case1' || CASE === 'case4' || CASE === 'case5') {
     requirePresentation = {
       '@type': 'REQUIRE_PRESENTATION',
       'from': eaDid,
@@ -804,6 +812,11 @@ async function createTransfer() {
     ]
   };
 
+  // Case 5: Add Custodian A as agent in the transfer (EA side)
+  if (CASE === 'case5' && s.caDid) {
+    transferBody.agents.splice(2, 0, { '@id': s.caDid, 'for': eaDid, role: 'Custodian' });
+  }
+
   try {
     var res2 = await fetch('/api/notabene/transfer', {
       method: 'POST',
@@ -826,7 +839,7 @@ async function createTransfer() {
     var piiStatus = 'skipped';
     var ivms101 = null;
 
-    var skipsPII = CASE !== 'case1' && CASE !== 'case4';
+    var skipsPII = CASE !== 'case1' && CASE !== 'case4' && CASE !== 'case5';
     if (skipsPII) {
       piiStatus = 'not_sent';
     } else if (lastValidatedIVMS101) {
@@ -933,7 +946,7 @@ async function createTransfer() {
     fetchOutgoingTransfers();
 
     // Cases 2,3: Unlock Step 4c — Incoming RFI section (for later use after EB creates counter-transfer)
-    if (CASE !== 'case1' && CASE !== 'case4') {
+    if (CASE !== 'case1' && CASE !== 'case4' && CASE !== 'case5') {
       var rfiSection = document.getElementById('ea-rfi-section');
       var rfiTitle = document.getElementById('ea-rfi-title');
       if (rfiSection) rfiSection.style.display = 'block';
@@ -1002,6 +1015,14 @@ async function selectIncomingTransfer(txId) {
     var title = document.getElementById(prefix + '-title');
     if (title) { title.style.opacity = '1'; title.innerHTML = title.innerHTML.replace(/ <span.*<\/span>/, ''); }
   });
+
+  // Case 5: Unlock EB Step 7 (Add Custodian) when transfer is selected
+  if (typeof CASE !== 'undefined' && CASE === 'case5') {
+    var custSection = document.getElementById('eb-custodian-section');
+    var custTitle = document.getElementById('eb-custodian-title');
+    if (custSection) custSection.style.display = 'block';
+    if (custTitle) { custTitle.style.opacity = '1'; custTitle.innerHTML = custTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+  }
 
   // Auto-fetch details and policies
   await fetchTransferDetails();

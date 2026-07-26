@@ -991,6 +991,18 @@ app.get('/api/notabene/transfer/match', async (req, res) => {
   }
 });
 
+// ─── Add agent to a transfer (e.g. custodian) ───
+app.post('/api/notabene/transfer/agents', async (req, res) => {
+  const { clientId, clientSecret, did, txId, agent } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entity/' + did + '/tx/' + txId + '/agents', token, { agent });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── Revert a settled transfer ───
 app.post('/api/notabene/transfer/revert', async (req, res) => {
   const { clientId, clientSecret, did, txId, reason, settlementAddress } = req.body;
