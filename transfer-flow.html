@@ -202,6 +202,7 @@
       <select class="case-select" id="case-selector" onchange="switchCase()">
         <option value="">— Select a test case —</option>
         <option value="case1" selected>Case 1: Happy Path — Successful Transfer</option>
+        <option value="case2">Case 2: Rule Discovery via Rejection</option>
       </select>
       <span class="case-desc" id="case-desc">Choose a scenario to begin.</span>
       <button class="btn btn-outline btn-sm" id="reset-btn" onclick="resetAll()" style="margin-left:auto;display:none">↻ Reset All</button>
@@ -409,6 +410,9 @@
             </div>
           </div>
           <div class="hint" style="margin-top:8px">Agent chain (6 hops) and custody wallets are auto-constructed from Settings.</div>
+          <div class="case2-only hint" style="display:none;margin-top:6px;padding:6px 8px;background:#fef3c7;border-radius:4px;color:#92400e;font-size:11px">
+            <strong>Case 2:</strong> EA sends the transfer without PII or presentation requirements — EA cannot query EB's compliance rules (403 Forbidden). If EB needs more, EB will reject and create a counter-transfer with its actual requirements.
+          </div>
         </div>
       </div>
       <div id="ea-tx-result" style="display:none"></div>
@@ -424,6 +428,39 @@
           <div class="card-body" style="padding:0">
             <div id="ea-outgoing-list" style="max-height:300px;overflow-y:auto">
               <div class="placeholder" style="padding:20px"><p>Click Refresh to view outgoing transfers</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4c: Incoming RFI from Entity B (Case 2 only) -->
+      <div class="section-title case2-only" id="ea-rfi-title" style="opacity:0.4;display:none">Step 4c · Incoming RFI from Entity B <span style="font-size:10px;font-weight:400;color:#888">🔒 Refresh after EB creates counter-transfer</span></div>
+      <div id="ea-rfi-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            Incoming RFI Transfers
+            <button class="btn btn-outline btn-sm" onclick="fetchIncomingRFI()">↻ Refresh</button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div id="ea-rfi-list" style="max-height:200px;overflow-y:auto">
+              <div class="placeholder" style="padding:20px"><p>After EB creates a counter-transfer, click Refresh to discover EB's requirements.</p></div>
+            </div>
+          </div>
+        </div>
+        <div id="ea-rfi-detail" style="display:none;margin-top:10px">
+          <div class="card">
+            <div class="card-header">EB's Requirements (Presentation Definition)</div>
+            <div class="card-body" id="ea-rfi-pd-body">
+              <p class="hint">Select an RFI transfer above to see what EB requires.</p>
+            </div>
+          </div>
+          <div class="card" style="margin-top:10px">
+            <div class="card-header">
+              Append PII to EB's Transfer
+              <button class="btn btn-success btn-sm" id="ea-rfi-append-btn" onclick="appendPiiToRFI()">Submit PII</button>
+            </div>
+            <div class="card-body" id="ea-rfi-pii-body">
+              <p class="hint">Fill the originator identity fields below, then submit to EB.</p>
             </div>
           </div>
         </div>
@@ -600,6 +637,38 @@
           <div class="role-actions" id="eb-action-bar">
             <button class="btn btn-success" onclick="authorizeTransfer()">✓ Authorize</button>
             <button class="btn btn-danger" onclick="rejectTransfer()">✗ Reject</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5b: Create Counter-Transfer (Case 2 only) -->
+      <div class="section-title case2-only" id="eb-counter-title" style="opacity:0.4;display:none">Step 5b · Create Counter-Transfer (RFI) <span style="font-size:10px;font-weight:400;color:#888">🔒 Reject a transfer to unlock</span></div>
+      <div id="eb-counter-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            Create RFI Transfer with Your Requirements
+            <button class="btn btn-primary btn-sm" id="eb-counter-btn" onclick="createCounterTransfer()">Create Transfer</button>
+          </div>
+          <div class="card-body">
+            <p class="hint" style="margin-bottom:8px">POST /entity/:did/tx — Since EA cannot query your policies (403 Forbidden), create a new transfer (RFI) with your own REQUIRE_PRESENTATION policy. EA will see this as an incoming RFI with <code>actionRequired: true</code> and can read exactly which fields you require.</p>
+            <div class="transfer-form">
+              <div class="form-group full">
+                <label>Presentation Definition URL (Your Requirements)</label>
+                <input type="text" id="eb-pd-url" value="https://pd.notabene.id/ivms101/v2/FA-1000.json" style="font-size:11px">
+              </div>
+            </div>
+            <div class="hint" style="margin-top:4px">FA-1000 = FATF baseline Travel Rule (full originator identity: name, DOB, nationalId, address). This communicates your actual requirements to EA.</div>
+            <div id="eb-counter-result" style="display:none;margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div class="card" id="eb-counter-review-card" style="display:none;margin-top:10px">
+          <div class="card-header">
+            Review Counter-Transfer
+            <button class="btn btn-outline btn-sm" onclick="refreshCounterTransfer()">↻ Refresh</button>
+          </div>
+          <div class="card-body" id="eb-counter-review-body" style="min-height:40px">
+            <p class="hint">After creating the counter-transfer, refresh here to check if EA has appended PII. When the policy status shows COMPLETED, EA has fulfilled your requirements.</p>
           </div>
         </div>
       </div>
@@ -858,6 +927,13 @@ var CASES = {
     activeRoles: ['entity-a', 'entity-b'],
     passiveRoles: ['custodian-a', 'custodian-b'],
     passiveNote: 'Passive role in agent chain — no action needed.'
+  },
+  case2: {
+    name: 'Rule Discovery via Rejection',
+    desc: 'EA sends minimal PII → EB rejects (insufficient) → EB creates counter-transfer with correct requirements → EA discovers EB rules → appends correct PII → settles.',
+    activeRoles: ['entity-a', 'entity-b'],
+    passiveRoles: ['custodian-a', 'custodian-b'],
+    passiveNote: 'Passive role in agent chain — no action needed.'
   }
 };
 
@@ -916,6 +992,12 @@ function switchCase() {
   // Auto-switch to first active role
   var firstActive = c.activeRoles[0];
   activateTab(firstActive);
+
+  // Toggle Case 2 specific sections
+  var isCase2 = (caseId === 'case2');
+  document.querySelectorAll('.case2-only').forEach(function(el) {
+    el.style.display = isCase2 ? '' : 'none';
+  });
 }
 
 function activateTab(tabName) {
@@ -1505,7 +1587,9 @@ async function createTransfer() {
   }
 
   // Block transfer creation if PII validation was not completed successfully
-  if (!lastValidatedIVMS101) {
+  // (Case 2 skips this — EA doesn't know EB's requirements yet)
+  var currentCase = document.getElementById('case-selector').value;
+  if (currentCase !== 'case2' && !lastValidatedIVMS101) {
     result.style.display = 'block';
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
     return;
@@ -1540,12 +1624,19 @@ async function createTransfer() {
   // Semantics: "EB requires EA to present originator PII" — from=EA, for=EB.
   // Attached to EB's agent because EB is the party that needs to receive the PII.
   // Proven by A/B test: with this construction, BOTH EA and EB see status=COMPLETED.
-  var requirePresentation = {
-    '@type': 'REQUIRE_PRESENTATION',
-    'from': eaDid,
-    'for': ebDid,
-    'presentationDefinition': 'https://pd.notabene.id/ivms101/v2/AE-0.json'
-  };
+  // Case 2: EA does NOT attach policies — EA doesn't know EB's requirements yet.
+  var requirePresentation = null;
+  if (currentCase !== 'case2') {
+    requirePresentation = {
+      '@type': 'REQUIRE_PRESENTATION',
+      'from': eaDid,
+      'for': ebDid,
+      'presentationDefinition': 'https://pd.notabene.id/ivms101/v2/AE-0.json'
+    };
+  }
+
+  var ebAgent = { '@id': ebDid, 'for': beneId, role: 'VASP' };
+  if (requirePresentation) ebAgent.policies = [requirePresentation];
 
   var transferBody = {
     ref: ref,
@@ -1557,7 +1648,7 @@ async function createTransfer() {
     agents: [
       { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': eaDid, role: 'SourceAddress' },
       { '@id': eaDid, 'for': origId, role: 'VASP' },
-      { '@id': ebDid, 'for': beneId, role: 'VASP', policies: [requirePresentation] },
+      ebAgent,
       { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': ebDid, role: 'SettlementAddress' }
     ]
   };
@@ -1580,10 +1671,14 @@ async function createTransfer() {
 
     // Submit PII via IVMS101 /append endpoint
     // Always use the exact IVMS101 that was validated by the PII Validation step
-    var piiStatus = 'pending';
+    // Case 2: Skip PII — EA sends transfer only, PII comes later after EB's counter-transfer
+    var piiStatus = 'skipped';
     var ivms101 = null;
 
-    if (lastValidatedIVMS101) {
+    if (currentCase === 'case2') {
+      // Case 2: No PII sent — EA doesn't know what EB needs
+      piiStatus = 'not_sent';
+    } else if (lastValidatedIVMS101) {
       // Use the validated IVMS101 — this includes ALL fields that passed validation
       ivms101 = JSON.parse(JSON.stringify(lastValidatedIVMS101));
       // Patch wallet addresses in case they changed
@@ -1640,6 +1735,8 @@ async function createTransfer() {
     // Display result
     var piiBadge = piiStatus === 'success'
       ? '<span class="tag" style="background:#d1fae5;color:#065f46">PII Sent ✓</span>'
+      : piiStatus === 'not_sent'
+      ? '<span class="tag" style="background:#fef3c7;color:#92400e">No PII Sent — Waiting for EB</span>'
       : '<span class="tag" style="background:#fee2e2;color:#991b1b">PII: ' + esc(piiStatus) + '</span>';
 
     var eaName = eaCust ? eaCust.firstName + ' ' + eaCust.lastName : '—';
@@ -1683,6 +1780,17 @@ async function createTransfer() {
     }
     // Auto-load the outgoing transfers list
     fetchOutgoingTransfers();
+
+    // Case 2: Unlock Step 4c — Incoming RFI section (for later use after EB creates counter-transfer)
+    if (currentCase === 'case2') {
+      var rfiSection = document.getElementById('ea-rfi-section');
+      var rfiTitle = document.getElementById('ea-rfi-title');
+      if (rfiSection) rfiSection.style.display = 'block';
+      if (rfiTitle) {
+        rfiTitle.style.opacity = '1';
+        rfiTitle.innerHTML = 'Step 4c · Incoming RFI from Entity B';
+      }
+    }
   } catch(e) {
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ ' + esc(e.message) + '</div></div>';
     btn.disabled = false; btn.textContent = 'Retry'; btn.className = 'btn btn-danger btn-sm';
@@ -2366,10 +2474,369 @@ async function rejectTransfer() {
       document.getElementById('eb-action-bar').style.display = 'none';
       document.getElementById('eb-review-body').insertAdjacentHTML('afterbegin',
         '<div style="background:#fee2e2;color:#991b1b;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">✗ Rejected — ' + esc(label) + (comment ? ' (' + esc(comment) + ')' : '') + '</div>');
+
+      // Case 2: Unlock Step 5b — Create Counter-Transfer
+      var currentCase = document.getElementById('case-selector').value;
+      if (currentCase === 'case2') {
+        var counterSection = document.getElementById('eb-counter-section');
+        var counterTitle = document.getElementById('eb-counter-title');
+        if (counterSection) {
+          counterSection.style.display = 'block';
+          counterTitle.style.opacity = '1';
+          counterTitle.innerHTML = 'Step 5b · Create Counter-Transfer (RFI)';
+        }
+      }
     } catch(e) {
       alert('Reject failed: ' + e.message);
     }
   });
+}
+
+// ═══ Case 2: Rule Discovery via Rejection ═══
+
+// EB creates a counter-transfer (RFI) with its own REQUIRE_PRESENTATION policy
+var counterTransferTxId = null;
+
+async function createCounterTransfer() {
+  var s = await loadSettings();
+  var btn = document.getElementById('eb-counter-btn');
+  var result = document.getElementById('eb-counter-result');
+
+  var wallets = {};
+  try { var wr = await fetch('/api/wallet/persisted'); wallets = await wr.json(); } catch(e) {}
+  var eaWallet = (wallets.ea || {}).address;
+  var ebWallet = (wallets.eb || {}).address;
+  if (!eaWallet || !ebWallet) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ Missing wallet addresses. Generate in Settings first.</div>';
+    return;
+  }
+
+  var pdUrl = document.getElementById('eb-pd-url').value.trim();
+  var amount = (selectedTxData && selectedTxData.amount) ? selectedTxData.amount : '3500';
+
+  btn.disabled = true; btn.textContent = 'Creating...';
+  result.style.display = 'block';
+  result.innerHTML = '<div style="color:#888;font-size:11px">Creating counter-transfer with your requirements...</div>';
+
+  var ref = 'RFI-' + Date.now().toString(36).toUpperCase();
+  var origId = 'urn:uuid:' + crypto.randomUUID();
+  var beneId = 'urn:uuid:' + crypto.randomUUID();
+  var USDT_TEST = 'eip155:11155111/erc20:0xA2c7341dAdB120aa638795Dc73f7c74Ebd35D868';
+
+  var requirePresentation = {
+    '@type': 'REQUIRE_PRESENTATION',
+    'from': s.eaDid,
+    'for': s.ebDid,
+    'presentationDefinition': pdUrl
+  };
+
+  var transferBody = {
+    ref: ref,
+    originator: { '@id': origId },
+    beneficiary: { '@id': beneId },
+    asset: USDT_TEST,
+    amount: String(amount),
+    transactionValue: { amount: String(amount), currency: 'USD' },
+    agents: [
+      { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': s.eaDid, role: 'SourceAddress' },
+      { '@id': s.eaDid, 'for': origId, role: 'VASP' },
+      { '@id': s.ebDid, 'for': beneId, role: 'VASP', policies: [requirePresentation] },
+      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': s.ebDid, role: 'SettlementAddress' }
+    ]
+  };
+
+  try {
+    var res = await fetch('/api/notabene/transfer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.ebApikey, clientSecret: s.ebApisecret, entityDid: s.ebDid, transferBody: transferBody })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    counterTransferTxId = data.transfer ? data.transfer['@id'] : data.id;
+    var status = data.transfer ? data.transfer.status : data.status;
+
+    result.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:8px 10px;border-radius:4px;font-size:12px;font-weight:600">' +
+      '✓ Counter-transfer created — ' + esc(counterTransferTxId.slice(0,16)) + '...<br>' +
+      '<span style="font-weight:400;font-size:11px">Status: ' + esc(status) + ' · EA will see this as an incoming RFI with actionRequired: true</span></div>';
+
+    // Show review card
+    document.getElementById('eb-counter-review-card').style.display = 'block';
+    btn.disabled = false; btn.textContent = '✓ Created';
+    btn.style.background = '#059669'; btn.style.borderColor = '#059669';
+  } catch(e) {
+    result.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+    btn.disabled = false; btn.textContent = 'Create Transfer';
+  }
+}
+
+// EB refreshes counter-transfer status to check if EA appended PII
+async function refreshCounterTransfer() {
+  var s = await loadSettings();
+  if (!counterTransferTxId) return;
+  var body = document.getElementById('eb-counter-review-body');
+  body.innerHTML = '<div style="color:#888;font-size:11px">Checking...</div>';
+
+  try {
+    // Check TAP policies
+    var res = await fetch('/api/notabene/transfer/tap-policies?clientId=' + encodeURIComponent(s.ebApikey) +
+      '&clientSecret=' + encodeURIComponent(s.ebApisecret) + '&did=' + encodeURIComponent(s.ebDid) + '&txId=' + encodeURIComponent(counterTransferTxId));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var policies = data.data || data.policies || [];
+    var html = '';
+    var allCompleted = policies.length > 0;
+
+    for (var i = 0; i < policies.length; i++) {
+      var p = policies[i];
+      var pStatus = p.status || 'UNKNOWN';
+      var color = pStatus === 'COMPLETED' ? '#059669' : '#d97706';
+      var pdUrl = p.presentationDefinition || p.presentation_definition || '';
+      var pdName = pdUrl ? String(pdUrl).split('/').pop() : '—';
+      html += '<div class="cred-row"><span class="k">' + esc(p.type || 'Policy') + '</span>' +
+        '<span class="v"><span style="color:' + color + ';font-weight:600">' + esc(pStatus) + '</span> · PD: ' + esc(pdName) + '</span></div>';
+      if (pStatus !== 'COMPLETED') allCompleted = false;
+    }
+
+    if (policies.length === 0) {
+      html = '<p class="hint">No policies found on this transfer.</p>';
+      allCompleted = false;
+    }
+
+    if (allCompleted) {
+      html += '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-top:8px;font-size:12px;font-weight:600">' +
+        '✓ All requirements satisfied — EA has submitted compliant PII. You can now wait for on-chain settlement and match the deposit.</div>';
+    } else {
+      html += '<div style="background:#fef3c7;color:#92400e;padding:6px 10px;border-radius:4px;margin-top:8px;font-size:12px">' +
+        '⏳ Waiting for EA to append PII...</div>';
+    }
+
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// EA fetches incoming RFI transfers (created by EB)
+var rfiSelectedTxId = null;
+var rfiSelectedPDUrl = null;
+
+async function fetchIncomingRFI() {
+  var s = await loadSettings();
+  var listEl = document.getElementById('ea-rfi-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>Loading...</p></div>';
+
+  try {
+    var res = await fetch('/api/notabene/transfers?clientId=' + encodeURIComponent(s.eaApikey) +
+      '&clientSecret=' + encodeURIComponent(s.eaApisecret) + '&did=' + encodeURIComponent(s.eaDid));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var txs = data.data || data.transfers || [];
+    if (!Array.isArray(txs)) txs = [txs];
+
+    // Filter: only show transfers initiated by EB (RFI transfers)
+    var rfiTxs = txs.filter(function(t) {
+      return t.initiator && t.initiator !== s.eaDid;
+    });
+
+    if (rfiTxs.length === 0) {
+      listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p>No incoming RFI transfers yet. Wait for EB to create a counter-transfer.</p></div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < rfiTxs.length; i++) {
+      var t = rfiTxs[i];
+      var txId = t['@id'] || t.id;
+      var status = t.status || '—';
+      var amount = t.amount || '—';
+      var initiator = t.initiator ? String(t.initiator).split(':').slice(-2)[0] : '—';
+      var isRFI = t.requestForInformation && t.requestForInformation.isRFI;
+      var rfiBadge = isRFI ? '<span class="tag" style="background:#fef3c7;color:#92400e;font-size:9px">RFI</span> ' : '';
+      var cls = rfiSelectedTxId === txId ? 'wh-item selected' : 'wh-item';
+      html += '<div class="' + cls + '" style="padding:8px 10px" onclick="selectRFITransfer(\'' + txId + '\')">' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600;font-size:12px">' + rfiBadge + esc(amount) + ' <span style="font-size:10px;color:#888">from ' + esc(initiator) + '</span></div>' +
+          '<div style="font-size:10px;color:#888;margin-top:2px">' + esc(String(txId).slice(0, 20)) + '...</div>' +
+        '</div>' +
+        '<span class="transfer-status ts-' + status.toLowerCase() + '" style="font-size:10px">' + esc(status) + '</span>' +
+      '</div>';
+    }
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = '<div class="placeholder" style="padding:20px"><p style="color:#dc2626">✗ ' + esc(e.message) + '</p></div>';
+  }
+}
+
+// EA selects an RFI transfer and views EB's PD requirements
+async function selectRFITransfer(txId) {
+  var s = await loadSettings();
+  rfiSelectedTxId = txId;
+  selectedTxId = txId; // also set the global selectedTxId for on-chain/settle steps
+
+  // Re-fetch to highlight selected
+  await fetchIncomingRFI();
+
+  // Show detail section
+  document.getElementById('ea-rfi-detail').style.display = 'block';
+
+  // Fetch transfer details to extract PD
+  var pdBody = document.getElementById('ea-rfi-pd-body');
+  var piiBody = document.getElementById('ea-rfi-pii-body');
+  pdBody.innerHTML = '<div style="color:#888;font-size:11px">Loading requirements...</div>';
+  piiBody.innerHTML = '';
+
+  try {
+    var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent(s.eaApikey) +
+      '&clientSecret=' + encodeURIComponent(s.eaApisecret) + '&did=' + encodeURIComponent(s.eaDid) + '&txId=' + encodeURIComponent(txId));
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    var tx = data.transfer || data;
+    selectedTxData = tx;
+
+    // Find REQUIRE_PRESENTATION policy and extract PD URL
+    var pdUrl = null;
+    if (tx.agents) {
+      for (var i = 0; i < tx.agents.length; i++) {
+        var policies = tx.agents[i].policies || [];
+        for (var j = 0; j < policies.length; j++) {
+          if (policies[j].type === 'REQUIRE_PRESENTATION' || policies[j]['@type'] === 'REQUIRE_PRESENTATION') {
+            pdUrl = policies[j].presentationDefinition || policies[j].presentation_definition || null;
+          }
+        }
+      }
+    }
+
+    rfiSelectedPDUrl = pdUrl;
+
+    if (!pdUrl) {
+      pdBody.innerHTML = '<p class="hint" style="color:#dc2626">No REQUIRE_PRESENTATION policy found on this transfer.</p>';
+      return;
+    }
+
+    // Fetch PD JSON to display required fields
+    var pdName = String(pdUrl).split('/').pop();
+    var pdRes = await fetch(pdUrl);
+    var pdData = await pdRes.json();
+
+    var descriptors = pdData.input_descriptors || [];
+    var html = '<div class="cred-row"><span class="k">PD URL</span><span class="v mono" style="font-size:10px">' + esc(pdName) + '</span></div>';
+    html += '<div class="cred-row"><span class="k">Descriptors</span><span class="v">' + descriptors.length + ' field groups</span></div>';
+
+    // List required fields
+    html += '<div style="margin-top:8px;font-size:10px;font-weight:600;color:#5b4cdb">REQUIRED FIELDS</div>';
+    for (var d = 0; d < descriptors.length; d++) {
+      var desc = descriptors[d];
+      var fields = (desc.constraints && desc.constraints.fields) || [];
+      var fieldPaths = fields.map(function(f) { return (f.path || []).map(function(p) { return p.replace('$.originator.originatorPersons[0].naturalPerson.', '').replace('$.originator.', '').replace('$.beneficiary.', 'bene.'); }).join(', '); });
+      html += '<div class="cred-row"><span class="k" style="font-size:10px">' + esc(desc.name || desc.id) + '</span><span class="v" style="font-size:10px">' + esc(fieldPaths.join('; ')) + '</span></div>';
+    }
+
+    pdBody.innerHTML = html;
+
+    // Show PII form
+    var eaCustIdx = document.getElementById('ea-customer-select').value;
+    var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+
+    piiBody.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        '<div>' +
+          '<div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator Identity</div>' +
+          '<div class="form-group"><label>First Name</label><input type="text" id="rfi-orig-fn" value="' + (eaCust ? esc(eaCust.firstName) : '') + '" style="font-size:11px"></div>' +
+          '<div class="form-group"><label>Last Name</label><input type="text" id="rfi-orig-ln" value="' + (eaCust ? esc(eaCust.lastName) : '') + '" style="font-size:11px"></div>' +
+          '<div class="form-group"><label>Date of Birth</label><input type="text" id="rfi-orig-dob" value="' + (eaCust ? esc(eaCust.dob || '') : '') + '" placeholder="1990-01-01" style="font-size:11px"></div>' +
+          '<div class="form-group"><label>Place of Birth</label><input type="text" id="rfi-orig-pob" placeholder="AE" style="font-size:11px"></div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator Docs</div>' +
+          '<div class="form-group"><label>National ID</label><input type="text" id="rfi-orig-nid" placeholder="Passport number" style="font-size:11px"></div>' +
+          '<div class="form-group"><label>National ID Type</label><input type="text" id="rfi-orig-nidtype" value="PASSPORT" style="font-size:11px"></div>' +
+          '<div class="form-group"><label>ID Country of Issue</label><input type="text" id="rfi-orig-nidcountry" value="AE" style="font-size:11px"></div>' +
+          '<div class="form-group"><label>Address</label><input type="text" id="rfi-orig-addr" placeholder="Building 123, Sheikh Zayed Rd, Dubai, AE" style="font-size:11px"></div>' +
+        '</div>' +
+      '</div>';
+
+    // Unlock on-chain section (transfer is already authorized by EB as initiator)
+    document.getElementById('ea-onchain-section').style.display = 'block';
+    var onchainTitle = document.getElementById('ea-onchain-title');
+    onchainTitle.style.opacity = '1';
+    onchainTitle.innerHTML = 'Step 6 · On-Chain Transfer';
+
+  } catch(e) {
+    pdBody.innerHTML = '<div style="color:#dc2626;font-size:11px">✗ ' + esc(e.message) + '</div>';
+  }
+}
+
+// EA appends PII to the EB-created RFI transfer
+async function appendPiiToRFI() {
+  var s = await loadSettings();
+  if (!rfiSelectedTxId) return;
+  var btn = document.getElementById('ea-rfi-append-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  var wallets = {};
+  try { var wr = await fetch('/api/wallet/persisted'); wallets = await wr.json(); } catch(e) {}
+  var eaWallet = (wallets.ea || {}).address;
+  var ebWallet = (wallets.eb || {}).address;
+
+  var fn = document.getElementById('rfi-orig-fn').value.trim();
+  var ln = document.getElementById('rfi-orig-ln').value.trim();
+  var dob = document.getElementById('rfi-orig-dob').value.trim();
+  var pob = document.getElementById('rfi-orig-pob').value.trim();
+  var nid = document.getElementById('rfi-orig-nid').value.trim();
+  var nidtype = document.getElementById('rfi-orig-nidtype').value.trim() || 'PASSPORT';
+  var nidcountry = document.getElementById('rfi-orig-nidcountry').value.trim() || 'AE';
+  var addr = document.getElementById('rfi-orig-addr').value.trim();
+
+  // Build IVMS101 with full originator identity
+  // nationalIdentification + geographicAddress go INSIDE naturalPerson, not at person level
+  var natPerson = {
+    name: { nameIdentifier: [{ primaryIdentifier: ln, secondaryIdentifier: fn, naturalPersonNameIdentifierType: 'LEGL' }] },
+    dateAndPlaceOfBirth: { dateOfBirth: dob, placeOfBirth: pob }
+  };
+  if (nid) natPerson.nationalIdentification = { nationalIdentifier: nid, nationalIdentifierType: nidtype };
+  if (addr) natPerson.geographicAddress = [{ addressLine: [addr], country: nidcountry }];
+
+  var ivms101 = {
+    originator: {
+      originatorPerson: [{
+        naturalPerson: natPerson,
+        accountNumber: ['did:pkh:eip155:11155111:' + eaWallet]
+      }]
+    },
+    beneficiary: {
+      beneficiaryPerson: [{
+        naturalPerson: {
+          name: { nameIdentifier: [{ primaryIdentifier: 'Beneficiary', secondaryIdentifier: 'Name', naturalPersonNameIdentifierType: 'LEGL' }] }
+        },
+        accountNumber: ['did:pkh:eip155:11155111:' + ebWallet]
+      }]
+    }
+  };
+
+  try {
+    var res = await fetch('/api/notabene/transfer/append', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: s.eaApikey, clientSecret: s.eaApisecret, did: s.eaDid, txId: rfiSelectedTxId, ivms101: ivms101 })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    btn.textContent = '✓ PII Submitted';
+    btn.style.background = '#059669'; btn.style.borderColor = '#059669';
+
+    document.getElementById('ea-rfi-pii-body').insertAdjacentHTML('afterbegin',
+      '<div style="background:#d1fae5;color:#065f46;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-size:12px;font-weight:600">' +
+      '✓ PII submitted to EB\'s transfer. EB can now verify your compliance.</div>');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Submit PII';
+    alert('Failed to submit PII: ' + e.message);
+  }
 }
 
 // Global variable to store on-chain tx hash for settlement
