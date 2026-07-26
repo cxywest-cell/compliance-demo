@@ -358,8 +358,22 @@
         </div>
       </div>
 
-      <!-- Step 4: Confirm Address -->
-      <div class="section-title" id="eb-confirm-title" style="opacity:0.4">Step 4 · Confirm Address Ownership <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
+      <!-- Step 4: PII Review -->
+      <div class="section-title" id="eb-review-title" style="opacity:0.4">Step 4 · Travel Rule PII Review <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
+      <div id="eb-review-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            Decrypted PII (IVMS101)
+            <button class="btn btn-outline btn-sm" onclick="fetchTransferDetails()">↻ Refresh</button>
+          </div>
+          <div class="card-body" id="eb-review-body" style="min-height:40px">
+            <p class="hint">Select a transfer to view decrypted originator/beneficiary PII data.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Confirm Address -->
+      <div class="section-title" id="eb-confirm-title" style="opacity:0.4">Step 5 · Confirm Address Ownership <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
       <div id="eb-confirm-section" style="display:none">
         <div class="alert-warn">
           The settlement address in this transfer is NOT registered in your Relationships table.

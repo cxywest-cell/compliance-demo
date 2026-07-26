@@ -1242,7 +1242,7 @@ async function fetchTransferDetails() {
     var hasPii = !!(t.originator && t.originator.originatorPerson);
     var nameMatchBtn = document.getElementById('eb-name-match-btn');
     var nameMatchBody = document.getElementById('eb-name-match-body');
-    var nameMatchHeader = document.querySelector('#eb-name-match-btn').closest('.card').querySelector('.card-header');
+    var nameMatchHeader = nameMatchBtn ? document.querySelector('#eb-name-match-btn').closest('.card').querySelector('.card-header') : null;
 
     // Fetch entity settings to check if name matching policy is ON or OFF
     var ebSettings = {};
