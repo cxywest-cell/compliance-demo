@@ -453,7 +453,7 @@ async function validatePII(isRevalidate) {
     ivms101.originator.originatorPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + eaWallet];
   }
   if (ivms101.beneficiary && ivms101.beneficiary.beneficiaryPerson) {
-    ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + ebWallet];
+    ivms101.beneficiary.beneficiaryPerson[0].accountNumber = ['did:pkh:eip155:11155111:' + (CASE === 'case6' && window.case6UnregisteredAddress ? window.case6UnregisteredAddress : ebWallet)];
   }
 
   // Check if editor has any data
@@ -700,7 +700,7 @@ function buildIVMS101FromEditor() {
     ivms101.beneficiary = {
       beneficiaryPerson: [{
         naturalPerson: np,
-        accountNumber: ['did:pkh:eip155:11155111:' + ebWallet]
+        accountNumber: ['did:pkh:eip155:11155111:' + (CASE === 'case6' && window.case6UnregisteredAddress ? window.case6UnregisteredAddress : ebWallet)]
       }]
     };
   }
@@ -880,7 +880,7 @@ async function createTransfer() {
               name: { nameIdentifier: [{ primaryIdentifier: ebCust.lastName, secondaryIdentifier: ebCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
               ...(ebCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: ebCust.dob } } : {})
             },
-            accountNumber: ['did:pkh:eip155:11155111:' + ebWallet]
+            accountNumber: ['did:pkh:eip155:11155111:' + (CASE === 'case6' && window.case6UnregisteredAddress ? window.case6UnregisteredAddress : ebWallet)]
           }]
         };
       }
@@ -932,7 +932,7 @@ async function createTransfer() {
           '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(eaDob) + '</span></div>' +
           '<div style="font-size:10px;font-weight:600;color:#06b6d4;margin:8px 0 4px">BENEFICIARY</div>' +
           '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(ebName) + '</span></div>' +
-          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">did:pkh:eip155:11155111:' + esc(ebWallet) + '</span></div>' +
+          '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">did:pkh:eip155:11155111:' + esc((CASE === 'case6' && window.case6UnregisteredAddress) ? window.case6UnregisteredAddress : ebWallet) + '</span></div>' +
           '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(ebDob) + '</span></div>' +
         '</div>' +
         '<div class="card-body" style="border-top:1px solid #e0e0e0">' +
