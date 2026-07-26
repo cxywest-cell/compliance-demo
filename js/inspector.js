@@ -38,9 +38,12 @@ async function inspectTransfer() {
     return;
   }
 
-  var creds = role === 'eb'
-    ? { id: s.ebApikey, secret: s.ebApisecret, did: s.ebDid }
-    : { id: s.eaApikey, secret: s.eaApisecret, did: s.eaDid };
+  var creds = {
+    ea: { id: s.eaApikey, secret: s.eaApisecret, did: s.eaDid },
+    eb: { id: s.ebApikey, secret: s.ebApisecret, did: s.ebDid },
+    ca: { id: s.caApikey, secret: s.caApisecret, did: s.caDid },
+    cb: { id: s.cbApikey, secret: s.cbApisecret, did: s.cbDid },
+  }[role] || { id: s.eaApikey, secret: s.eaApisecret, did: s.eaDid };
 
   if (!creds.id || !creds.secret) {
     result.innerHTML = '<div style="color:#dc2626;font-size:11px">No credentials for ' + role.toUpperCase() + '. Configure in Settings.</div>';
