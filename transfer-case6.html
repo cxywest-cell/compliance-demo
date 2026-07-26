@@ -344,6 +344,20 @@
         </div>
       </div>
 
+      <!-- Step 3b: TAP Policies (policy viewer) -->
+      <div class="section-title" id="eb-tap-title" style="opacity:0.4">Step 3b · Transfer Policies <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
+      <div id="eb-tap-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            GET /entity/:did/tx/:tx/tap-policies
+            <button class="btn btn-outline btn-sm" onclick="fetchTapPolicies()">↻ Refresh</button>
+          </div>
+          <div class="card-body" id="eb-tap-body" style="min-height:40px">
+            <p class="hint">Check what authorization policies are required and their status.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Step 4: Confirm Address -->
       <div class="section-title" id="eb-confirm-title" style="opacity:0.4">Step 4 · Confirm Address Ownership <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
       <div id="eb-confirm-section" style="display:none">

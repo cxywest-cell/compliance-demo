@@ -1070,10 +1070,7 @@ async function selectIncomingTransfer(txId) {
 
   // Auto-fetch details and policies
   await fetchTransferDetails();
-  // Case 6 has no TAP/review sections — skip fetching policies
-  if (typeof CASE !== 'undefined' && CASE !== 'case6') {
-    await fetchTapPolicies();
-  }
+  await fetchTapPolicies();
 }
 
 // Helper: render a PII block with all IVMS101 fields

@@ -67,8 +67,12 @@ async function confirmRelationship() {
     document.getElementById('eb-done-title').style.display = 'block';
     document.getElementById('eb-done-section').style.display = 'block';
 
-    // Re-fetch transfer details to show updated status
-    setTimeout(function() { fetchTransferDetails(); }, 1500);
+    // Re-fetch transfer details + TAP policies to show updated status (PENDING → COMPLETED)
+    setTimeout(function() {
+      fetchTransferDetails();
+      fetchTapPolicies();
+    }, 1500);
+    setTimeout(function() { fetchTapPolicies(); }, 3000);
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '✓ Confirm Address';
