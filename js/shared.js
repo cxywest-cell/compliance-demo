@@ -739,7 +739,7 @@ async function createTransfer() {
 
   // Block transfer creation if PII validation was not completed successfully
   // (Case 2 skips this — EA doesn't know EB's requirements yet)
-  if (CASE !== 'case2' && !lastValidatedIVMS101) {
+  if (CASE === 'case1' && !lastValidatedIVMS101) {
     result.style.display = 'block';
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
     return;
@@ -776,7 +776,7 @@ async function createTransfer() {
   // Proven by A/B test: with this construction, BOTH EA and EB see status=COMPLETED.
   // Case 2: EA does NOT attach policies — EA doesn't know EB's requirements yet.
   var requirePresentation = null;
-  if (CASE !== 'case2') {
+  if (CASE === 'case1') {
     requirePresentation = {
       '@type': 'REQUIRE_PRESENTATION',
       'from': eaDid,
@@ -825,8 +825,7 @@ async function createTransfer() {
     var piiStatus = 'skipped';
     var ivms101 = null;
 
-    if (CASE === 'case2') {
-      // Case 2: No PII sent — EA doesn't know what EB needs
+    if (CASE !== 'case1') {
       piiStatus = 'not_sent';
     } else if (lastValidatedIVMS101) {
       // Use the validated IVMS101 — this includes ALL fields that passed validation
@@ -932,7 +931,7 @@ async function createTransfer() {
     fetchOutgoingTransfers();
 
     // Case 2: Unlock Step 4c — Incoming RFI section (for later use after EB creates counter-transfer)
-    if (CASE === 'case2') {
+    if (CASE !== 'case1') {
       var rfiSection = document.getElementById('ea-rfi-section');
       var rfiTitle = document.getElementById('ea-rfi-title');
       if (rfiSection) rfiSection.style.display = 'block';
@@ -1637,6 +1636,7 @@ async function rejectTransfer() {
           counterTitle.innerHTML = 'Step 5b · Create Counter-Transfer (RFI)';
         }
       }
+      // Case 3: counter-transfer unlocked via flagTransfer() after settlement, not here
     } catch(e) {
       alert('Reject failed: ' + e.message);
     }
@@ -1849,6 +1849,12 @@ async function matchOnchainDeposit() {
           '<div style="margin-top:8px;font-size:11px;border-top:1px solid #a7f3d0;padding-top:8px">Based on this travel rule message, you can now decide whether to release the funds to the customer or withhold for further checks.</div>' +
         '</div>';
       btn.textContent = '✓ Matched'; btn.className = 'btn btn-success';
+
+      // Case 3: Unlock flag button after successful match
+      if (CASE === 'case3') {
+        var flagSection = document.getElementById('eb-flag-section');
+        if (flagSection) flagSection.style.display = 'block';
+      }
     } else {
       result.innerHTML =
         '<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:6px;font-size:12px">' +
