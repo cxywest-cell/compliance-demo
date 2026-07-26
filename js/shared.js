@@ -738,8 +738,9 @@ async function createTransfer() {
   }
 
   // Block transfer creation if PII validation was not completed successfully
-  // (Case 2 skips this — EA doesn't know EB's requirements yet)
-  if (CASE === 'case1' && !lastValidatedIVMS101) {
+  // (Cases 2,3 skip this — EA doesn't know EB's requirements yet)
+  var requiresPII = CASE === 'case1' || CASE === 'case4';
+  if (requiresPII && !lastValidatedIVMS101) {
     result.style.display = 'block';
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
     return;
@@ -776,7 +777,7 @@ async function createTransfer() {
   // Proven by A/B test: with this construction, BOTH EA and EB see status=COMPLETED.
   // Case 2: EA does NOT attach policies — EA doesn't know EB's requirements yet.
   var requirePresentation = null;
-  if (CASE === 'case1') {
+  if (CASE === 'case1' || CASE === 'case4') {
     requirePresentation = {
       '@type': 'REQUIRE_PRESENTATION',
       'from': eaDid,
@@ -825,7 +826,8 @@ async function createTransfer() {
     var piiStatus = 'skipped';
     var ivms101 = null;
 
-    if (CASE !== 'case1') {
+    var skipsPII = CASE !== 'case1' && CASE !== 'case4';
+    if (skipsPII) {
       piiStatus = 'not_sent';
     } else if (lastValidatedIVMS101) {
       // Use the validated IVMS101 — this includes ALL fields that passed validation
@@ -930,8 +932,8 @@ async function createTransfer() {
     // Auto-load the outgoing transfers list
     fetchOutgoingTransfers();
 
-    // Case 2: Unlock Step 4c — Incoming RFI section (for later use after EB creates counter-transfer)
-    if (CASE !== 'case1') {
+    // Cases 2,3: Unlock Step 4c — Incoming RFI section (for later use after EB creates counter-transfer)
+    if (CASE !== 'case1' && CASE !== 'case4') {
       var rfiSection = document.getElementById('ea-rfi-section');
       var rfiTitle = document.getElementById('ea-rfi-title');
       if (rfiSection) rfiSection.style.display = 'block';

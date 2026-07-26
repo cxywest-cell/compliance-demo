@@ -991,6 +991,18 @@ app.get('/api/notabene/transfer/match', async (req, res) => {
   }
 });
 
+// ─── Revert a settled transfer ───
+app.post('/api/notabene/transfer/revert', async (req, res) => {
+  const { clientId, clientSecret, did, txId, reason, settlementAddress } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const data = await notabeneApi('POST', '/entity/' + did + '/tx/' + txId + '/revert', token, { reason, settlementAddress });
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── Cloudflare Tunnel Management ───
 let tunnelProcess = null;
 let tunnelUrl = null;
