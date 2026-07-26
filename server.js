@@ -756,6 +756,19 @@ app.post('/api/notabene/register-address', async (req, res) => {
   }
 });
 
+// Confirm a relationship (PATCH — confirm unregistered address belongs to entity)
+app.post('/api/notabene/relationship/confirm', async (req, res) => {
+  const { clientId, clientSecret, entityDid, fromAddress } = req.body;
+  try {
+    const token = await getNotabeneToken(clientId, clientSecret);
+    const path = '/entity/' + entityDid + '/relationship?from=' + encodeURIComponent(fromAddress) + '&to=' + encodeURIComponent(entityDid);
+    const data = await notabeneApi('PATCH', path, token, {});
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Create transfer
 app.post('/api/notabene/transfer', async (req, res) => {
   const { clientId, clientSecret, entityDid, transferBody } = req.body;

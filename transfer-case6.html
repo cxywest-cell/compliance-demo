@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case 6: Unregistered Address — Manual Relationship Confirmation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 16px; border-bottom: 1px solid #e0e0e0; }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 600; }
+  .sidebar-logo h1 span { color: #5b4cdb; }
+  .sidebar-nav { padding: 12px 0; }
+  .nav-item { padding: 10px 16px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; display: flex; align-items: center; gap: 8px; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: #f5f5f5; color: #1a1a1a; }
+  .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .content { flex: 1; overflow-y: auto; padding: 16px; }
+  .role-tabs { display: flex; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 16px; overflow-x: auto; position: sticky; top: 43px; z-index: 99; }
+  .role-tab { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.15s; }
+  .role-tab:hover { color: #1a1a1a; }
+  .role-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .role-tab.passive { color: #ccc; cursor: not-allowed; }
+  .role-tab.passive:hover { color: #ccc; }
+  .role-tab.passive .lock { font-size: 9px; margin-left: 3px; }
+  .case-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 100; }
+  .case-bar .case-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
+  .case-desc { font-size: 11px; color: #666; margin-left: 8px; }
+  .role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+  .role-header .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .role-header h2 { font-size: 14px; font-weight: 600; }
+  .role-header .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #f0f0f0; color: #666; margin-left: auto; }
+  .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { font-size: 11px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; }
+  .card-body { padding: 10px 12px; }
+  .cred-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+  .cred-row + .cred-row { border-top: 1px solid #f0f0f0; }
+  .k { color: #888; }
+  .v { color: #1a1a1a; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; }
+  .placeholder { padding: 40px 16px; text-align: center; color: #888; }
+  .placeholder h3 { font-size: 14px; margin-bottom: 8px; color: #1a1a1a; }
+  .placeholder p { font-size: 12px; }
+  .role-page { display: none; }
+  .role-page.active { display: block; }
+  .net-status { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
+  .net-online { background: #d1fae5; color: #065f46; }
+  .net-offline { background: #fee2e2; color: #991b1b; }
+  .hint { font-size: 10px; color: #aaa; }
+  .transfer-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .transfer-form .full { grid-column: 1 / -1; }
+  .form-group label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; color: #888; margin-bottom: 4px; }
+  .form-group input, .form-group select { width: 100%; padding: 7px 10px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 12px; font-family: inherit; background: #fff; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: #5b4cdb; box-shadow: 0 0 0 2px rgba(91,76,219,0.1); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: #5b4cdb; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #4a3db8; }
+  .btn-success { background: #059669; color: #fff; }
+  .btn-success:hover:not(:disabled) { background: #047857; }
+  .btn-outline { background: transparent; border: 1px solid #e0e0e0; color: #1a1a1a; }
+  .btn-outline:hover:not(:disabled) { background: #f5f5f5; }
+  .btn-danger { background: #dc2626; color: #fff; }
+  .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .tx-summary { background: linear-gradient(135deg, #f8f7ff, #f0efff); border: 1px solid #e0dff8; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .tx-summary .tx-id { font-size: 10px; color: #888; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .tx-summary .tx-amount { font-size: 22px; font-weight: 700; color: #1a1a1a; margin: 4px 0; }
+  .tx-summary .tx-route { font-size: 11px; color: #666; }
+  .tx-summary .tx-route span { color: #5b4cdb; font-weight: 600; }
+  .role-actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: #fafafa; border-top: 1px solid #e0e0e0; }
+  .no-transfer { text-align: center; padding: 40px 20px; }
+  .no-transfer .icon { font-size: 40px; margin-bottom: 12px; }
+  .no-transfer h3 { font-size: 14px; color: #1a1a1a; margin-bottom: 6px; }
+  .no-transfer p { font-size: 12px; color: #888; }
+  .alert-warn { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #92400e; margin: 8px 0; }
+  .alert-info { background: #dbeafe; border: 1px solid #93c5fd; border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #1e40af; margin: 8px 0; }
+  .wh-console-bar { background: #fff; border-top: 2px solid #5b4cdb; cursor: pointer; transition: background 0.15s; }
+  .wh-console-bar:hover { background: #f0efff; }
+  .wh-console-panel { display: none; flex: 1; min-height: 0; background: #f5f5f5; border-top: 1px solid #e0e0e0; }
+  .wh-list { display: flex; flex-direction: column; gap: 4px; }
+  .wh-tab { padding: 3px 10px; font-size: 10px; font-weight: 600; color: #888; cursor: pointer; border-radius: 4px; transition: all 0.15s; user-select: none; }
+  .wh-tab:hover { color: #5b4cdb; background: rgba(91,76,219,0.08); }
+  .wh-tab.active { color: #fff; background: #5b4cdb; }
+  .wh-item { display: flex; align-items: center; gap: 6px; padding: 7px 8px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-size: 11px; }
+  .wh-item:hover { background: #f0efff; border-color: #5b4cdb; }
+  .wh-item.selected { background: #f0efff; border-color: #5b4cdb; }
+  .wh-time { font-size: 10px; color: #888; font-family: monospace; min-width: 55px; }
+  .wh-role { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; min-width: 28px; text-align: center; }
+  .wh-role-ea { background: #ede9fe; color: #5b21b6; }
+  .wh-role-ca { background: #ddd6fe; color: #5b21b6; }
+  .wh-role-eb { background: #cffafe; color: #155e75; }
+  .wh-role-cb { background: #ccfbf1; color: #115e59; }
+  .wh-verify-yes { color: #059669; font-weight: 700; }
+  .wh-verify-no { color: #dc2626; font-weight: 700; }
+  .wh-type { font-weight: 500; min-width: 0; flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wh-status-change { font-size: 10px; font-family: monospace; }
+  .json-viewer { background: #0d1117; border-radius: 4px; padding: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: #c9d1d9; overflow-x: auto; white-space: pre; line-height: 1.7; min-height: 0; height: 100%; }
+  .json-key { color: #79c0ff; }
+  .json-str { color: #a5d6ff; }
+  .json-num { color: #79c0ff; }
+  .json-bool { color: #ff7b72; }
+  .json-null { color: #8b949e; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1><span>◈</span> Compliance Demo</h1>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item" href="onboarding.html"><span class="icon">+</span> Onboard</a>
+    <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
+    <a class="nav-item active" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
+    <a class="nav-item" href="network.html"><span class="icon">🌐</span> VASP Directory</a>
+    <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
+  </div>
+</div>
+
+
+<div class="main">
+  <div class="topbar">
+    <a href="transfer-flow.html" style="text-decoration:none;color:inherit;font-weight:400">← Cases</a> · Case 6: Unregistered Address — Manual Relationship Confirmation
+    <div class="topbar-actions">
+      <span id="net-badge"></span>
+    </div>
+  </div>
+  <div class="content">
+
+    <div class="case-bar">
+      <span class="case-label">📋 Case 6</span>
+      <span class="case-desc">EA sends to an unregistered EB address → relationship cannot auto-confirm → EB manually confirms address ownership.</span>
+      <a href="transfer-flow.html" class="btn btn-outline btn-sm" style="margin-left:auto">← Back to Cases</a>
+    </div>
+
+    <div class="role-tabs">
+      <div class="role-tab" data-tab="entity-a">Entity A</div>
+      <div class="role-tab passive" data-tab="custodian-a">Custodian A <span class="lock">🔒</span></div>
+      <div class="role-tab" data-tab="entity-b">Entity B</div>
+      <div class="role-tab passive" data-tab="custodian-b">Custodian B <span class="lock">🔒</span></div>
+    </div>
+
+
+    <!-- ═══ Entity A ═══ -->
+    <div class="role-page active" id="role-entity-a">
+      <div class="role-header"><span class="dot" style="background:#5b4cdb"></span><h2>Entity A</h2><span class="tag">Originator VASP</span></div>
+
+      <div class="section-title">Step 1 · Connection Test</div>
+      <div class="card">
+        <div class="card-header">Verify Notabene Network Access</div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
+          <button class="btn btn-primary" id="ea-verify-btn" onclick="verifyConnection('ea')">Verify Connection</button>
+          <div id="ea-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Customer</div>
+      <div class="card"><div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator (Entity A's customer)</div>
+            <div class="cred-row" style="margin-bottom:6px">
+              <span class="k">Select</span>
+              <select id="ea-customer-select" onchange="updateEaCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
+                <option value="">— choose —</option>
+              </select>
+            </div>
+            <div id="ea-customer-detail" style="display:none">
+              <div class="cred-row"><span class="k">Name</span><span class="v" id="ea-customer-name">—</span></div>
+              <div class="cred-row"><span class="k">DOB</span><span class="v" id="ea-customer-dob">—</span></div>
+              <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#06b6d4;text-transform:uppercase;margin-bottom:6px">Beneficiary (Entity B's customer)</div>
+            <div class="cred-row" style="margin-bottom:6px">
+              <span class="k">Select</span>
+              <select id="eb-customer-select-ea" onchange="updateEbCustomerEA()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
+                <option value="">— choose —</option>
+              </select>
+            </div>
+            <div id="eb-customer-detail-ea" style="display:none">
+              <div class="cred-row"><span class="k">Name</span><span class="v" id="eb-customer-name-ea">—</span></div>
+              <div class="cred-row"><span class="k">DOB</span><span class="v" id="eb-customer-dob-ea">—</span></div>
+              <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="eb-customer-hit-ea">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+
+      <!-- Step 2: PII Validation -->
+      <div class="section-title">Step 2 · Pre-Transfer Validation</div>
+      <div class="card">
+        <div class="card-header">
+          PII Validation (IVMS101)
+          <button class="btn btn-primary btn-sm" id="ea-validate-pii-btn" onclick="validatePII()">Validate</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">POST /validate-pii — Validate collected PII against jurisdictional requirements before submission.</p>
+          <div class="transfer-form">
+            <div class="form-group full">
+              <label>Presentation Definition URL</label>
+              <input type="text" id="ea-pd-url" value="https://pd.notabene.id/ivms101/v2/AE-0.json" style="font-size:11px">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:4px">PII is auto-constructed from the selected originator/beneficiary customers above.</div>
+          <div id="ea-validate-pii-result" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- PII Editor -->
+      <div id="ea-pii-editor-card" class="card" style="display:none">
+        <div class="card-header">
+          PII Field Editor — Fill Missing Fields
+          <button class="btn btn-primary btn-sm" onclick="fillPIIDefaults()">Fill Defaults</button>
+          <button class="btn btn-success btn-sm" onclick="revalidatePII()" style="margin-left:4px">Re-validate</button>
+        </div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Fill the missing fields below, then re-validate. Fields marked with ⚠ were reported as missing by IVMS101 validation.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>
+              <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator</div>
+              <div class="form-group"><label>First Name <span id="pii-warn-orig-fn" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-fn" style="font-size:11px"></div>
+              <div class="form-group"><label>Last Name <span id="pii-warn-orig-ln" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-ln" style="font-size:11px"></div>
+              <div class="form-group"><label>Date of Birth <span id="pii-warn-orig-dob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-dob" placeholder="1990-01-01" style="font-size:11px"></div>
+              <div class="form-group"><label>Place of Birth <span id="pii-warn-orig-pob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-pob" placeholder="AE" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID <span id="pii-warn-orig-nid" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-nid" placeholder="Passport number" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID Type</label><input type="text" id="pii-orig-nidtype" placeholder="PASSPORT" style="font-size:11px"></div>
+              <div class="form-group"><label>Address <span id="pii-warn-orig-addr" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-addr" placeholder="Street, City, Country" style="font-size:11px"></div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:600;color:#06b6d4;text-transform:uppercase;margin-bottom:6px">Beneficiary</div>
+              <div class="form-group"><label>First Name <span id="pii-warn-bene-fn" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-bene-fn" style="font-size:11px"></div>
+              <div class="form-group"><label>Last Name <span id="pii-warn-bene-ln" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-bene-ln" style="font-size:11px"></div>
+              <div class="form-group"><label>Date of Birth <span id="pii-warn-bene-dob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-bene-dob" placeholder="1990-01-01" style="font-size:11px"></div>
+              <div class="form-group"><label>Place of Birth</label><input type="text" id="pii-bene-pob" placeholder="AE" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID</label><input type="text" id="pii-bene-nid" placeholder="Passport number" style="font-size:11px"></div>
+              <div class="form-group"><label>National ID Type</label><input type="text" id="pii-bene-nidtype" placeholder="PASSPORT" style="font-size:11px"></div>
+              <div class="form-group"><label>Address</label><input type="text" id="pii-bene-addr" placeholder="Street, City, Country" style="font-size:11px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Create Transfer -->
+      <div class="section-title">Step 3 · Create Transfer to Unregistered Address</div>
+      <div class="alert-warn">
+        ⚠ This case uses a new address for Entity B that has NOT been registered via the Relationships API.
+        The REQUIRE_RELATIONSHIP_CONFIRMATION policy will remain pending until Entity B manually confirms address ownership.
+      </div>
+      <div class="card">
+        <div class="card-header">
+          Transfer Details
+          <button class="btn btn-primary btn-sm" id="ea-create-btn" onclick="createTransfer()">Create Transfer</button>
+        </div>
+        <div class="card-body">
+          <div class="transfer-form">
+            <div class="form-group">
+              <label>Beneficiary VASP (Entity B)</label>
+              <input type="text" id="ea-tx-beneficiary" readonly style="background:#f8f8f8;font-size:11px">
+            </div>
+            <div class="form-group">
+              <label>Destination Wallet (UNREGISTERED)</label>
+              <input type="text" id="ea-tx-destaddr" readonly style="background:#fef3c7;font-size:11px;font-family:monospace">
+            </div>
+            <div class="form-group">
+              <label>Amount (USDT-TEST)</label>
+              <input type="number" id="ea-tx-amount" value="3500" min="3500" step="1">
+            </div>
+            <div class="form-group">
+              <label>Asset</label>
+              <input type="text" value="USDT-TEST · Sepolia Testnet" readonly style="background:#f8f8f8;font-size:12px">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:8px">No on-chain broadcast or settlement in this case. The transfer is created on Notabene only.</div>
+        </div>
+      </div>
+      <div id="ea-tx-result" style="display:none"></div>
+
+      <div class="section-title">Done</div>
+      <div class="alert-info">
+        Transfer created. Switch to Entity B to confirm the address relationship.
+      </div>
+    </div>
+
+
+    <!-- ═══ Custodian A ═══ -->
+    <div class="role-page" id="role-custodian-a">
+      <div class="role-header"><span class="dot" style="background:#8b5cf6"></span><h2>Custodian A</h2><span class="tag">Custody Provider</span></div>
+      <div class="placeholder">
+        <h3>Not Active in This Case</h3>
+        <p>Case 6 involves only Entity A and Entity B.</p>
+      </div>
+    </div>
+
+
+    <!-- ═══ Entity B ═══ -->
+    <div class="role-page" id="role-entity-b">
+      <div class="role-header"><span class="dot" style="background:#06b6d4"></span><h2>Entity B</h2><span class="tag">Beneficiary VASP</span></div>
+
+      <div class="section-title">Step 1 · Connection Test</div>
+      <div class="card">
+        <div class="card-header">Verify Notabene Network Access</div>
+        <div class="card-body">
+          <p class="hint" style="margin-bottom:8px">Authenticate via OAuth and fetch this entity's info from the Notabene network.</p>
+          <button class="btn btn-primary" id="eb-verify-btn" onclick="verifyConnection('eb')">Verify Connection</button>
+          <div id="eb-verify-result" style="display:none;margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Review Incoming -->
+      <div class="section-title">Step 2 · Review Incoming Transfer</div>
+      <div class="card">
+        <div class="card-header">
+          Incoming Transfers
+          <button class="btn btn-outline btn-sm" onclick="fetchIncomingTransfers()">↻ Refresh</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div id="eb-incoming-list" style="max-height:300px;overflow-y:auto">
+            <div class="placeholder" style="padding:20px"><p>Click Refresh to fetch incoming transfers</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Transfer Details -->
+      <div class="section-title" id="eb-details-title" style="opacity:0.4">Step 3 · Transfer Details <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
+      <div id="eb-details-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            GET /entity/:did/tx/:tx
+            <button class="btn btn-outline btn-sm" onclick="fetchTransferDetails()">↻ Fetch</button>
+          </div>
+          <div class="card-body" id="eb-details-body" style="min-height:40px">
+            <p class="hint">Select a transfer above to fetch its details.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirm Address -->
+      <div class="section-title" id="eb-confirm-title" style="opacity:0.4">Step 4 · Confirm Address Ownership <span style="font-size:10px;font-weight:400;color:#888">🔒 Select a transfer to unlock</span></div>
+      <div id="eb-confirm-section" style="display:none">
+        <div class="alert-warn">
+          The settlement address in this transfer is NOT registered in your Relationships table.
+          The REQUIRE_RELATIONSHIP_CONFIRMATION policy cannot auto-complete.
+          You must manually confirm that this address belongs to Entity B.
+        </div>
+        <div class="card">
+          <div class="card-header">
+            PATCH /entity/:did/relationship — Confirm Address
+            <button class="btn btn-success btn-sm" id="eb-confirm-btn" onclick="confirmRelationship()">✓ Confirm Address</button>
+          </div>
+          <div class="card-body">
+            <div class="cred-row"><span class="k">Unregistered Address</span><span class="v mono" id="eb-confirm-address">—</span></div>
+            <div class="cred-row"><span class="k">Entity DID</span><span class="v mono" id="eb-confirm-did">—</span></div>
+            <div class="hint" style="margin-top:6px">Confirms the relationship between this address and your entity. Once confirmed, the address is hashed and saved to Notabene's Hashed Address Service for future discoverability.</div>
+          </div>
+          <div id="eb-confirm-result" style="display:none;padding:10px 12px"></div>
+        </div>
+      </div>
+
+      <div class="section-title" id="eb-done-title" style="display:none">Done</div>
+      <div id="eb-done-section" style="display:none">
+        <div class="alert-info">
+          ✓ Relationship confirmed. The address is now associated with Entity B and saved to the Hashed Address Service.
+          Future transfers to this address will auto-confirm.
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══ Custodian B ═══ -->
+    <div class="role-page" id="role-custodian-b">
+      <div class="role-header"><span class="dot" style="background:#14b8a6"></span><h2>Custodian B</h2><span class="tag">Custody Provider</span></div>
+      <div class="placeholder">
+        <h3>Not Active in This Case</h3>
+        <p>Case 6 involves only Entity A and Entity B.</p>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- ═══ Webhook Console (fixed bottom) ═══ -->
+  <div class="wh-console-bar" id="wh-bar" onclick="whToggle()">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px">
+      <span id="wh-arrow" style="font-size:18px;color:#5b4cdb;transition:transform 0.2s;line-height:1">▶</span>
+      <span style="font-size:11px;font-weight:600;color:#5b4cdb">📡 Notabene Webhook Console</span>
+      <span id="wh-count" style="font-size:10px;font-weight:600;color:#5b4cdb;background:#f0efff;padding:2px 8px;border-radius:10px;border:1px solid #5b4cdb">0 events</span>
+      <span id="wh-latest" style="font-size:10px;color:#888;margin-left:auto"></span>
+      <div style="display:flex;gap:2px;margin-left:8px">
+        <div class="wh-tab active" data-wh-tab="webhooks" onclick="event.stopPropagation(); whSwitchTab('webhooks', true)">📡 Webhooks</div>
+        <div class="wh-tab" data-wh-tab="inspector" onclick="event.stopPropagation(); whSwitchTab('inspector', true)">🔍 Inspector</div>
+      </div>
+    </div>
+  </div>
+  <div class="wh-console-panel" id="wh-panel">
+    <div id="wh-tab-webhooks" class="wh-tab-content" style="display:flex;height:100%;min-height:280px">
+      <div style="width:340px;overflow-y:auto;background:#fff;border-right:1px solid #e0e0e0">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #e0e0e0">
+          <span style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Events</span>
+          <button class="btn btn-outline btn-sm" onclick="whClearLog()">Clear</button>
+        </div>
+        <div id="wh-list" class="wh-list" style="padding:6px"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid #e0e0e0;background:#fff">
+          <span id="wh-detail-title" style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase">Select an event</span>
+          <button class="btn btn-outline btn-sm" onclick="whCopyJSON()">Copy JSON</button>
+        </div>
+        <div id="wh-json" class="json-viewer" style="flex:1">// Click an event to see full payload</div>
+      </div>
+    </div>
+    <div id="wh-tab-inspector" class="wh-tab-content" style="display:none;height:100%;min-height:280px;overflow-y:auto;padding:14px">
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
+        <div class="form-group" style="flex:1;min-width:280px;margin-bottom:0">
+          <label style="font-size:10px;color:#888;text-transform:uppercase">Transfer ID</label>
+          <input type="text" id="tx-inspector-id" placeholder="e.g. 5d4467ff-..." style="width:100%;font-size:12px;font-family:monospace">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label style="font-size:10px;color:#888;text-transform:uppercase">View as</label>
+          <select id="tx-inspector-role" style="font-size:12px">
+            <option value="ea">Entity A (Originator)</option>
+            <option value="eb">Entity B (Beneficiary)</option>
+            <option value="ca">Custodian A</option>
+            <option value="cb">Custodian B</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="inspectTransfer()">Look Up</button>
+      </div>
+      <div id="tx-inspector-result"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>var CASE = 'case6';</script>
+<script src="js/shared.js"></script>
+<script src="js/case6.js"></script>
+<script src="js/inspector.js"></script>
+<script>
+// Generate a random unregistered Ethereum address for this session
+var unregisteredAddress = '0x' + Array.from(crypto.getRandomValues(new Uint8Array(20)))
+  .map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+
+populateCustomerSelects();
+activateTab('entity-a');
+
+// Override autoFillTransferForm for case6 — use unregistered address
+autoFillTransferForm();
+
+// Set the unregistered address in the UI
+var destEl = document.getElementById('ea-tx-destaddr');
+if (destEl) destEl.value = unregisteredAddress;
+
+// Store globally so createTransfer can use it
+window.case6UnregisteredAddress = unregisteredAddress;
+</script>
+
+</body>
+</html>

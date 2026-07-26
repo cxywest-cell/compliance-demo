@@ -203,7 +203,13 @@ async function autoFillTransferForm() {
   if (benEl) benEl.value = ebDid;
 
   var destEl = document.getElementById('ea-tx-destaddr');
-  if (destEl) destEl.value = ebWallet;
+  if (destEl) {
+    if (typeof CASE !== 'undefined' && CASE === 'case6' && window.case6UnregisteredAddress) {
+      destEl.value = window.case6UnregisteredAddress;
+    } else {
+      destEl.value = ebWallet;
+    }
+  }
   
   var discEl = document.getElementById('ea-discover-address');
   if (discEl) discEl.value = ebWallet;
@@ -747,7 +753,7 @@ async function createTransfer() {
 
   // Block transfer creation if PII validation was not completed successfully
   // (Cases 2,3 skip this — EA doesn't know EB's requirements yet)
-  var requiresPII = CASE === 'case1' || CASE === 'case4' || CASE === 'case5';
+  var requiresPII = CASE === 'case1' || CASE === 'case4' || CASE === 'case5' || CASE === 'case6';
   if (requiresPII && !lastValidatedIVMS101) {
     result.style.display = 'block';
     result.innerHTML = '<div class="card"><div class="card-body" style="color:#dc2626">✗ PII Validation incomplete. Complete the PII Validation step above (select customers → fill all fields → click Validate → must show VALID ✓) before creating a transfer.</div></div>';
@@ -785,7 +791,7 @@ async function createTransfer() {
   // Proven by A/B test: with this construction, BOTH EA and EB see status=COMPLETED.
   // Case 2: EA does NOT attach policies — EA doesn't know EB's requirements yet.
   var requirePresentation = null;
-  if (CASE === 'case1' || CASE === 'case4' || CASE === 'case5') {
+  if (CASE === 'case1' || CASE === 'case4' || CASE === 'case5' || CASE === 'case6') {
     requirePresentation = {
       '@type': 'REQUIRE_PRESENTATION',
       'from': eaDid,
@@ -808,7 +814,7 @@ async function createTransfer() {
       { '@id': 'did:pkh:eip155:11155111:' + eaWallet, 'for': eaDid, role: 'SourceAddress' },
       { '@id': eaDid, 'for': origId, role: 'VASP' },
       ebAgent,
-      { '@id': 'did:pkh:eip155:11155111:' + ebWallet, 'for': ebDid, role: 'SettlementAddress' }
+      { '@id': 'did:pkh:eip155:11155111:' + (CASE === 'case6' && window.case6UnregisteredAddress ? window.case6UnregisteredAddress : ebWallet), 'for': ebDid, role: 'SettlementAddress' }
     ]
   };
 
@@ -839,7 +845,7 @@ async function createTransfer() {
     var piiStatus = 'skipped';
     var ivms101 = null;
 
-    var skipsPII = CASE !== 'case1' && CASE !== 'case4' && CASE !== 'case5';
+    var skipsPII = CASE !== 'case1' && CASE !== 'case4' && CASE !== 'case5' && CASE !== 'case6';
     if (skipsPII) {
       piiStatus = 'not_sent';
     } else if (lastValidatedIVMS101) {
@@ -946,7 +952,7 @@ async function createTransfer() {
     fetchOutgoingTransfers();
 
     // Cases 2,3: Unlock Step 4c — Incoming RFI section (for later use after EB creates counter-transfer)
-    if (CASE !== 'case1' && CASE !== 'case4' && CASE !== 'case5') {
+    if (CASE !== 'case1' && CASE !== 'case4' && CASE !== 'case5' && CASE !== 'case6') {
       var rfiSection = document.getElementById('ea-rfi-section');
       var rfiTitle = document.getElementById('ea-rfi-title');
       if (rfiSection) rfiSection.style.display = 'block';
@@ -1011,7 +1017,9 @@ async function selectIncomingTransfer(txId) {
 
   // Reveal Steps 3-5, activate titles
   ['eb-details', 'eb-tap', 'eb-review'].forEach(function(prefix) {
-    document.getElementById(prefix + '-section').style.display = 'block';
+    var sec = document.getElementById(prefix + '-section');
+    if (!sec) return;
+    sec.style.display = 'block';
     var title = document.getElementById(prefix + '-title');
     if (title) { title.style.opacity = '1'; title.innerHTML = title.innerHTML.replace(/ <span.*<\/span>/, ''); }
   });
@@ -1024,9 +1032,48 @@ async function selectIncomingTransfer(txId) {
     if (custTitle) { custTitle.style.opacity = '1'; custTitle.innerHTML = custTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
   }
 
+  // Case 6: Unlock EB Step 4 (Confirm Address) when transfer is selected
+  if (typeof CASE !== 'undefined' && CASE === 'case6') {
+    var confSection = document.getElementById('eb-confirm-section');
+    var confTitle = document.getElementById('eb-confirm-title');
+    if (confSection) confSection.style.display = 'block';
+    if (confTitle) { confTitle.style.opacity = '1'; confTitle.innerHTML = confTitle.innerHTML.replace(/ <span.*<\/span>/, ''); }
+    // Populate the address display from the transfer data
+    try {
+      var res = await fetch('/api/notabene/transfer?clientId=' + encodeURIComponent((await loadSettings()).ebApikey) +
+        '&clientSecret=' + encodeURIComponent((await loadSettings()).ebApisecret) +
+        '&did=' + encodeURIComponent((await loadSettings()).ebDid) +
+        '&txId=' + encodeURIComponent(txId) + '&decrypt=true');
+      var data = await res.json();
+      if (!data.error) {
+        var tx = data.transfer || data;
+        var sAddr = null;
+        if (tx.agents) {
+          for (var i = 0; i < tx.agents.length; i++) {
+            if (tx.agents[i].role === 'SettlementAddress') {
+              sAddr = tx.agents[i].agent ? tx.agents[i].agent['@id'] : tx.agents[i]['@id'];
+              break;
+            }
+          }
+        }
+        if (sAddr) {
+          var shortAddr = sAddr.replace('did:pkh:eip155:11155111:', '');
+          var addrEl = document.getElementById('eb-confirm-address');
+          if (addrEl) addrEl.textContent = shortAddr;
+        }
+        var didEl = document.getElementById('eb-confirm-did');
+        var s2 = await loadSettings();
+        if (didEl && s2.ebDid) didEl.textContent = s2.ebDid;
+      }
+    } catch(e) {}
+  }
+
   // Auto-fetch details and policies
   await fetchTransferDetails();
-  await fetchTapPolicies();
+  // Case 6 has no TAP/review sections — skip fetching policies
+  if (typeof CASE !== 'undefined' && CASE !== 'case6') {
+    await fetchTapPolicies();
+  }
 }
 
 // Helper: render a PII block with all IVMS101 fields
