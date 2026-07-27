@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Assessment Model — Transaction Risk Framework</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 16px; border-bottom: 1px solid #e0e0e0; }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 600; }
+  .sidebar-logo h1 span { color: #5b4cdb; }
+  .sidebar-nav { padding: 12px 0; }
+  .nav-item { padding: 10px 16px; cursor: pointer; font-size: 12px; font-weight: 500; color: #888; display: flex; align-items: center; gap: 8px; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: #f5f5f5; color: #1a1a1a; }
+  .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
+  .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* Tabs */
+  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 0; }
+  .view-tab { padding: 10px 18px; cursor: pointer; font-size: 12px; font-weight: 600; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+  .view-tab:hover { color: #1a1a1a; }
+  .view-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .view-page { display: none; }
+  .view-page.active { display: block; }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .card-header { font-size: 12px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 10px 14px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; }
+  .card-body { padding: 14px; }
+  .section-title { font-size: 13px; font-weight: 700; margin: 20px 0 10px; color: #1a1a1a; }
+  .section-title:first-child { margin-top: 0; }
+
+  /* Risk gauge */
+  .risk-gauge-container { display: flex; align-items: center; justify-content: center; gap: 30px; }
+  .risk-gauge { position: relative; width: 180px; height: 180px; }
+  .risk-score-big { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .risk-score-big .num { font-size: 48px; font-weight: 800; line-height: 1; }
+  .risk-score-big .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* Risk level colors */
+  .rl-low { color: #16a34a; }
+  .rl-mid { color: #d97706; }
+  .rl-high { color: #dc2626; }
+  .bg-low { background: #dcfce7; }
+  .bg-mid { background: #fef3c7; }
+  .bg-high { background: #fee2e2; }
+
+  /* Factor grid */
+  .factor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .factor-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; border-left: 4px solid #e0e0e0; }
+  .factor-card.low { border-left-color: #16a34a; }
+  .factor-card.mid { border-left-color: #d97706; }
+  .factor-card.high { border-left-color: #dc2626; }
+  .factor-card .fc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .factor-card .fc-title { font-size: 12px; font-weight: 700; }
+  .factor-card .fc-score { font-size: 24px; font-weight: 800; }
+  .factor-card .fc-source { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .factor-card .fc-desc { font-size: 11px; color: #666; line-height: 1.5; }
+  .factor-card .fc-data { font-size: 10px; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+  .factor-card .fc-data .row { display: flex; justify-content: space-between; padding: 2px 0; }
+  .factor-card .fc-data .k { color: #888; }
+  .factor-card .fc-data .v { color: #1a1a1a; font-weight: 500; }
+
+  /* Data source badges */
+  .ds-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ds-sumsub { background: #ede9fe; color: #5b21b6; }
+  .ds-elliptic { background: #dbeafe; color: #1e40af; }
+  .ds-notabene { background: #d1fae5; color: #065f46; }
+  .ds-internal { background: #f0f0f0; color: #666; }
+
+  /* Flow diagram */
+  .flow-diagram { display: flex; align-items: stretch; gap: 0; margin: 20px 0; }
+  .flow-layer { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 8px; }
+  .flow-layer-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #888; text-align: center; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; margin-bottom: 8px; }
+  .flow-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; font-size: 11px; text-align: center; transition: all 0.15s; }
+  .flow-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .flow-item .fi-name { font-weight: 600; }
+  .flow-item .fi-val { font-size: 10px; color: #888; margin-top: 2px; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 20px; color: #ccc; width: 30px; flex-shrink: 0; }
+
+  /* Matrix table */
+  .risk-matrix { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .risk-matrix th { background: #fafafa; padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e0e0e0; font-size: 10px; text-transform: uppercase; color: #888; }
+  .risk-matrix td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  .risk-matrix tr:hover td { background: #f8f8ff; }
+
+  /* Weight bar */
+  .weight-bar { height: 6px; border-radius: 3px; background: #f0f0f0; overflow: hidden; margin-top: 4px; }
+  .weight-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+  /* Info note */
+  .info-note { background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #1e40af; margin-bottom: 16px; }
+  .formula-box { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1><span>◈</span> Compliance Demo</h1>
+  </div>
+  <div class="sidebar-nav">
+    <a class="nav-item" href="onboarding.html"><span class="icon">+</span> Onboard</a>
+    <a class="nav-item" href="screening.html"><span class="icon">🔍</span> Entity Screening</a>
+    <a class="nav-item" href="monitoring.html"><span class="icon">📡</span> Tx/Addr Screening & Monitoring</a>
+    <a class="nav-item" href="transfer-flow.html"><span class="icon">↗</span> Travel Rule Transfer</a>
+    <a class="nav-item active" href="risk-model.html"><span class="icon">📊</span> Risk Model</a>
+    <a class="nav-item" href="network.html"><span class="icon">🌐</span> VASP Directory</a>
+    <a class="nav-item" href="settings.html"><span class="icon">⚙</span> Settings</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">📊 Transaction Risk Assessment Model</div>
+  <div class="content">
+
+    <div class="info-note">
+      This page illustrates how data from all integrated services — <strong>Sumsub</strong> (KYC/AML),
+      <strong>Elliptic</strong> (on-chain), <strong>Notabene</strong> (Travel Rule) — combine into a
+      unified transaction risk score. Switch between views below to understand the framework from different angles.
+    </div>
+
+    <!-- View Tabs -->
+    <div class="view-tabs">
+      <div class="view-tab active" onclick="switchView('overview')">Overview</div>
+      <div class="view-tab" onclick="switchView('factors')">Risk Factors</div>
+      <div class="view-tab" onclick="switchView('sources')">Data Sources</div>
+      <div class="view-tab" onclick="switchView('formula')">Scoring Formula</div>
+    </div>
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <div class="view-page active" id="view-overview">
+      <div class="card">
+        <div class="card-header">Combined Risk Score — Sample Transaction</div>
+        <div class="card-body">
+          <div class="risk-gauge-container">
+            <svg class="risk-gauge" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="85" fill="none" stroke="#f0f0f0" stroke-width="16"/>
+              <circle cx="100" cy="100" r="85" fill="none" stroke="#d97706" stroke-width="16"
+                stroke-dasharray="534" stroke-dashoffset="160"
+                transform="rotate(-90 100 100)" stroke-linecap="round"/>
+            </svg>
+            <div class="risk-score-big">
+              <div class="num rl-mid">6.2</div>
+              <div class="label">Medium Risk</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:11px;color:#888">Sample: 3,500 USDT-TEST transfer<br>Originator: Lorem Mockrime LLC<br>Beneficiary: John Doe<br>On-chain score: 4.2 (Elliptic)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Data Flow — How Data Combines</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="flow-diagram">
+            <div class="flow-layer">
+              <div class="flow-layer-title">Data Collection</div>
+              <div class="flow-item"><div class="fi-name">KYC / KYB</div><div class="fi-val">Identity verified ✓</div></div>
+              <div class="flow-item"><div class="fi-name">AML Screening</div><div class="fi-val">Crime hit ⚠</div></div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-layer">
+              <div class="flow-layer-title">Risk Factors</div>
+              <div class="flow-item"><div class="fi-name">Customer Risk</div><div class="fi-val">Score: 7</div></div>
+              <div class="flow-item"><div class="fi-name">Counterparty Risk</div><div class="fi-val">Score: 5</div></div>
+              <div class="flow-item"><div class="fi-name">Transaction Risk</div><div class="fi-val">Score: 3</div></div>
+              <div class="flow-item"><div class="fi-name">Blockchain Risk</div><div class="fi-val">Score: 4</div></div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-layer">
+              <div class="flow-layer-title">Decision</div>
+              <div class="flow-item" style="background:#fef3c7;border-color:#fcd34d"><div class="fi-name">Combined: 6.2</div><div class="fi-val">Review Required</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Risk Level Thresholds</div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr>
+              <th>Score Range</th>
+              <th>Level</th>
+              <th>Action</th>
+              <th>Color</th>
+            </tr>
+            <tr>
+              <td><strong>0.0 – 3.0</strong></td>
+              <td class="rl-low"><strong>Low Risk</strong></td>
+              <td>Auto-approve. Proceed with normal processing.</td>
+              <td><span class="bg-low" style="padding:3px 12px;border-radius:3px;color:#16a34a;font-weight:600">GREEN</span></td>
+            </tr>
+            <tr>
+              <td><strong>3.1 – 7.0</strong></td>
+              <td class="rl-mid"><strong>Medium Risk</strong></td>
+              <td>Manual review required. Compliance officer reviews all factors.</td>
+              <td><span class="bg-mid" style="padding:3px 12px;border-radius:3px;color:#d97706;font-weight:600">AMBER</span></td>
+            </tr>
+            <tr>
+              <td><strong>7.1 – 10.0</strong></td>
+              <td class="rl-high"><strong>High Risk</strong></td>
+              <td>Reject or escalate. SAR filing may be required. Freeze funds pending investigation.</td>
+              <td><span class="bg-high" style="padding:3px 12px;border-radius:3px;color:#dc2626;font-weight:600">RED</span></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RISK FACTORS ═══ -->
+    <div class="view-page" id="view-factors">
+      <div class="section-title">Four Risk Factor Categories</div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">Each transaction is assessed across four independent risk dimensions. Each factor contributes a weighted score (0–10) to the combined risk.</p>
+
+      <div class="factor-grid">
+
+        <!-- Customer Risk -->
+        <div class="factor-card mid">
+          <div class="fc-header">
+            <div>
+              <div class="fc-title">Customer Risk</div>
+              <div class="fc-source"><span class="ds-badge ds-sumsub">Sumsub</span> + <span class="ds-badge ds-internal">Internal</span></div>
+            </div>
+            <div class="fc-score rl-mid">7</div>
+          </div>
+          <div class="fc-desc">Risk associated with the originator's identity profile — KYC verification level, AML screening results (sanctions, PEP, crime, adverse media).</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">KYC Status</span><span class="v">Verified ✓</span></div>
+            <div class="row"><span class="k">AML Hit</span><span class="v" style="color:#d97706">Crime ⚠</span></div>
+            <div class="row"><span class="k">Entity Type</span><span class="v">Corporate (LLC)</span></div>
+            <div class="row"><span class="k">Weight</span><span class="v">30%</span></div>
+            <div class="weight-bar"><div class="weight-bar-fill" style="width:30%;background:#d97706"></div></div>
+          </div>
+        </div>
+
+        <!-- Counterparty Risk -->
+        <div class="factor-card mid">
+          <div class="fc-header">
+            <div>
+              <div class="fc-title">Counterparty Risk</div>
+              <div class="fc-source"><span class="ds-badge ds-notabene">Notabene</span> + <span class="ds-badge ds-elliptic">Elliptic</span></div>
+            </div>
+            <div class="fc-score rl-mid">5</div>
+          </div>
+          <div class="fc-desc">Risk from the receiving VASP and beneficiary — counterparty jurisdiction, VASP registration status, relationship confirmation, beneficiary address ownership.</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">VASP Known</span><span class="v">Yes ✓</span></div>
+            <div class="row"><span class="k">Relationship</span><span class="v">Confirmed ✓</span></div>
+            <div class="row"><span class="k">Jurisdiction</span><span class="v">AE → AE</span></div>
+            <div class="row"><span class="k">Weight</span><span class="v">25%</span></div>
+            <div class="weight-bar"><div class="weight-bar-fill" style="width:25%;background:#5b4cdb"></div></div>
+          </div>
+        </div>
+
+        <!-- Transaction Risk -->
+        <div class="factor-card low">
+          <div class="fc-header">
+            <div>
+              <div class="fc-title">Transaction Risk</div>
+              <div class="fc-source"><span class="ds-badge ds-notabene">Notabene</span> + <span class="ds-badge ds-internal">Internal</span></div>
+            </div>
+            <div class="fc-score rl-low">3</div>
+          </div>
+          <div class="fc-desc">Risk from transaction characteristics — amount vs. threshold, PII completeness, Travel Rule compliance status, transaction pattern anomalies.</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Amount</span><span class="v">3,500 USD (at threshold)</span></div>
+            <div class="row"><span class="k">Travel Rule</span><span class="v">Compliant ✓</span></div>
+            <div class="row"><span class="k">PII Complete</span><span class="v">Full IVMS101 ✓</span></div>
+            <div class="row"><span class="k">Weight</span><span class="v">20%</span></div>
+            <div class="weight-bar"><div class="weight-bar-fill" style="width:20%;background:#16a34a"></div></div>
+          </div>
+        </div>
+
+        <!-- Blockchain Risk -->
+        <div class="factor-card mid">
+          <div class="fc-header">
+            <div>
+              <div class="fc-title">Blockchain Risk</div>
+              <div class="fc-source"><span class="ds-badge ds-elliptic">Elliptic</span></div>
+            </div>
+            <div class="fc-score rl-mid">4</div>
+          </div>
+          <div class="fc-desc">On-chain risk from the source and settlement addresses — exposure to illicit entities, mixer/tumbler interaction, darknet, ransomware, sanctions addresses.</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Source Address</span><span class="v">Score: 3.1 (Low)</span></div>
+            <div class="row"><span class="k">Settlement Address</span><span class="v">Score: 4.2 (Medium)</span></div>
+            <div class="row"><span class="k">Categories</span><span class="v">None flagged</span></div>
+            <div class="row"><span class="k">Weight</span><span class="v">25%</span></div>
+            <div class="weight-bar"><div class="weight-bar-fill" style="width:25%;background:#d97706"></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="section-title">Factor Contribution Summary</div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr><th>Factor</th><th>Raw Score</th><th>Weight</th><th>Weighted</th><th>Data Source</th></tr>
+            <tr><td>Customer Risk</td><td class="rl-mid">7</td><td>30%</td><td><strong>2.10</strong></td><td><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-internal">Internal</span></td></tr>
+            <tr><td>Counterparty Risk</td><td class="rl-mid">5</td><td>25%</td><td><strong>1.25</strong></td><td><span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-elliptic">Elliptic</span></td></tr>
+            <tr><td>Transaction Risk</td><td class="rl-low">3</td><td>20%</td><td><strong>0.60</strong></td><td><span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-internal">Internal</span></td></tr>
+            <tr><td>Blockchain Risk</td><td class="rl-mid">4</td><td>25%</td><td><strong>2.25</strong></td><td><span class="ds-badge ds-elliptic">Elliptic</span></td></tr>
+            <tr style="background:#fafafa"><td colspan="2"><strong>Combined</strong></td><td>100%</td><td class="rl-mid"><strong>6.20</strong></td><td>— Medium Risk — Review Required</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DATA SOURCES ═══ -->
+    <div class="view-page" id="view-sources">
+      <div class="section-title">Data Sources → Risk Inputs Mapping</div>
+      <p style="font-size:12px;color:#666;margin-bottom:16px">Each external service provides specific data points that feed into the risk factors. This view shows exactly what data comes from where.</p>
+
+      <div class="factor-grid">
+
+        <div class="factor-card" style="border-left-color:#5b21b6">
+          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-sumsub">Sumsub</span> KYC / KYB</div></div></div>
+          <div class="fc-desc">Identity verification and onboarding data</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Provides</span><span class="v">KYC level, doc verification</span></div>
+            <div class="row"><span class="k">Feeds into</span><span class="v">Customer Risk</span></div>
+            <div class="row"><span class="k">API</span><span class="v">WebSDK + REST</span></div>
+            <div class="row"><span class="k">Demo Page</span><span class="v">/onboarding</span></div>
+          </div>
+        </div>
+
+        <div class="factor-card" style="border-left-color:#5b21b6">
+          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-sumsub">Sumsub</span> AML Name Screening</div></div></div>
+          <div class="fc-desc">Sanctions, PEP, crime, adverse media screening</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Provides</span><span class="v">Hit type, risk rating, match score</span></div>
+            <div class="row"><span class="k">Feeds into</span><span class="v">Customer Risk</span></div>
+            <div class="row"><span class="k">Categories</span><span class="v">Sanctions, Crime, Adverse Media, PEP</span></div>
+            <div class="row"><span class="k">Demo Page</span><span class="v">/screening</span></div>
+          </div>
+        </div>
+
+        <div class="factor-card" style="border-left-color:#1e40af">
+          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-elliptic">Elliptic</span> Address Screening</div></div></div>
+          <div class="fc-desc">Blockchain wallet address risk assessment</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Provides</span><span class="v">Risk score (0–10), exposure categories</span></div>
+            <div class="row"><span class="k">Feeds into</span><span class="v">Blockchain Risk</span></div>
+            <div class="row"><span class="k">Categories</span><span class="v">Mixer, Darknet, Ransomware, Sanctions, Theft</span></div>
+            <div class="row"><span class="k">Demo Page</span><span class="v">/monitoring</span></div>
+          </div>
+        </div>
+
+        <div class="factor-card" style="border-left-color:#1e40af">
+          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-elliptic">Elliptic</span> Transaction Screening</div></div></div>
+          <div class="fc-desc">On-chain transaction risk scoring</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Provides</span><span class="v">TX-level risk score, source/dest exposure</span></div>
+            <div class="row"><span class="k">Feeds into</span><span class="v">Blockchain Risk</span></div>
+            <div class="row"><span class="k">Inputs</span><span class="v">TX hash + output address</span></div>
+            <div class="row"><span class="k">Demo Page</span><span class="v">/monitoring</span></div>
+          </div>
+        </div>
+
+        <div class="factor-card" style="border-left-color:#065f46">
+          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-notabene">Notabene</span> Travel Rule PII</div></div></div>
+          <div class="fc-desc">Originator/beneficiary identity data (IVMS101)</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Provides</span><span class="v">Name, address, national ID, account number</span></div>
+            <div class="row"><span class="k">Feeds into</span><span class="v">Counterparty Risk, Transaction Risk</span></div>
+            <div class="row"><span class="k">Supports</span><span class="v">naturalPerson (individual), legalPerson (corporate)</span></div>
+            <div class="row"><span class="k">Demo Page</span><span class="v">/transfer-flow</span></div>
+          </div>
+        </div>
+
+        <div class="factor-card" style="border-left-color:#065f46">
+          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-notabene">Notabene</span> VASP Network</div></div></div>
+          <div class="fc-desc">Counterparty VASP discovery and relationship status</div>
+          <div class="fc-data">
+            <div class="row"><span class="k">Provides</span><span class="v">VASP identity, jurisdiction, relationship status</span></div>
+            <div class="row"><span class="k">Feeds into</span><span class="v">Counterparty Risk</span></div>
+            <div class="row"><span class="k">Key check</span><span class="v">Address ownership confirmed?</span></div>
+            <div class="row"><span class="k">Demo Page</span><span class="v">/transfer-flow (Case 6)</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ SCORING FORMULA ═══ -->
+    <div class="view-page" id="view-formula">
+      <div class="section-title">Weighted Scoring Model</div>
+      <div class="card">
+        <div class="card-body">
+          <p style="font-size:12px;margin-bottom:12px">The combined transaction risk score is a weighted average of four independent factor scores. Each factor is independently scored 0–10, then multiplied by its weight and summed.</p>
+          <div class="formula-box">
+Combined Score = (Customer × 0.30) + (Counterparty × 0.25) + (Transaction × 0.20) + (Blockchain × 0.25)
+          </div>
+          <p style="font-size:11px;color:#888">Weights are configurable and should reflect your institution's risk appetite. The defaults above are illustrative.</p>
+        </div>
+      </div>
+
+      <div class="section-title">Factor Scoring Details</div>
+
+      <div class="card">
+        <div class="card-header">Customer Risk Score (0–10) — Weight: 30%</div>
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr><th>Condition</th><th>Score</th></tr>
+            <tr><td>KYC verified + No AML hits</td><td class="rl-low">0–2</td></tr>
+            <tr><td>KYC verified + Adverse media only</td><td class="rl-low">3</td></tr>
+            <tr><td>KYC verified + PEP</td><td class="rl-mid">4–5</td></tr>
+            <tr><td>KYC verified + Crime hit</td><td class="rl-mid">6–7</td></tr>
+            <tr><td>KYC verified + Sanctions hit</td><td class="rl-high">9–10</td></tr>
+            <tr><td>KYC incomplete / Failed</td><td class="rl-high">8–10</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Counterparty Risk Score (0–10) — Weight: 25%</div>
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr><th>Condition</th><th>Score</th></tr>
+            <tr><td>Known VASP + Address confirmed + Same jurisdiction</td><td class="rl-low">0–2</td></tr>
+            <tr><td>Known VASP + Address confirmed + Different jurisdiction</td><td class="rl-low">2–3</td></tr>
+            <tr><td>Known VASP + Address unconfirmed (manual confirm)</td><td class="rl-mid">4–5</td></tr>
+            <tr><td>Unknown VASP / Self-hosted counterparty</td><td class="rl-mid">6–7</td></tr>
+            <tr><td>High-risk jurisdiction / Sanctions country</td><td class="rl-high">9–10</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Transaction Risk Score (0–10) — Weight: 20%</div>
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr><th>Condition</th><th>Score</th></tr>
+            <tr><td>Below threshold + Full PII + Travel Rule compliant</td><td class="rl-low">0–1</td></tr>
+            <tr><td>At threshold (3,500 USD) + Full PII + Compliant</td><td class="rl-low">2–3</td></tr>
+            <tr><td>Above threshold + Full PII + Compliant</td><td class="rl-low">3–4</td></tr>
+            <tr><td>PII incomplete / Pending relationship confirmation</td><td class="rl-mid">5–6</td></tr>
+            <tr><td>Travel Rule non-compliant / Structured transaction</td><td class="rl-high">7–10</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Blockchain Risk Score (0–10) — Weight: 25%</div>
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr><th>Condition</th><th>Score</th></tr>
+            <tr><td>Both addresses CLEAN (no exposure)</td><td class="rl-low">0</td></tr>
+            <tr><td>Minor indirect exposure (exchange, ATM)</td><td class="rl-low">1–3</td></tr>
+            <tr><td>Moderate exposure (gambling, mixer-adjacent)</td><td class="rl-mid">4–6</td></tr>
+            <tr><td>Direct exposure to illicit service (darknet, scam)</td><td class="rl-high">7–8</td></tr>
+            <tr><td>Sanctions address / Ransomware / Direct criminal</td><td class="rl-high">9–10</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-title">Decision Matrix</div>
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <table class="risk-matrix">
+            <tr><th>Combined Score</th><th>Decision</th><th>Automated?</th><th>Actions</th></tr>
+            <tr>
+              <td class="rl-low"><strong>0.0 – 3.0</strong></td>
+              <td><strong>Approve</strong></td>
+              <td>✓ Auto</td>
+              <td>Proceed, record assessment</td>
+            </tr>
+            <tr>
+              <td class="rl-mid"><strong>3.1 – 5.0</strong></td>
+              <td><strong>Approve with monitoring</strong></td>
+              <td>✓ Auto</td>
+              <td>Proceed, flag for ongoing monitoring</td>
+            </tr>
+            <tr>
+              <td class="rl-mid"><strong>5.1 – 7.0</strong></td>
+              <td><strong>Manual review</strong></td>
+              <td>✗ Manual</td>
+              <td>Compliance officer reviews all factors, may request additional info</td>
+            </tr>
+            <tr>
+              <td class="rl-high"><strong>7.1 – 8.5</strong></td>
+              <td><strong>Reject / Escalate</strong></td>
+              <td>✗ Manual</td>
+              <td>Reject or escalate to MLRO, consider SAR</td>
+            </tr>
+            <tr>
+              <td class="rl-high"><strong>8.6 – 10.0</strong></td>
+              <td><strong>Reject + Freeze</strong></td>
+              <td>✗ Manual</td>
+              <td>Reject, freeze funds, file SAR, report to FIU</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:20px;color:#aaa;font-size:11px;margin-top:20px">
+        This risk model is illustrative for demo purposes. Production risk scoring should be calibrated to your institution's regulatory requirements and risk appetite.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchView(view) {
+  document.querySelectorAll('.view-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.view-page').forEach(function(p) { p.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('view-' + view).classList.add('active');
+}
+</script>
+
+</body>
+</html>
