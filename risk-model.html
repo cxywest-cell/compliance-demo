@@ -176,17 +176,26 @@
           These are hard overrides. If any trigger fires, scoring is bypassed entirely —
           they cannot be averaged away by other low scores.
         </p>
-        <div class="red-flag-list">
-          <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>Sanctions match</strong> (OFAC / UN / EU / HMT) on customer, UBO, or counterparty → <strong>HARD REJECT</strong></div></div>
-          <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>FATF blacklisted jurisdiction</strong> (DPRK, Iran, Myanmar) → <strong>HARD REJECT</strong></div></div>
-          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Direct mixer / tumbler exposure</strong> (Elliptic) → <strong>MANDATORY EDD</strong></div></div>
-          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Structuring detected</strong> — sub-threshold splitting → <strong>MANDATORY REVIEW</strong></div></div>
-          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>PEP with unverified Source of Wealth</strong> → <strong>MANDATORY EDD</strong></div></div>
-          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Unregistered VASP counterparty</strong> in regulated jurisdiction → <strong>MANDATORY REVIEW</strong></div></div>
+        <div class="sub-card">
+          <div class="sub-card-title">🔍 Entity Screening Flags</div>
+          <div style="font-size:10px;color:#aaa;margin-bottom:8px"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-notabene">Notabene</span> — sanctions, PEP, jurisdiction, VASP registration</div>
+          <div class="red-flag-list">
+            <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>Sanctions match</strong> (OFAC / UN / EU / HMT) on customer, UBO, or counterparty → <strong>HARD REJECT</strong></div></div>
+            <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>FATF blacklisted jurisdiction</strong> (DPRK, Iran, Myanmar) → <strong>HARD REJECT</strong></div></div>
+            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>PEP with unverified Source of Wealth</strong> → <strong>MANDATORY EDD</strong></div></div>
+            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Unregistered VASP counterparty</strong> in regulated jurisdiction → <strong>MANDATORY REVIEW</strong></div></div>
+          </div>
         </div>
         <div class="sub-card">
-          <div class="sub-card-title">Sample Result</div>
-          <div style="font-size:12px;color:#16a34a;font-weight:600">✓ No red flags triggered — proceed to scoring.</div>
+          <div class="sub-card-title">⛓ On-chain Screening Flags</div>
+          <div style="font-size:10px;color:#aaa;margin-bottom:8px"><span class="ds-badge ds-elliptic">Elliptic</span> <span class="ds-badge ds-internal">Internal</span> — address exposure, tx patterns</div>
+          <div class="red-flag-list">
+            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Direct mixer / tumbler exposure</strong> (Elliptic) → <strong>MANDATORY EDD</strong></div></div>
+            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Structuring detected</strong> — sub-threshold splitting → <strong>MANDATORY REVIEW</strong></div></div>
+          </div>
+        </div>
+        <div class="sub-card" style="background:#f0fdf4;border-color:#bbf7d0">
+          <div style="font-size:12px;color:#16a34a;font-weight:600">✓ All screening passed — proceed to scoring.</div>
         </div>
       </div>
     </div>
