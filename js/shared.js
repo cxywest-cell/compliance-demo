@@ -1101,6 +1101,7 @@ function piiBlock(title, color, pii) {
   if (pii.name !== '—') rows += piiRow('Name', pii.name);
   if (pii.dob !== '—') rows += piiRow('DOB', pii.dob);
   if (pii.pob !== '—') rows += piiRow('Place of Birth', pii.pob);
+  if (pii.customerId && pii.customerId !== '—') rows += piiRow('Customer ID', pii.customerId);
   if (pii.nationalId !== '—') rows += piiRow('National ID (' + pii.nationalIdType + ')', pii.nationalId);
   if (pii.address !== '—') rows += piiRow('Address', pii.address);
   if (pii.account !== '—') rows += piiRow('Account', pii.account, true);
@@ -1139,20 +1140,29 @@ function extractPII(person, kind) {
   var persons = person[personKey] || person[personsKey];
 
   if (persons && Array.isArray(persons) && persons.length > 0) {
+    var isLegal = !persons[0].naturalPerson && !!persons[0].legalPerson;
     var np = persons[0].naturalPerson || persons[0].legalPerson || persons[0];
     if (np) {
-      // Name
+      // Name — naturalPerson uses primary/secondary, legalPerson uses legalPersonName
       if (np.name && np.name.nameIdentifier) {
         var ids = np.name.nameIdentifier;
         if (Array.isArray(ids) && ids.length > 0) {
-          result.name = [ids[0].secondaryIdentifier, ids[0].primaryIdentifier].filter(Boolean).join(' ') ||
-                        ids[0].nameIdentifier || ids[0].primaryIdentifier || '—';
+          if (isLegal) {
+            result.name = ids[0].legalPersonName || ids[0].nameIdentifier || '—';
+          } else {
+            result.name = [ids[0].secondaryIdentifier, ids[0].primaryIdentifier].filter(Boolean).join(' ') ||
+                          ids[0].nameIdentifier || ids[0].primaryIdentifier || '—';
+          }
         }
       }
-      // Date and place of birth
+      // Date and place of birth (naturalPerson only)
       if (np.dateAndPlaceOfBirth) {
         result.dob = np.dateAndPlaceOfBirth.dateOfBirth || result.dob;
         result.pob = np.dateAndPlaceOfBirth.placeOfBirth || '—';
+      }
+      // Customer identification
+      if (np.customerIdentification) {
+        result.customerId = np.customerIdentification;
       }
       // National identification
       if (np.nationalIdentification) {
