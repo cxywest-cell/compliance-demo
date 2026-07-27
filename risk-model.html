@@ -18,31 +18,9 @@
   .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
-  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; max-width: 960px; margin: 0 auto; width: 100%; }
 
-  /* Tabs */
-  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 0; }
-  .view-tab { padding: 10px 18px; cursor: pointer; font-size: 12px; font-weight: 600; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
-  .view-tab:hover { color: #1a1a1a; }
-  .view-tab.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
-  .view-page { display: none; }
-  .view-page.active { display: block; }
-
-  /* Cards */
-  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
-  .card-header { font-size: 12px; font-weight: 600; color: #1a1a1a; background: #fafafa; padding: 10px 14px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; }
-  .card-body { padding: 14px; }
-  .section-title { font-size: 13px; font-weight: 700; margin: 20px 0 10px; color: #1a1a1a; }
-  .section-title:first-child { margin-top: 0; }
-
-  /* Risk gauge */
-  .risk-gauge-container { position: relative; display: flex; align-items: center; justify-content: center; gap: 30px; }
-  .risk-gauge { position: relative; width: 180px; height: 180px; }
-  .risk-score-big { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-  .risk-score-big .num { font-size: 48px; font-weight: 800; line-height: 1; }
-  .risk-score-big .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-
-  /* Risk level colors */
+  /* Risk levels */
   .rl-low { color: #16a34a; }
   .rl-mid { color: #d97706; }
   .rl-high { color: #dc2626; }
@@ -50,24 +28,74 @@
   .bg-mid { background: #fef3c7; }
   .bg-high { background: #fee2e2; }
 
-  /* Factor grid */
-  .factor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-  .factor-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; border-left: 4px solid #e0e0e0; }
-  .factor-card.low { border-left-color: #16a34a; }
-  .factor-card.mid { border-left-color: #d97706; }
-  .factor-card.high { border-left-color: #dc2626; }
-  .factor-card .fc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .factor-card .fc-title { font-size: 12px; font-weight: 700; }
-  .factor-card .fc-score { font-size: 24px; font-weight: 800; }
-  .factor-card .fc-source { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-  .factor-card .fc-desc { font-size: 11px; color: #666; line-height: 1.5; }
-  .factor-card .fc-data { font-size: 10px; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
-  .factor-card .fc-data .row { display: flex; justify-content: space-between; padding: 2px 0; }
-  .factor-card .fc-data .k { color: #888; }
-  .factor-card .fc-data .v { color: #1a1a1a; font-weight: 500; }
+  /* Hero score */
+  .hero { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 28px; margin-bottom: 20px; text-align: center; }
+  .hero-score { font-size: 64px; font-weight: 800; line-height: 1; }
+  .hero-label { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; margin-top: 8px; }
+  .hero-signal { display: inline-block; margin-top: 12px; padding: 6px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; }
+  .hero-context { font-size: 11px; color: #aaa; margin-top: 12px; }
 
-  /* Data source badges */
-  .ds-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  /* Story sections */
+  .story-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; overflow: hidden; transition: all 0.2s; }
+  .story-section.expanded { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .story-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .story-header:hover { background: #fafafa; }
+  .story-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+  .story-num.green { background: #dcfce7; color: #16a34a; }
+  .story-num.purple { background: #f0efff; color: #5b4cdb; }
+  .story-num.blue { background: #dbeafe; color: #1e40af; }
+  .story-info { flex: 1; }
+  .story-title { font-size: 14px; font-weight: 700; }
+  .story-summary { font-size: 12px; color: #888; margin-top: 2px; }
+  .story-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 4px; flex-shrink: 0; }
+  .story-chevron { font-size: 14px; color: #ccc; transition: transform 0.2s; flex-shrink: 0; }
+  .story-section.expanded .story-chevron { transform: rotate(90deg); }
+  .story-body { display: none; padding: 0 20px 20px; border-top: 1px solid #f0f0f0; margin-top: 0; }
+  .story-section.expanded .story-body { display: block; padding-top: 16px; }
+
+  /* Inside expanded content */
+  .sub-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; margin-top: 12px; }
+  .sub-card-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .factor-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.1s; }
+  .factor-row:last-child { border-bottom: none; }
+  .factor-row:hover { background: #fff; border-radius: 6px; padding-left: 8px; padding-right: 8px; }
+  .factor-row.expanded .factor-detail { display: block; }
+  .factor-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .factor-dot.low { background: #16a34a; }
+  .factor-dot.mid { background: #d97706; }
+  .factor-dot.high { background: #dc2626; }
+  .factor-name { flex: 1; font-size: 13px; font-weight: 600; }
+  .factor-weight { font-size: 10px; color: #aaa; }
+  .factor-score { font-size: 20px; font-weight: 800; width: 30px; text-align: right; }
+  .factor-detail { display: none; padding: 12px 0 8px 22px; }
+  .factor-detail .fd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+  .factor-detail .fd-k { color: #888; }
+  .factor-detail .fd-v { color: #1a1a1a; font-weight: 500; }
+  .factor-detail .fd-desc { font-size: 11px; color: #666; margin-bottom: 8px; line-height: 1.5; }
+
+  /* Red flags list */
+  .red-flag-list { display: flex; flex-direction: column; gap: 6px; }
+  .red-flag-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
+  .red-flag-item.reject { background: #fef2f2; border: 1px solid #fecaca; }
+  .red-flag-item.edd { background: #fffbeb; border: 1px solid #fde68a; }
+  .red-flag-item .rf-icon { font-weight: 700; flex-shrink: 0; font-size: 14px; }
+  .red-flag-item.reject .rf-icon { color: #dc2626; }
+  .red-flag-item.edd .rf-icon { color: #d97706; }
+
+  /* Classification gate */
+  .gate-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .gate-col { border-radius: 8px; padding: 16px; }
+  .gate-col.inst { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .gate-col.qual { background: #fffbeb; border: 1px solid #fde68a; }
+  .gate-col-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .gate-col-sub { font-size: 10px; color: #888; margin-bottom: 10px; }
+  .gate-col .gc-item { font-size: 11px; padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+  .gate-col .gc-item .gc-check { color: #16a34a; font-weight: 700; }
+  .gate-col .gc-item .gc-x { color: #dc2626; font-weight: 700; }
+  .gate-col .gc-base { margin-top: 8px; font-size: 11px; font-weight: 700; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06); }
+
+  /* DS badges */
+  .ds-badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
   .ds-sumsub { background: #ede9fe; color: #5b21b6; }
   .ds-elliptic { background: #dbeafe; color: #1e40af; }
   .ds-notabene { background: #d1fae5; color: #065f46; }
@@ -75,68 +103,27 @@
   .ds-manual { background: #fef3c7; color: #92400e; }
   .ds-fatca { background: #fce7f3; color: #9d174d; }
 
-  /* Flow diagram */
-  .flow-diagram { display: flex; align-items: stretch; gap: 0; margin: 20px 0; }
-  .flow-layer { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 8px; }
-  .flow-layer-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #888; text-align: center; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; margin-bottom: 8px; }
-  .flow-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; font-size: 11px; text-align: center; transition: all 0.15s; }
-  .flow-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-  .flow-item .fi-name { font-weight: 600; }
-  .flow-item .fi-val { font-size: 10px; color: #888; margin-top: 2px; }
-  .flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 20px; color: #ccc; width: 30px; flex-shrink: 0; }
+  /* Tables */
+  .t-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
+  .t-table th { background: #fafafa; padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e0e0e0; font-size: 10px; text-transform: uppercase; color: #888; }
+  .t-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
 
-  /* Matrix table */
-  .risk-matrix { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .risk-matrix th { background: #fafafa; padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e0e0e0; font-size: 10px; text-transform: uppercase; color: #888; }
-  .risk-matrix td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
-  .risk-matrix tr:hover td { background: #f8f8ff; }
+  /* Decision bar */
+  .decision-bar { display: flex; height: 36px; border-radius: 8px; overflow: hidden; margin-top: 12px; }
+  .db-segment { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; text-align: center; line-height: 1.1; }
+  .db-segment.s1 { background: #16a34a; }
+  .db-segment.s2 { background: #65a30d; }
+  .db-segment.s3 { background: #d97706; }
+  .db-segment.s4 { background: #ea580c; }
+  .db-segment.s5 { background: #dc2626; }
+  .decision-legend { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-top: 4px; }
 
-  /* Weight bar */
-  .weight-bar { height: 6px; border-radius: 3px; background: #f0f0f0; overflow: hidden; margin-top: 4px; }
-  .weight-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  /* Formula */
+  .formula-box { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; margin-top: 12px; line-height: 1.8; }
 
-  /* Info note */
-  .info-note { background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #1e40af; margin-bottom: 16px; }
-  .warn-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #92400e; margin-bottom: 16px; }
-  .formula-box { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; margin: 12px 0; }
-
-  /* Decision flow */
-  .decision-flow { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
-  .df-step { display: flex; align-items: stretch; gap: 0; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
-  .df-num { display: flex; align-items: center; justify-content: center; width: 40px; background: #f0efff; font-size: 16px; font-weight: 700; color: #5b4cdb; flex-shrink: 0; }
-  .df-body { padding: 10px 14px; flex: 1; }
-  .df-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
-  .df-desc { font-size: 11px; color: #666; }
-  .df-result { display: flex; align-items: center; padding: 0 14px; font-size: 11px; font-weight: 600; flex-shrink: 0; }
-  .df-result.reject { background: #fee2e2; color: #dc2626; }
-  .df-result.edd { background: #fef3c7; color: #d97706; }
-  .df-result.review { background: #fef3c7; color: #d97706; }
-  .df-result.proceed { background: #dcfce7; color: #16a34a; }
-
-  /* Red flag override box */
-  .red-flag-box { background: #fff1f1; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
-  .red-flag-box .rf-title { font-size: 12px; font-weight: 700; color: #dc2626; margin-bottom: 8px; }
-  .red-flag-box .rf-item { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; font-size: 11px; }
-  .red-flag-box .rf-item .rf-icon { color: #dc2626; font-weight: 700; flex-shrink: 0; }
-
-  /* Customer classification gate */
-  .gate-box { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-  .gate-box .gate-title { font-size: 12px; font-weight: 700; margin-bottom: 12px; text-align: center; }
-  .gate-tree { display: flex; flex-direction: column; gap: 10px; }
-  .gate-node { display: flex; align-items: center; gap: 10px; }
-  .gate-node .gate-label { font-size: 11px; font-weight: 600; min-width: 180px; text-align: right; }
-  .gate-node .gate-arrow { color: #ccc; font-size: 18px; }
-  .gate-node .gate-value { font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: 600; }
-  .gate-node .gate-value.inst { background: #dcfce7; color: #16a34a; }
-  .gate-node .gate-value.qual { background: #fef3c7; color: #d97706; }
-  .gate-branch { margin-left: 24px; padding-left: 16px; border-left: 2px solid #e0e0e0; display: flex; flex-direction: column; gap: 6px; }
-  .gate-branch-item { font-size: 11px; color: #666; display: flex; align-items: center; gap: 6px; }
-  .gate-branch-item .check { color: #16a34a; font-weight: 700; }
-  .gate-branch-item .xmark { color: #dc2626; font-weight: 700; }
-
-  /* Two-column split */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 24px 0 12px; }
+  .section-label:first-child { margin-top: 0; }
+  .intro-text { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 20px; }
 </style>
 </head>
 <body>
@@ -160,788 +147,288 @@
   <div class="topbar">📊 Transaction Risk Assessment Model</div>
   <div class="content">
 
-    <div class="info-note">
-      This page illustrates how data from all integrated services and operational measures combine into a
-      unified transaction risk score following <strong>FATF-aligned best practices</strong>.
-      Data sources: <strong>Sumsub</strong> (KYC/AML), <strong>Elliptic</strong> (on-chain),
-      <strong>Notabene</strong> (Travel Rule), <strong>FATCA/CRS</strong> (tax classification),
-      plus internal operational measures.
+    <!-- ═══ HERO ═══ -->
+    <div class="hero">
+      <div class="hero-score rl-mid">4.9</div>
+      <div class="hero-label rl-mid">Medium-Low Risk</div>
+      <div class="hero-signal bg-low" style="color:#16a34a">APPROVE + MONITOR · Standard CDD</div>
+      <div class="hero-context">Sample: 3,500 USDT-TEST · Originator: Lorem Mockrime LLC (Qualified Investor) · No red flags triggered</div>
     </div>
 
-    <!-- View Tabs -->
-    <div class="view-tabs">
-      <div class="view-tab active" onclick="switchView('overview')">Overview</div>
-      <div class="view-tab" onclick="switchView('gate')">Customer Classification</div>
-      <div class="view-tab" onclick="switchView('factors')">Risk Factors</div>
-      <div class="view-tab" onclick="switchView('sources')">Data Sources</div>
-      <div class="view-tab" onclick="switchView('formula')">Scoring Formula</div>
+    <p class="intro-text">
+      Every transaction flows through a three-gate decision pipeline.
+      Click each gate below to inspect what was checked and why.
+    </p>
+
+    <!-- ═══ GATE 1: RED FLAGS ═══ -->
+    <div class="story-section expanded" id="sec-redflag">
+      <div class="story-header" onclick="toggleSection('sec-redflag')">
+        <div class="story-num green">✓</div>
+        <div class="story-info">
+          <div class="story-title">Gate 1 — Red Flag Override</div>
+          <div class="story-summary">6 absolute triggers checked · All passed</div>
+        </div>
+        <div class="story-badge bg-low" style="color:#16a34a">PASSED</div>
+        <div class="story-chevron">▶</div>
+      </div>
+      <div class="story-body">
+        <p style="font-size:12px;color:#666;margin-bottom:12px">
+          These are hard overrides. If any trigger fires, scoring is bypassed entirely —
+          they cannot be averaged away by other low scores.
+        </p>
+        <div class="red-flag-list">
+          <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>Sanctions match</strong> (OFAC / UN / EU / HMT) on customer, UBO, or counterparty → <strong>HARD REJECT</strong></div></div>
+          <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>FATF blacklisted jurisdiction</strong> (DPRK, Iran, Myanmar) → <strong>HARD REJECT</strong></div></div>
+          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Direct mixer / tumbler exposure</strong> (Elliptic) → <strong>MANDATORY EDD</strong></div></div>
+          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Structuring detected</strong> — sub-threshold splitting → <strong>MANDATORY REVIEW</strong></div></div>
+          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>PEP with unverified Source of Wealth</strong> → <strong>MANDATORY EDD</strong></div></div>
+          <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Unregistered VASP counterparty</strong> in regulated jurisdiction → <strong>MANDATORY REVIEW</strong></div></div>
+        </div>
+        <div class="sub-card">
+          <div class="sub-card-title">Sample Result</div>
+          <div style="font-size:12px;color:#16a34a;font-weight:600">✓ No red flags triggered — proceed to scoring.</div>
+        </div>
+      </div>
     </div>
 
-    <!-- ═══ OVERVIEW ═══ -->
-    <div class="view-page active" id="view-overview">
-
-      <!-- Decision flow -->
-      <div class="section-title">Decision Flow — How a Transaction is Assessed</div>
-      <div class="decision-flow">
-        <div class="df-step">
-          <div class="df-num">1</div>
-          <div class="df-body">
-            <div class="df-title">Red Flag Check</div>
-            <div class="df-desc">Hard override — if any red flag is triggered, scoring is bypassed entirely. These are absolute blocks that cannot be averaged away.</div>
-          </div>
-          <div class="df-result reject">Bypass Scoring</div>
+    <!-- ═══ GATE 2: RISK FACTORS ═══ -->
+    <div class="story-section" id="sec-factors">
+      <div class="story-header" onclick="toggleSection('sec-factors')">
+        <div class="story-num purple">6</div>
+        <div class="story-info">
+          <div class="story-title">Gate 2 — Weighted Risk Scoring</div>
+          <div class="story-summary">6 dimensions scored 0–10, weighted, summed → 4.9</div>
         </div>
-        <div class="df-step">
-          <div class="df-num">2</div>
-          <div class="df-body">
-            <div class="df-title">Weighted Scoring</div>
-            <div class="df-desc">If no red flag: calculate combined score across 6 risk dimensions, each independently scored 0–10 and weighted.</div>
-          </div>
-          <div class="df-result proceed">Score → Decision</div>
-        </div>
-        <div class="df-step">
-          <div class="df-num">3</div>
-          <div class="df-body">
-            <div class="df-title">CDD Level Assignment</div>
-            <div class="df-desc">Combined score maps to a CDD tier (Simplified / Standard / Enhanced) with specific required actions.</div>
-          </div>
-          <div class="df-result proceed">CDD Tier</div>
-        </div>
+        <div class="story-badge" style="background:#f0efff;color:#5b4cdb">3.50 WEIGHTED</div>
+        <div class="story-chevron">▶</div>
       </div>
+      <div class="story-body">
+        <p style="font-size:12px;color:#666;margin-bottom:8px">
+          Each dimension is independently scored then weighted. Click any factor for details.
+        </p>
+        <div class="formula-box">
+Combined = (Customer × 0.25) + (Counterparty × 0.20) + (Geographic × 0.15)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (Transaction × 0.15) + (Blockchain × 0.20) + (Asset × 0.05)
+        </div>
 
-      <!-- Red flag box -->
-      <div class="section-title">Step 1 — Red Flag Override System</div>
-      <div class="red-flag-box">
-        <div class="rf-title">⚠ Hard Override Triggers — any of these bypasses the scoring entirely</div>
-        <div class="rf-item"><span class="rf-icon">✕</span> <strong>Sanctions match</strong> (OFAC, UN, EU, HMT) on customer, UBO, or counterparty → HARD REJECT</div>
-        <div class="rf-item"><span class="rf-icon">✕</span> <strong>FATF blacklisted jurisdiction</strong> (DPRK, Iran, Myanmar) in customer or counterparty country → HARD REJECT</div>
-        <div class="rf-item"><span class="rf-icon">⚠</span> <strong>Direct mixer/tumbler exposure</strong> (Elliptic) on source address → MANDATORY EDD</div>
-        <div class="rf-item"><span class="rf-icon">⚠</span> <strong>Structuring detected</strong> — multiple sub-threshold transactions to evade reporting → MANDATORY REVIEW</div>
-        <div class="rf-item"><span class="rf-icon">⚠</span> <strong>PEP with unverified source of wealth</strong> → MANDATORY EDD</div>
-        <div class="rf-item"><span class="rf-icon">⚠</span> <strong>Unregistered VASP counterparty</strong> in a regulated jurisdiction → MANDATORY REVIEW</div>
-      </div>
+        <div style="margin-top:12px">
 
-      <!-- Sample score -->
-      <div class="section-title">Step 2 — Sample Weighted Score</div>
-      <div class="card">
-        <div class="card-header">Combined Risk Score — Sample Transaction</div>
-        <div class="card-body">
-          <div class="risk-gauge-container">
-            <div style="position:relative;width:180px;height:180px">
-              <svg width="180" height="180" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="85" fill="none" stroke="#f0f0f0" stroke-width="16"/>
-                <circle cx="100" cy="100" r="85" fill="none" stroke="#d97706" stroke-width="16"
-                  stroke-dasharray="534" stroke-dashoffset="200"
-                  transform="rotate(-90 100 100)" stroke-linecap="round"/>
-              </svg>
-              <div class="risk-score-big">
-                <div class="num rl-mid">4.9</div>
-                <div class="label">Medium-Low</div>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div style="font-size:11px;color:#888">Sample: 3,500 USDT-TEST transfer<br>Originator: Lorem Mockrime LLC (Active NFE → Qualified)<br>Beneficiary: John Doe<br>On-chain score: 3.1 (Elliptic, clean)</div>
+          <div class="factor-row" onclick="this.classList.toggle('expanded')">
+            <div class="factor-dot low"></div>
+            <div class="factor-name">Customer Risk</div>
+            <div class="factor-weight">25% · <span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-manual">SoW/SoF</span></div>
+            <div class="factor-score rl-low">4</div>
+            <div class="factor-detail">
+              <div class="fd-desc">Risk from originator entity — classification, verification depth, AML screening, source of wealth/funds.</div>
+              <div class="fd-row"><span class="fd-k">Investor Type</span><span class="fd-v">Qualified (Active NFE)</span></div>
+              <div class="fd-row"><span class="fd-k">KYB Status</span><span class="fd-v">Verified ✓</span></div>
+              <div class="fd-row"><span class="fd-k">AML Hit</span><span class="fd-v">None ✓</span></div>
+              <div class="fd-row"><span class="fd-k">SoW / SoF</span><span class="fd-v">Verified ✓</span></div>
+              <div class="fd-row"><span class="fd-k">UBO Screening</span><span class="fd-v">3 UBOs, all clean ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>4 × 0.25 = 1.00</strong></span></div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Data flow -->
-      <div class="section-title">Data Flow — How Data Combines</div>
-      <div class="card">
-        <div class="card-body">
-          <div class="flow-diagram">
-            <div class="flow-layer">
-              <div class="flow-layer-title">Data Collection</div>
-              <div class="flow-item"><div class="fi-name">FATCA/CRS</div><div class="fi-val">Entity classification</div></div>
-              <div class="flow-item"><div class="fi-name">Sumsub KYB</div><div class="fi-val">Identity verified ✓</div></div>
-              <div class="flow-item"><div class="fi-name">AML Screening</div><div class="fi-val">No hits ✓</div></div>
-              <div class="flow-item"><div class="fi-name">Elliptic</div><div class="fi-val">Score: 3.1</div></div>
-              <div class="flow-item"><div class="fi-name">Notabene</div><div class="fi-val">VASP confirmed ✓</div></div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-layer">
-              <div class="flow-layer-title">Red Flags</div>
-              <div class="flow-item" style="background:#dcfce7;border-color:#86efac"><div class="fi-name">No Red Flags</div><div class="fi-val">Proceed to scoring</div></div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-layer">
-              <div class="flow-layer-title">Risk Factors</div>
-              <div class="flow-item"><div class="fi-name">Customer</div><div class="fi-val">Score: 4 · 25%</div></div>
-              <div class="flow-item"><div class="fi-name">Counterparty</div><div class="fi-val">Score: 3 · 20%</div></div>
-              <div class="flow-item"><div class="fi-name">Geographic</div><div class="fi-val">Score: 5 · 15%</div></div>
-              <div class="flow-item"><div class="fi-name">Transaction</div><div class="fi-val">Score: 3 · 15%</div></div>
-              <div class="flow-item"><div class="fi-name">Blockchain</div><div class="fi-val">Score: 3 · 20%</div></div>
-              <div class="flow-item"><div class="fi-name">Asset/Product</div><div class="fi-val">Score: 2 · 5%</div></div>
-            </div>
-            <div class="flow-arrow">→</div>
-            <div class="flow-layer">
-              <div class="flow-layer-title">Decision</div>
-              <div class="flow-item" style="background:#dcfce7;border-color:#86efac"><div class="fi-name">Combined: 4.9</div><div class="fi-val">Standard CDD<br>Auto-approve + monitor</div></div>
+          <div class="factor-row" onclick="this.classList.toggle('expanded')">
+            <div class="factor-dot low"></div>
+            <div class="factor-name">Counterparty Risk</div>
+            <div class="factor-weight">20% · <span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-elliptic">Elliptic</span></div>
+            <div class="factor-score rl-low">3</div>
+            <div class="factor-detail">
+              <div class="fd-desc">Risk from receiving VASP and beneficiary — VASP tier, relationship confirmation, PII completeness.</div>
+              <div class="fd-row"><span class="fd-k">VASP Known</span><span class="fd-v">Yes ✓ (Tier 1)</span></div>
+              <div class="fd-row"><span class="fd-k">Relationship</span><span class="fd-v">Confirmed ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Beneficiary PII</span><span class="fd-v">Full IVMS101 ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>3 × 0.20 = 0.60</strong></span></div>
             </div>
           </div>
+
+          <div class="factor-row" onclick="this.classList.toggle('expanded')">
+            <div class="factor-dot mid"></div>
+            <div class="factor-name">Geographic Risk</div>
+            <div class="factor-weight">15% · <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-manual">FATF</span></div>
+            <div class="factor-score rl-mid">5</div>
+            <div class="factor-detail">
+              <div class="fd-desc">Risk from jurisdictions — customer country, counterparty country, cross-border nature, FATF lists.</div>
+              <div class="fd-row"><span class="fd-k">Originator Country</span><span class="fd-v">UAE</span></div>
+              <div class="fd-row"><span class="fd-k">Counterparty Country</span><span class="fd-v">UAE</span></div>
+              <div class="fd-row"><span class="fd-k">FATF Status</span><span class="fd-v">Neither blacklisted ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Cross-Border</span><span class="fd-v">No (domestic)</span></div>
+              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>5 × 0.15 = 0.75</strong></span></div>
+            </div>
+          </div>
+
+          <div class="factor-row" onclick="this.classList.toggle('expanded')">
+            <div class="factor-dot low"></div>
+            <div class="factor-name">Transaction Risk</div>
+            <div class="factor-weight">15% · <span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-internal">Internal</span></div>
+            <div class="factor-score rl-low">3</div>
+            <div class="factor-detail">
+              <div class="fd-desc">Amount vs threshold, Travel Rule compliance, PII completeness, structuring and velocity anomalies.</div>
+              <div class="fd-row"><span class="fd-k">Amount</span><span class="fd-v">3,500 USD (at threshold)</span></div>
+              <div class="fd-row"><span class="fd-k">Travel Rule</span><span class="fd-v">Compliant ✓</span></div>
+              <div class="fd-row"><span class="fd-k">PII Complete</span><span class="fd-v">Full IVMS101 ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Structuring</span><span class="fd-v">Not detected ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>3 × 0.15 = 0.45</strong></span></div>
+            </div>
+          </div>
+
+          <div class="factor-row" onclick="this.classList.toggle('expanded')">
+            <div class="factor-dot low"></div>
+            <div class="factor-name">Blockchain Risk</div>
+            <div class="factor-weight">20% · <span class="ds-badge ds-elliptic">Elliptic</span></div>
+            <div class="factor-score rl-low">3</div>
+            <div class="factor-detail">
+              <div class="fd-desc">On-chain risk — exposure to mixers, darknet, ransomware, sanctions addresses on source/destination.</div>
+              <div class="fd-row"><span class="fd-k">Source Address</span><span class="fd-v">Score: 3.1 (Low)</span></div>
+              <div class="fd-row"><span class="fd-k">Settlement Address</span><span class="fd-v">Score: 2.8 (Low)</span></div>
+              <div class="fd-row"><span class="fd-k">Categories</span><span class="fd-v">None flagged ✓</span></div>
+              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>3 × 0.20 = 0.60</strong></span></div>
+            </div>
+          </div>
+
+          <div class="factor-row" onclick="this.classList.toggle('expanded')">
+            <div class="factor-dot low"></div>
+            <div class="factor-name">Asset / Product Risk</div>
+            <div class="factor-weight">5% · <span class="ds-badge ds-internal">Internal</span></div>
+            <div class="factor-score rl-low">2</div>
+            <div class="factor-detail">
+              <div class="fd-desc">Asset type (stablecoin vs privacy coin) and wallet type (custodial vs unhosted).</div>
+              <div class="fd-row"><span class="fd-k">Asset Type</span><span class="fd-v">USDT (stablecoin, low)</span></div>
+              <div class="fd-row"><span class="fd-k">Wallet Type</span><span class="fd-v">Custodial (both sides)</span></div>
+              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>2 × 0.05 = 0.10</strong></span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="sub-card" style="background:#f0efff;border-color:#ddd6fe">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:13px;font-weight:700">Combined Score</div>
+            <div style="font-size:28px;font-weight:800" class="rl-low">3.50</div>
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:4px">1.00 + 0.60 + 0.75 + 0.45 + 0.60 + 0.10 = 3.50 → Medium-Low → Standard CDD</div>
         </div>
       </div>
-
-      <!-- CDD tiers -->
-      <div class="section-title">Step 3 — CDD Level Decision Tiers</div>
-      <div class="card">
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr>
-              <th>Score</th>
-              <th>Level</th>
-              <th>Action</th>
-              <th>CDD Level</th>
-              <th>Automated?</th>
-            </tr>
-            <tr>
-              <td><strong>0.0 – 2.0</strong></td>
-              <td class="rl-low"><strong>Low</strong></td>
-              <td>Auto-approve</td>
-              <td><strong>Simplified</strong></td>
-              <td>✓ Auto</td>
-            </tr>
-            <tr>
-              <td><strong>2.1 – 4.0</strong></td>
-              <td class="rl-low"><strong>Medium-Low</strong></td>
-              <td>Auto-approve + ongoing monitoring</td>
-              <td><strong>Standard</strong></td>
-              <td>✓ Auto</td>
-            </tr>
-            <tr>
-              <td><strong>4.1 – 6.0</strong></td>
-              <td class="rl-mid"><strong>Medium</strong></td>
-              <td>Manual review by compliance officer</td>
-              <td><strong>Standard</strong></td>
-              <td>✗ Manual</td>
-            </tr>
-            <tr>
-              <td><strong>6.1 – 8.0</strong></td>
-              <td class="rl-high"><strong>High</strong></td>
-              <td>EDD + senior approval required</td>
-              <td><strong>Enhanced</strong></td>
-              <td>✗ Manual</td>
-            </tr>
-            <tr>
-              <td><strong>8.1 – 10.0</strong></td>
-              <td class="rl-high"><strong>Critical</strong></td>
-              <td>Reject / Escalate / SAR filing / Freeze</td>
-              <td><strong>Blocked</strong></td>
-              <td>✗ Manual</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-
     </div>
 
-    <!-- ═══ CUSTOMER CLASSIFICATION ═══ -->
-    <div class="view-page" id="view-gate">
-
-      <div class="info-note">
-        All customers are <strong>corporate entities</strong>. The CRS Entity Self-Certification form is the
-        first classification gate — it determines the investor category, which in turn determines the
-        Customer Risk base score and what additional verification is required.
-      </div>
-
-      <div class="section-title">Customer Classification Gate</div>
-      <div class="gate-box">
-        <div class="gate-title">CRS Entity Self-Certification → Investor Category</div>
-        <div class="gate-tree">
-
-          <div class="gate-node">
-            <div class="gate-label">CRS Classification:</div>
-            <div class="gate-arrow">→</div>
-            <div class="gate-value inst">Financial Institution / Investment Entity</div>
-          </div>
-          <div class="gate-branch">
-            <div class="gate-branch-item"><span class="check">→</span> <strong>Institutional Investor</strong> path</div>
-            <div class="gate-branch-item"><span class="check">✓</span> KYB: verify license, regulatory registration</div>
-            <div class="gate-branch-item"><span class="check">✓</span> Entity screening (Sumsub AML)</div>
-            <div class="gate-branch-item"><span class="xmark">✕</span> Source of Wealth: NOT required</div>
-            <div class="gate-branch-item"><span class="xmark">✕</span> Source of Funds: NOT required</div>
-            <div class="gate-branch-item"><span class="check">✓</span> UBO structure: required (CRS controlling persons)</div>
-            <div class="gate-branch-item" style="color:#16a34a;font-weight:600">→ Customer Risk base: LOW (1–2)</div>
-          </div>
-
+    <!-- ═══ GATE 3: DECISION ═══ -->
+    <div class="story-section" id="sec-decision">
+      <div class="story-header" onclick="toggleSection('sec-decision')">
+        <div class="story-num blue">3</div>
+        <div class="story-info">
+          <div class="story-title">Gate 3 — CDD Level Decision</div>
+          <div class="story-summary">Score maps to one of 5 tiers → determines required due diligence</div>
         </div>
-        <hr style="border:none;border-top:1px solid #e0e0e0;margin:16px 0">
-        <div class="gate-tree">
-
-          <div class="gate-node">
-            <div class="gate-label">CRS Classification:</div>
-            <div class="gate-arrow">→</div>
-            <div class="gate-value qual">Active NFE or Passive NFE</div>
-          </div>
-          <div class="gate-branch">
-            <div class="gate-branch-item"><span class="check">→</span> <strong>Qualified Investor</strong> path</div>
-            <div class="gate-branch-item"><span class="check">✓</span> KYB: verify incorporation, good standing</div>
-            <div class="gate-branch-item"><span class="check">✓</span> Entity screening (Sumsub AML)</div>
-            <div class="gate-branch-item"><span class="check">✓</span> Source of Wealth: <strong>REQUIRED</strong> (documentary proof)</div>
-            <div class="gate-branch-item"><span class="check">✓</span> Source of Funds: <strong>REQUIRED</strong> (documentary proof)</div>
-            <div class="gate-branch-item"><span class="check">✓</span> Financial threshold proof (income / net worth)</div>
-            <div class="gate-branch-item"><span class="check">✓</span> UBO structure: <strong>required + deeper screening</strong></div>
-            <div class="gate-branch-item" style="color:#d97706;font-weight:600">→ Customer Risk base: MEDIUM (3–4)</div>
-          </div>
-
-          <div class="warn-note" style="margin-top:12px">
-            <strong>Passive NFE special case:</strong> If CRS classification is Passive NFE, all controlling persons (UBOs)
-            must be individually screened against sanctions / PEP / crime lists. A single UBO hit elevates the
-            entire customer to High Risk regardless of entity-level screening.
-          </div>
-
-        </div>
+        <div class="story-badge bg-low" style="color:#16a34a">STANDARD</div>
+        <div class="story-chevron">▶</div>
       </div>
-
-      <!-- Onboarding data flow -->
-      <div class="section-title">Onboarding Data Requirements by Investor Type</div>
-      <div class="card">
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr>
-              <th>Requirement</th>
-              <th>Institutional Investor</th>
-              <th>Qualified Investor</th>
-              <th>Source</th>
-            </tr>
-            <tr>
-              <td>CRS Entity Self-Certification</td>
-              <td>✓ Required</td>
-              <td>✓ Required</td>
-              <td><span class="ds-badge ds-fatca">FATCA/CRS</span></td>
-            </tr>
-            <tr>
-              <td>FATCA Classification (Chapter 4)</td>
-              <td>✓ Required</td>
-              <td>✓ Required</td>
-              <td><span class="ds-badge ds-fatca">FATCA/CRS</span></td>
-            </tr>
-            <tr>
-              <td>Regulatory License / Registration</td>
-              <td>✓ Required</td>
-              <td>—</td>
-              <td><span class="ds-badge ds-manual">Operational</span></td>
-            </tr>
-            <tr>
-              <td>Entity AML Screening</td>
-              <td>✓ Required</td>
-              <td>✓ Required</td>
-              <td><span class="ds-badge ds-sumsub">Sumsub</span></td>
-            </tr>
-            <tr>
-              <td>UBO Structure + Controlling Persons</td>
-              <td>✓ Required</td>
-              <td>✓ Required (deeper)</td>
-              <td><span class="ds-badge ds-fatca">FATCA/CRS</span> <span class="ds-badge ds-manual">Operational</span></td>
-            </tr>
-            <tr>
-              <td>UBO Individual Screening</td>
-              <td>If Passive NFE</td>
-              <td>✓ All UBOs</td>
-              <td><span class="ds-badge ds-sumsub">Sumsub</span></td>
-            </tr>
-            <tr>
-              <td>Source of Wealth (SoW)</td>
-              <td>—</td>
-              <td>✓ Required</td>
-              <td><span class="ds-badge ds-manual">Operational</span></td>
-            </tr>
-            <tr>
-              <td>Source of Funds (SoF)</td>
-              <td>—</td>
-              <td>✓ Required</td>
-              <td><span class="ds-badge ds-manual">Operational</span></td>
-            </tr>
-            <tr>
-              <td>Financial Threshold Proof</td>
-              <td>—</td>
-              <td>✓ Required</td>
-              <td><span class="ds-badge ds-manual">Operational</span></td>
-            </tr>
-            <tr>
-              <td>KYC Level Achieved</td>
-              <td>Standard</td>
-              <td>Standard + SoW/SoF</td>
-              <td><span class="ds-badge ds-internal">Internal</span></td>
-            </tr>
-          </table>
+      <div class="story-body">
+        <div class="decision-bar">
+          <div class="db-segment s1" style="width:20%">0–2<br>Low</div>
+          <div class="db-segment s2" style="width:20%">2–4<br>Med-Low</div>
+          <div class="db-segment s3" style="width:20%">4–6<br>Medium</div>
+          <div class="db-segment s4" style="width:20%">6–8<br>High</div>
+          <div class="db-segment s5" style="width:20%">8–10<br>Critical</div>
         </div>
-      </div>
+        <div class="decision-legend">
+          <span>0.0</span><span>2.0</span><span>4.0</span><span>6.0</span><span>8.0</span><span>10.0</span>
+        </div>
 
+        <table class="t-table">
+          <tr><th>Score</th><th>Level</th><th>Action</th><th>CDD</th><th>Auto?</th></tr>
+          <tr><td><strong>0.0–2.0</strong></td><td class="rl-low"><strong>Low</strong></td><td>Auto-approve</td><td>Simplified</td><td>✓</td></tr>
+          <tr style="background:#f0fdf4"><td><strong>2.1–4.0</strong></td><td class="rl-low"><strong>Med-Low</strong></td><td>Auto-approve + monitor</td><td>Standard</td><td>✓</td></tr>
+          <tr><td><strong>4.1–6.0</strong></td><td class="rl-mid"><strong>Medium</strong></td><td>Manual review</td><td>Standard</td><td>✗</td></tr>
+          <tr><td><strong>6.1–8.0</strong></td><td class="rl-high"><strong>High</strong></td><td>EDD + senior approval</td><td>Enhanced</td><td>✗</td></tr>
+          <tr><td><strong>8.1–10</strong></td><td class="rl-high"><strong>Critical</strong></td><td>Reject / Freeze / SAR</td><td>Blocked</td><td>✗</td></tr>
+        </table>
+      </div>
     </div>
 
-    <!-- ═══ RISK FACTORS ═══ -->
-    <div class="view-page" id="view-factors">
-      <div class="section-title">Six Risk Dimensions</div>
-      <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Each transaction is assessed across six independent risk dimensions. Each factor is independently scored 0–10,
-        then multiplied by its weight and summed. <strong>Red flag overrides (Step 1) take precedence over all scoring.</strong>
-      </p>
-
-      <div class="factor-grid">
-
-        <!-- 1. Customer Risk -->
-        <div class="factor-card low">
-          <div class="fc-header">
-            <div>
-              <div class="fc-title">1. Customer Risk</div>
-              <div class="fc-source">
-                <span class="ds-badge ds-sumsub">Sumsub</span>
-                <span class="ds-badge ds-fatca">FATCA/CRS</span>
-                <span class="ds-badge ds-manual">SoW/SoF</span>
-              </div>
-            </div>
-            <div class="fc-score rl-low">4</div>
-          </div>
-          <div class="fc-desc">
-            Risk from the originator entity's identity, classification, and verification depth.
-            Base score determined by CRS classification gate: Institutional (low base) vs Qualified (medium base).
-          </div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Investor Type</span><span class="v">Qualified (Active NFE)</span></div>
-            <div class="row"><span class="k">KYB Status</span><span class="v">Verified ✓</span></div>
-            <div class="row"><span class="k">AML Hit</span><span class="v">None ✓</span></div>
-            <div class="row"><span class="k">SoW / SoF</span><span class="v">Verified ✓</span></div>
-            <div class="row"><span class="k">UBO Screening</span><span class="v">3 UBOs, all clean ✓</span></div>
-            <div class="row"><span class="k">Weight</span><span class="v">25%</span></div>
-            <div class="weight-bar"><div class="weight-bar-fill" style="width:25%;background:#5b4cdb"></div></div>
-          </div>
+    <!-- ═══ CLASSIFICATION GATE ═══ -->
+    <div class="section-label">Foundation — Customer Classification</div>
+    <div class="story-section" id="sec-classify">
+      <div class="story-header" onclick="toggleSection('sec-classify')">
+        <div class="story-num purple">◇</div>
+        <div class="story-info">
+          <div class="story-title">CRS Classification → Investor Category</div>
+          <div class="story-summary">Determines Customer Risk base score & verification requirements</div>
         </div>
-
-        <!-- 2. Counterparty Risk -->
-        <div class="factor-card low">
-          <div class="fc-header">
-            <div>
-              <div class="fc-title">2. Counterparty Risk</div>
-              <div class="fc-source">
-                <span class="ds-badge ds-notabene">Notabene</span>
-                <span class="ds-badge ds-elliptic">Elliptic</span>
-              </div>
-            </div>
-            <div class="fc-score rl-low">3</div>
-          </div>
-          <div class="fc-desc">
-            Risk from the receiving VASP and beneficiary. Counterparty VASP tier, jurisdiction,
-            relationship confirmation, beneficiary address ownership.
-          </div>
-          <div class="fc-data">
-            <div class="row"><span class="k">VASP Known</span><span class="v">Yes ✓ (Tier 1)</span></div>
-            <div class="row"><span class="k">Relationship</span><span class="v">Confirmed ✓</span></div>
-            <div class="row"><span class="k">Beneficiary PII</span><span class="v">Full IVMS101 ✓</span></div>
-            <div class="row"><span class="k">Weight</span><span class="v">20%</span></div>
-            <div class="weight-bar"><div class="weight-bar-fill" style="width:20%;background:#5b4cdb"></div></div>
-          </div>
-        </div>
-
-        <!-- 3. Geographic Risk -->
-        <div class="factor-card mid">
-          <div class="fc-header">
-            <div>
-              <div class="fc-title">3. Geographic Risk</div>
-              <div class="fc-source">
-                <span class="ds-badge ds-fatca">FATCA/CRS</span>
-                <span class="ds-badge ds-internal">Internal</span>
-                <span class="ds-badge ds-manual">FATF Lists</span>
-              </div>
-            </div>
-            <div class="fc-score rl-mid">5</div>
-          </div>
-          <div class="fc-desc">
-            Risk from jurisdictions involved — customer country, counterparty country, cross-border nature.
-            Uses FATF black/grey lists and sanctions country lists.
-          </div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Originator Country</span><span class="v">UAE</span></div>
-            <div class="row"><span class="k">Counterparty Country</span><span class="v">UAE</span></div>
-            <div class="row"><span class="k">FATF Status</span><span class="v">Neither blacklisted ✓</span></div>
-            <div class="row"><span class="k">Cross-Border</span><span class="v">No (domestic)</span></div>
-            <div class="row"><span class="k">Tax Haven</span><span class="v">No ✓</span></div>
-            <div class="row"><span class="k">Weight</span><span class="v">15%</span></div>
-            <div class="weight-bar"><div class="weight-bar-fill" style="width:15%;background:#d97706"></div></div>
-          </div>
-        </div>
-
-        <!-- 4. Transaction Risk -->
-        <div class="factor-card low">
-          <div class="fc-header">
-            <div>
-              <div class="fc-title">4. Transaction Risk</div>
-              <div class="fc-source">
-                <span class="ds-badge ds-notabene">Notabene</span>
-                <span class="ds-badge ds-internal">Internal</span>
-              </div>
-            </div>
-            <div class="fc-score rl-low">3</div>
-          </div>
-          <div class="fc-desc">
-            Risk from transaction characteristics — amount vs threshold, Travel Rule compliance,
-            PII completeness, structuring and velocity anomalies.
-          </div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Amount</span><span class="v">3,500 USD (at threshold)</span></div>
-            <div class="row"><span class="k">Travel Rule</span><span class="v">Compliant ✓</span></div>
-            <div class="row"><span class="k">PII Complete</span><span class="v">Full IVMS101 ✓</span></div>
-            <div class="row"><span class="k">Structuring</span><span class="v">Not detected ✓</span></div>
-            <div class="row"><span class="k">Weight</span><span class="v">15%</span></div>
-            <div class="weight-bar"><div class="weight-bar-fill" style="width:15%;background:#16a34a"></div></div>
-          </div>
-        </div>
-
-        <!-- 5. Blockchain Risk -->
-        <div class="factor-card low">
-          <div class="fc-header">
-            <div>
-              <div class="fc-title">5. Blockchain Risk</div>
-              <div class="fc-source">
-                <span class="ds-badge ds-elliptic">Elliptic</span>
-              </div>
-            </div>
-            <div class="fc-score rl-low">3</div>
-          </div>
-          <div class="fc-desc">
-            On-chain risk from source and settlement addresses — exposure to illicit entities,
-            mixers, darknet, ransomware, sanctions addresses.
-          </div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Source Address</span><span class="v">Score: 3.1 (Low)</span></div>
-            <div class="row"><span class="k">Settlement Address</span><span class="v">Score: 2.8 (Low)</span></div>
-            <div class="row"><span class="k">Categories</span><span class="v">None flagged ✓</span></div>
-            <div class="row"><span class="k">Weight</span><span class="v">20%</span></div>
-            <div class="weight-bar"><div class="weight-bar-fill" style="width:20%;background:#16a34a"></div></div>
-          </div>
-        </div>
-
-        <!-- 6. Asset/Product Risk -->
-        <div class="factor-card low">
-          <div class="fc-header">
-            <div>
-              <div class="fc-title">6. Asset/Product Risk</div>
-              <div class="fc-source">
-                <span class="ds-badge ds-internal">Internal</span>
-              </div>
-            </div>
-            <div class="fc-score rl-low">2</div>
-          </div>
-          <div class="fc-desc">
-            Risk from the asset type and wallet type. Stablecoins are lower risk; privacy coins are high risk.
-            Custodial wallets are lower; unhosted unregistered are high.
-          </div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Asset Type</span><span class="v">USDT (stablecoin, low)</span></div>
-            <div class="row"><span class="k">Wallet Type</span><span class="v">Custodial (both sides)</span></div>
-            <div class="row"><span class="k">Weight</span><span class="v">5%</span></div>
-            <div class="weight-bar"><div class="weight-bar-fill" style="width:5%;background:#16a34a"></div></div>
-          </div>
-        </div>
-
+        <div class="story-chevron">▶</div>
       </div>
-
-      <!-- Factor contribution -->
-      <div class="section-title">Factor Contribution Summary</div>
-      <div class="card">
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Factor</th><th>Raw Score</th><th>Weight</th><th>Weighted</th><th>Data Sources</th></tr>
-            <tr><td>1. Customer Risk</td><td class="rl-low">4</td><td>25%</td><td><strong>1.00</strong></td><td><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-manual">SoW/SoF</span></td></tr>
-            <tr><td>2. Counterparty Risk</td><td class="rl-low">3</td><td>20%</td><td><strong>0.60</strong></td><td><span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-elliptic">Elliptic</span></td></tr>
-            <tr><td>3. Geographic Risk</td><td class="rl-mid">5</td><td>15%</td><td><strong>0.75</strong></td><td><span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-manual">FATF</span></td></tr>
-            <tr><td>4. Transaction Risk</td><td class="rl-low">3</td><td>15%</td><td><strong>0.45</strong></td><td><span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-internal">Internal</span></td></tr>
-            <tr><td>5. Blockchain Risk</td><td class="rl-low">3</td><td>20%</td><td><strong>0.60</strong></td><td><span class="ds-badge ds-elliptic">Elliptic</span></td></tr>
-            <tr><td>6. Asset/Product Risk</td><td class="rl-low">2</td><td>5%</td><td><strong>0.10</strong></td><td><span class="ds-badge ds-internal">Internal</span></td></tr>
-            <tr style="background:#fafafa"><td colspan="2"><strong>Combined</strong></td><td>100%</td><td class="rl-low"><strong>3.50</strong></td><td>— Medium-Low Risk — Standard CDD</td></tr>
-          </table>
+      <div class="story-body">
+        <p style="font-size:12px;color:#666;margin-bottom:4px">
+          All customers are corporate entities. The CRS Entity Self-Certification form is the first gate —
+          it determines investor category, which sets the Customer Risk base and what additional verification is needed.
+        </p>
+        <div class="gate-split">
+          <div class="gate-col inst">
+            <div class="gate-col-title" style="color:#16a34a">Institutional Investor</div>
+            <div class="gate-col-sub">CRS: Financial Institution / Investment Entity</div>
+            <div class="gc-item"><span class="gc-check">✓</span> KYB: license + registration</div>
+            <div class="gc-item"><span class="gc-check">✓</span> Entity AML screening</div>
+            <div class="gc-item"><span class="gc-x">✕</span> SoW: NOT required</div>
+            <div class="gc-item"><span class="gc-x">✕</span> SoF: NOT required</div>
+            <div class="gc-item"><span class="gc-check">✓</span> UBO structure (controlling persons)</div>
+            <div class="gc-base" style="color:#16a34a">Base Risk: LOW (1–2)</div>
+          </div>
+          <div class="gate-col qual">
+            <div class="gate-col-title" style="color:#d97706">Qualified Investor</div>
+            <div class="gate-col-sub">CRS: Active NFE or Passive NFE</div>
+            <div class="gc-item"><span class="gc-check">✓</span> KYB: incorporation + good standing</div>
+            <div class="gc-item"><span class="gc-check">✓</span> Entity AML screening</div>
+            <div class="gc-item"><span class="gc-check">✓</span> <strong>SoW: REQUIRED</strong></div>
+            <div class="gc-item"><span class="gc-check">✓</span> <strong>SoF: REQUIRED</strong></div>
+            <div class="gc-item"><span class="gc-check">✓</span> UBO structure + deeper screening</div>
+            <div class="gc-item"><span class="gc-check">✓</span> Financial threshold proof</div>
+            <div class="gc-base" style="color:#d97706">Base Risk: MEDIUM (3–4)</div>
+          </div>
+        </div>
+        <div class="sub-card" style="background:#fffbeb;border-color:#fde68a">
+          <div class="sub-card-title" style="color:#92400e">⚠ Passive NFE Special Case</div>
+          <div style="font-size:11px;color:#666">If CRS = Passive NFE, ALL controlling persons (UBOs) must be individually screened. A single UBO sanctions/PEP hit elevates the entire customer to High Risk regardless of entity-level screening.</div>
         </div>
       </div>
     </div>
 
     <!-- ═══ DATA SOURCES ═══ -->
-    <div class="view-page" id="view-sources">
-      <div class="section-title">Data Sources → Risk Inputs Mapping</div>
-      <p style="font-size:12px;color:#666;margin-bottom:16px">
-        Each service and operational measure provides specific data points that feed into the six risk dimensions.
-        <span class="ds-badge ds-manual">Operational</span> = manual/procedural, not automated via API.
-      </p>
-
-      <div class="factor-grid">
-
-        <!-- Sumsub KYC -->
-        <div class="factor-card" style="border-left-color:#5b21b6">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-sumsub">Sumsub</span> KYC / KYB</div></div></div>
-          <div class="fc-desc">Corporate identity verification and onboarding</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">KYB level, doc verification, incorporation</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Customer Risk</span></div>
-            <div class="row"><span class="k">API</span><span class="v">WebSDK + REST</span></div>
-            <div class="row"><span class="k">Demo Page</span><span class="v">/onboarding</span></div>
-          </div>
+    <div class="section-label">Reference</div>
+    <div class="story-section" id="sec-sources">
+      <div class="story-header" onclick="toggleSection('sec-sources')">
+        <div class="story-num blue">◈</div>
+        <div class="story-info">
+          <div class="story-title">Data Sources</div>
+          <div class="story-summary">8 sources across 4 services + operational measures</div>
         </div>
-
-        <!-- Sumsub AML -->
-        <div class="factor-card" style="border-left-color:#5b21b6">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-sumsub">Sumsub</span> AML Screening</div></div></div>
-          <div class="fc-desc">Entity + UBO sanctions, PEP, crime, adverse media</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">Hit type, risk rating, match score</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Customer Risk, Red Flag Override</span></div>
-            <div class="row"><span class="k">Categories</span><span class="v">Sanctions, Crime, Adverse Media, PEP</span></div>
-            <div class="row"><span class="k">Demo Page</span><span class="v">/screening</span></div>
-          </div>
-        </div>
-
-        <!-- FATCA/CRS -->
-        <div class="factor-card" style="border-left-color:#9d174d">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-fatca">FATCA/CRS</span> Self-Certification</div></div></div>
-          <div class="fc-desc">Entity tax classification — the investor category gate</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">FI/NFE classification, tax residency, UBO chain</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Customer Risk (gate), Geographic Risk</span></div>
-            <div class="row"><span class="k">Key Output</span><span class="v">Institutional vs Qualified determination</span></div>
-            <div class="row"><span class="k">Collection</span><span class="v">Self-cert form at onboarding</span></div>
-          </div>
-        </div>
-
-        <!-- Elliptic Address -->
-        <div class="factor-card" style="border-left-color:#1e40af">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-elliptic">Elliptic</span> Address Screening</div></div></div>
-          <div class="fc-desc">Blockchain wallet address risk assessment</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">Risk score (0–10), exposure categories</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Blockchain Risk, Red Flag Override</span></div>
-            <div class="row"><span class="k">Categories</span><span class="v">Mixer, Darknet, Ransomware, Sanctions, Theft</span></div>
-            <div class="row"><span class="k">Demo Page</span><span class="v">/monitoring</span></div>
-          </div>
-        </div>
-
-        <!-- Elliptic TX -->
-        <div class="factor-card" style="border-left-color:#1e40af">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-elliptic">Elliptic</span> Transaction Screening</div></div></div>
-          <div class="fc-desc">On-chain transaction risk scoring</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">TX-level risk score, source/dest exposure</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Blockchain Risk</span></div>
-            <div class="row"><span class="k">Inputs</span><span class="v">TX hash + output address</span></div>
-            <div class="row"><span class="k">Demo Page</span><span class="v">/monitoring</span></div>
-          </div>
-        </div>
-
-        <!-- Notabene PII -->
-        <div class="factor-card" style="border-left-color:#065f46">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-notabene">Notabene</span> Travel Rule PII</div></div></div>
-          <div class="fc-desc">Originator/beneficiary identity data (IVMS101)</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">Name, address, national ID, account number</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Counterparty Risk, Transaction Risk</span></div>
-            <div class="row"><span class="k">Supports</span><span class="v">naturalPerson, legalPerson (corporate)</span></div>
-            <div class="row"><span class="k">Demo Page</span><span class="v">/transfer-flow</span></div>
-          </div>
-        </div>
-
-        <!-- Notabene VASP -->
-        <div class="factor-card" style="border-left-color:#065f46">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-notabene">Notabene</span> VASP Network</div></div></div>
-          <div class="fc-desc">Counterparty VASP discovery and relationship status</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">VASP identity, jurisdiction, relationship</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Counterparty Risk, Geographic Risk</span></div>
-            <div class="row"><span class="k">Key check</span><span class="v">Address ownership confirmed?</span></div>
-            <div class="row"><span class="k">Demo Page</span><span class="v">/transfer-flow (Case 6)</span></div>
-          </div>
-        </div>
-
-        <!-- Operational -->
-        <div class="factor-card" style="border-left-color:#92400e">
-          <div class="fc-header"><div><div class="fc-title"><span class="ds-badge ds-manual">Operational</span> Manual Measures</div></div></div>
-          <div class="fc-desc">Compliance procedures beyond automated APIs</div>
-          <div class="fc-data">
-            <div class="row"><span class="k">Provides</span><span class="v">SoW/SoF verification, structuring analysis</span></div>
-            <div class="row"><span class="k">Feeds into</span><span class="v">Customer Risk, Transaction Risk</span></div>
-            <div class="row"><span class="k">Also</span><span class="v">FATF list checks, VASP tier assessment</span></div>
-            <div class="row"><span class="k">Method</span><span class="v">Document review + analyst judgment</span></div>
-          </div>
-        </div>
-
+        <div class="story-chevron">▶</div>
+      </div>
+      <div class="story-body">
+        <table class="t-table">
+          <tr><th>Source</th><th>Provides</th><th>Feeds Into</th></tr>
+          <tr><td><span class="ds-badge ds-sumsub">Sumsub</span> KYB</td><td>Identity verification, incorporation</td><td>Customer Risk</td></tr>
+          <tr><td><span class="ds-badge ds-sumsub">Sumsub</span> AML</td><td>Sanctions, PEP, crime, adverse media</td><td>Customer Risk, Red Flags</td></tr>
+          <tr><td><span class="ds-badge ds-fatca">FATCA/CRS</span></td><td>Entity classification, tax residency, UBO chain</td><td>Customer Gate, Geographic</td></tr>
+          <tr><td><span class="ds-badge ds-elliptic">Elliptic</span> Address</td><td>Wallet risk score (0–10), exposure categories</td><td>Blockchain Risk, Red Flags</td></tr>
+          <tr><td><span class="ds-badge ds-elliptic">Elliptic</span> Transaction</td><td>TX-level risk, source/dest exposure</td><td>Blockchain Risk</td></tr>
+          <tr><td><span class="ds-badge ds-notabene">Notabene</span> PII</td><td>IVMS101 identity data (originator/beneficiary)</td><td>Counterparty, Transaction</td></tr>
+          <tr><td><span class="ds-badge ds-notabene">Notabene</span> VASP</td><td>VASP identity, jurisdiction, relationship</td><td>Counterparty, Geographic</td></tr>
+          <tr><td><span class="ds-badge ds-manual">Operational</span></td><td>SoW/SoF verification, FATF lists, VASP tier</td><td>Customer, Transaction, Geographic</td></tr>
+        </table>
       </div>
     </div>
 
-    <!-- ═══ SCORING FORMULA ═══ -->
-    <div class="view-page" id="view-formula">
-      <div class="section-title">Weighted Scoring Model</div>
-      <div class="card">
-        <div class="card-body">
-          <p style="font-size:12px;margin-bottom:12px">
-            The combined transaction risk score is a weighted average of six independent factor scores.
-            Each factor is independently scored 0–10, then multiplied by its weight and summed.
-            <strong>Red flag overrides (Step 1) bypass this scoring entirely.</strong>
-          </p>
-          <div class="formula-box">
-Combined = (Customer × 0.25) + (Counterparty × 0.20) + (Geographic × 0.15)
-         + (Transaction × 0.15) + (Blockchain × 0.20) + (Asset/Product × 0.05)
-          </div>
-          <p style="font-size:11px;color:#888">Weights are configurable and should reflect your institution's risk appetite and regulatory requirements (VARA, FATF).</p>
-        </div>
-      </div>
-
-      <div class="section-title">Factor Scoring Details</div>
-
-      <!-- Customer Risk -->
-      <div class="card">
-        <div class="card-header">1. Customer Risk Score (0–10) — Weight: 25%</div>
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Condition</th><th>Score</th></tr>
-            <tr><td>Institutional Investor (FI) + KYB verified + No AML hits</td><td class="rl-low">0–1</td></tr>
-            <tr><td>Institutional + Adverse media only</td><td class="rl-low">2</td></tr>
-            <tr><td>Qualified Investor (Active NFE) + SoW/SoF verified + No hits</td><td class="rl-low">3–4</td></tr>
-            <tr><td>Qualified Investor + UBO PEP (SoW verified)</td><td class="rl-mid">5–6</td></tr>
-            <tr><td>Qualified Investor + Crime hit (any UBO)</td><td class="rl-high">7–8</td></tr>
-            <tr><td>Passive NFE + UBO sanctions hit</td><td class="rl-high">9–10</td></tr>
-            <tr><td>KYB incomplete / SoW/SoF unverifiable</td><td class="rl-high">8–10</td></tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Counterparty Risk -->
-      <div class="card">
-        <div class="card-header">2. Counterparty Risk Score (0–10) — Weight: 20%</div>
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Condition</th><th>Score</th></tr>
-            <tr><td>Tier 1 VASP + Address confirmed + Full PII</td><td class="rl-low">0–1</td></tr>
-            <tr><td>Tier 1 VASP + Address confirmed + Partial PII</td><td class="rl-low">2–3</td></tr>
-            <tr><td>Tier 2 VASP + Address confirmed</td><td class="rl-low">3–4</td></tr>
-            <tr><td>Known VASP + Address unconfirmed (manual confirm)</td><td class="rl-mid">4–5</td></tr>
-            <tr><td>Tier 3 VASP / Unregistered counterparty</td><td class="rl-mid">6–7</td></tr>
-            <tr><td>Unknown VASP / Self-hosted counterparty</td><td class="rl-high">8–9</td></tr>
-            <tr><td>Sanctioned VASP / High-risk jurisdiction VASP</td><td class="rl-high">10</td></tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Geographic Risk -->
-      <div class="card">
-        <div class="card-header">3. Geographic Risk Score (0–10) — Weight: 15%</div>
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Condition</th><th>Score</th></tr>
-            <tr><td>Domestic + FATF compliant jurisdiction</td><td class="rl-low">0–1</td></tr>
-            <tr><td>Cross-border + Both FATF compliant</td><td class="rl-low">2–3</td></tr>
-            <tr><td>Cross-border + One grey-listed jurisdiction</td><td class="rl-mid">4–5</td></tr>
-            <tr><td>Tax haven / Secrecy jurisdiction involved</td><td class="rl-mid">5–6</td></tr>
-            <tr><td>Crypto-restricted jurisdiction</td><td class="rl-high">7–8</td></tr>
-            <tr><td>FATF blacklisted jurisdiction</td><td class="rl-high">10</td><span class="ds-badge ds-manual">RED FLAG</span></tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Transaction Risk -->
-      <div class="card">
-        <div class="card-header">4. Transaction Risk Score (0–10) — Weight: 15%</div>
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Condition</th><th>Score</th></tr>
-            <tr><td>Below threshold + Full PII + Compliant</td><td class="rl-low">0–1</td></tr>
-            <tr><td>At threshold (3,500 USD) + Full PII + Compliant</td><td class="rl-low">2–3</td></tr>
-            <tr><td>Above threshold + Full PII + Compliant</td><td class="rl-low">3–4</td></tr>
-            <tr><td>PII incomplete / Pending relationship confirmation</td><td class="rl-mid">5–6</td></tr>
-            <tr><td>Velocity anomaly / Pattern deviation</td><td class="rl-mid">6–7</td></tr>
-            <tr><td>Structuring detected (sub-threshold splitting)</td><td class="rl-high">9–10</td><span class="ds-badge ds-manual">RED FLAG</span></tr>
-            <tr><td>Travel Rule non-compliant</td><td class="rl-high">8–10</td></tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Blockchain Risk -->
-      <div class="card">
-        <div class="card-header">5. Blockchain Risk Score (0–10) — Weight: 20%</div>
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Condition</th><th>Score</th></tr>
-            <tr><td>Both addresses CLEAN (no exposure)</td><td class="rl-low">0–1</td></tr>
-            <tr><td>Minor indirect exposure (exchange, ATM)</td><td class="rl-low">2–3</td></tr>
-            <tr><td>Moderate exposure (gambling, mixer-adjacent)</td><td class="rl-mid">4–6</td></tr>
-            <tr><td>Direct mixer/tumbler exposure</td><td class="rl-high">7–8</td><span class="ds-badge ds-manual">RED FLAG → EDD</span></tr>
-            <tr><td>Direct exposure to illicit service (darknet, scam)</td><td class="rl-high">8–9</td></tr>
-            <tr><td>Sanctions address / Ransomware</td><td class="rl-high">10</td><span class="ds-badge ds-manual">RED FLAG</span></tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Asset/Product Risk -->
-      <div class="card">
-        <div class="card-header">6. Asset/Product Risk Score (0–10) — Weight: 5%</div>
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Condition</th><th>Score</th></tr>
-            <tr><td>Stablecoin + Custodial wallet (both sides)</td><td class="rl-low">0–1</td></tr>
-            <tr><td>Major crypto (BTC/ETH) + Custodial wallet</td><td class="rl-low">2–3</td></tr>
-            <tr><td>Stablecoin + Self-hosted wallet</td><td class="rl-low">3–4</td></tr>
-            <tr><td>Altcoin + Self-hosted wallet</td><td class="rl-mid">5–6</td></tr>
-            <tr><td>Unhosted + Unregistered address</td><td class="rl-mid">6–7</td></tr>
-            <tr><td>Privacy coin (Monero, Zcash)</td><td class="rl-high">9–10</td></tr>
-          </table>
-        </div>
-      </div>
-
-      <!-- Decision Matrix -->
-      <div class="section-title">Decision Matrix</div>
-      <div class="card">
-        <div class="card-body" style="padding:0">
-          <table class="risk-matrix">
-            <tr><th>Combined Score</th><th>Decision</th><th>CDD Level</th><th>Automated?</th><th>Actions</th></tr>
-            <tr>
-              <td class="rl-low"><strong>0.0 – 2.0</strong></td>
-              <td><strong>Approve</strong></td>
-              <td>Simplified</td>
-              <td>✓ Auto</td>
-              <td>Proceed, record assessment</td>
-            </tr>
-            <tr>
-              <td class="rl-low"><strong>2.1 – 4.0</strong></td>
-              <td><strong>Approve + Monitor</strong></td>
-              <td>Standard</td>
-              <td>✓ Auto</td>
-              <td>Proceed, flag for ongoing monitoring</td>
-            </tr>
-            <tr>
-              <td class="rl-mid"><strong>4.1 – 6.0</strong></td>
-              <td><strong>Manual Review</strong></td>
-              <td>Standard</td>
-              <td>✗ Manual</td>
-              <td>Compliance officer reviews all factors, may request additional info</td>
-            </tr>
-            <tr>
-              <td class="rl-high"><strong>6.1 – 8.0</strong></td>
-              <td><strong>EDD + Senior Approval</strong></td>
-              <td>Enhanced</td>
-              <td>✗ Manual</td>
-              <td>Enhanced due diligence, senior compliance approval, SoW/SoF re-verification</td>
-            </tr>
-            <tr>
-              <td class="rl-high"><strong>8.1 – 10.0</strong></td>
-              <td><strong>Reject / Escalate</strong></td>
-              <td>Blocked</td>
-              <td>✗ Manual</td>
-              <td>Reject, freeze funds, file SAR, report to FIU</td>
-            </tr>
-          </table>
-        </div>
-      </div>
-
-      <div style="text-align:center;padding:20px;color:#aaa;font-size:11px;margin-top:20px">
-        This risk model is illustrative for demo purposes. Production risk scoring should be calibrated to your institution's regulatory requirements (VARA, FATF) and risk appetite.
-      </div>
+    <div style="text-align:center;padding:20px;color:#aaa;font-size:11px;margin-top:20px">
+      Illustrative model for demo purposes. Production scoring should be calibrated to your institution's regulatory requirements (VARA, FATF) and risk appetite.
     </div>
 
   </div>
 </div>
 
 <script>
-function switchView(view) {
-  document.querySelectorAll('.view-tab').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.view-page').forEach(function(p) { p.classList.remove('active'); });
-  event.target.classList.add('active');
-  document.getElementById('view-' + view).classList.add('active');
+function toggleSection(id) {
+  var sec = document.getElementById(id);
+  sec.classList.toggle('expanded');
 }
 </script>
 
