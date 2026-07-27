@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Risk Assessment Model — Transaction Risk Framework</title>
+<title>Risk Assessment — Transaction Report</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; font-size: 13px; line-height: 1.6; display: flex; height: 100vh; }
@@ -17,85 +17,89 @@
   .nav-item.active { background: #f0efff; color: #5b4cdb; border-right: 2px solid #5b4cdb; }
   .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; }
-  .content { flex: 1; overflow-y: auto; padding: 24px; max-width: 960px; margin: 0 auto; width: 100%; }
+  .topbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .topbar .tx-id { font-family: monospace; font-size: 11px; color: #888; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; max-width: 1000px; margin: 0 auto; width: 100%; }
 
   /* Risk levels */
   .rl-low { color: #16a34a; }
   .rl-mid { color: #d97706; }
   .rl-high { color: #dc2626; }
-  .bg-low { background: #dcfce7; }
-  .bg-mid { background: #fef3c7; }
-  .bg-high { background: #fee2e2; }
 
-  /* Hero score */
-  .hero { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 28px; margin-bottom: 20px; text-align: center; }
-  .hero-score { font-size: 64px; font-weight: 800; line-height: 1; }
-  .hero-label { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; margin-top: 8px; }
-  .hero-signal { display: inline-block; margin-top: 12px; padding: 6px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; }
-  .hero-context { font-size: 11px; color: #aaa; margin-top: 12px; }
+  /* Transaction card */
+  .tx-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .tx-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tx-card-title { font-size: 15px; font-weight: 700; }
+  .tx-amount { font-size: 28px; font-weight: 800; }
+  .tx-amount .currency { font-size: 13px; font-weight: 600; color: #888; }
+  .tx-flow { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
+  .tx-party { flex: 1; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; }
+  .tx-party-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .tx-party-name { font-size: 13px; font-weight: 700; }
+  .tx-party-sub { font-size: 11px; color: #666; margin-top: 2px; }
+  .tx-party-addr { font-size: 10px; font-family: monospace; color: #888; margin-top: 4px; word-break: break-all; }
+  .tx-arrow { font-size: 24px; color: #ccc; flex-shrink: 0; }
+  .tx-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+  .tx-meta-item { font-size: 11px; }
+  .tx-meta-item .k { color: #888; }
+  .tx-meta-item .v { font-weight: 600; }
 
-  /* Story sections */
-  .story-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; overflow: hidden; transition: all 0.2s; }
-  .story-section.expanded { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-  .story-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.15s; }
-  .story-header:hover { background: #fafafa; }
-  .story-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
-  .story-num.green { background: #dcfce7; color: #16a34a; }
-  .story-num.purple { background: #f0efff; color: #5b4cdb; }
-  .story-num.blue { background: #dbeafe; color: #1e40af; }
-  .story-info { flex: 1; }
-  .story-title { font-size: 14px; font-weight: 700; }
-  .story-summary { font-size: 12px; color: #888; margin-top: 2px; }
-  .story-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 4px; flex-shrink: 0; }
-  .story-chevron { font-size: 14px; color: #ccc; transition: transform 0.2s; flex-shrink: 0; }
-  .story-section.expanded .story-chevron { transform: rotate(90deg); }
-  .story-body { display: none; padding: 0 20px 20px; border-top: 1px solid #f0f0f0; margin-top: 0; }
-  .story-section.expanded .story-body { display: block; padding-top: 16px; }
+  /* Decision banner */
+  .decision-banner { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+  .decision-score { font-size: 40px; font-weight: 800; line-height: 1; }
+  .decision-info { flex: 1; }
+  .decision-level { font-size: 14px; font-weight: 700; }
+  .decision-action { font-size: 12px; color: #666; margin-top: 2px; }
+  .decision-badge { padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; }
 
-  /* Inside expanded content */
-  .sub-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; margin-top: 12px; }
-  .sub-card-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
-  .factor-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.1s; }
-  .factor-row:last-child { border-bottom: none; }
-  .factor-row:hover { background: #fff; border-radius: 6px; padding-left: 8px; padding-right: 8px; }
-  .factor-row.expanded .factor-detail { display: block; }
-  .factor-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .factor-dot.low { background: #16a34a; }
-  .factor-dot.mid { background: #d97706; }
-  .factor-dot.high { background: #dc2626; }
-  .factor-name { flex: 1; font-size: 13px; font-weight: 600; }
-  .factor-weight { font-size: 10px; color: #aaa; }
-  .factor-score { font-size: 20px; font-weight: 800; width: 30px; text-align: right; }
-  .factor-detail { display: none; padding: 12px 0 8px 22px; }
-  .factor-detail .fd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
-  .factor-detail .fd-k { color: #888; }
-  .factor-detail .fd-v { color: #1a1a1a; font-weight: 500; }
-  .factor-detail .fd-desc { font-size: 11px; color: #666; margin-bottom: 8px; line-height: 1.5; }
+  /* Section */
+  .section { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .section-header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #f0f0f0; }
+  .section-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .section-title { font-size: 13px; font-weight: 700; flex: 1; }
+  .section-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .section-body { padding: 16px 18px; }
 
-  /* Red flags list */
-  .red-flag-list { display: flex; flex-direction: column; gap: 6px; }
-  .red-flag-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
-  .red-flag-item.reject { background: #fef2f2; border: 1px solid #fecaca; }
-  .red-flag-item.edd { background: #fffbeb; border: 1px solid #fde68a; }
-  .red-flag-item .rf-icon { font-weight: 700; flex-shrink: 0; font-size: 14px; }
-  .red-flag-item.reject .rf-icon { color: #dc2626; }
-  .red-flag-item.edd .rf-icon { color: #d97706; }
+  /* Screening panels */
+  .screening-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .screen-panel { border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+  .screen-panel-header { padding: 10px 14px; font-size: 12px; font-weight: 700; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 8px; }
+  .screen-panel-header.entity { background: #f5f3ff; }
+  .screen-panel-header.onchain { background: #eff6ff; }
+  .screen-panel-body { padding: 12px 14px; }
+  .screen-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 11px; border-bottom: 1px solid #f5f5f5; }
+  .screen-item:last-child { border-bottom: none; }
+  .screen-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
+  .screen-icon.pass { background: #dcfce7; color: #16a34a; }
+  .screen-icon.fail { background: #fee2e2; color: #dc2626; }
+  .screen-icon.warn { background: #fef3c7; color: #d97706; }
+  .screen-label { flex: 1; }
+  .screen-label .sl-title { font-weight: 600; }
+  .screen-label .sl-detail { font-size: 10px; color: #888; margin-top: 1px; }
+  .screen-result { font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  .screen-result.pass { color: #16a34a; }
+  .screen-result.fail { color: #dc2626; }
+  .screen-result.warn { color: #d97706; }
 
-  /* Classification gate */
-  .gate-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .gate-col { border-radius: 8px; padding: 16px; }
-  .gate-col.inst { background: #f0fdf4; border: 1px solid #bbf7d0; }
-  .gate-col.qual { background: #fffbeb; border: 1px solid #fde68a; }
-  .gate-col-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-  .gate-col-sub { font-size: 10px; color: #888; margin-bottom: 10px; }
-  .gate-col .gc-item { font-size: 11px; padding: 3px 0; display: flex; align-items: center; gap: 6px; }
-  .gate-col .gc-item .gc-check { color: #16a34a; font-weight: 700; }
-  .gate-col .gc-item .gc-x { color: #dc2626; font-weight: 700; }
-  .gate-col .gc-base { margin-top: 8px; font-size: 11px; font-weight: 700; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06); }
+  /* Risk dimensions */
+  .dim-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .dim-row:last-child { border-bottom: none; }
+  .dim-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dim-dot.low { background: #16a34a; }
+  .dim-dot.mid { background: #d97706; }
+  .dim-dot.high { background: #dc2626; }
+  .dim-name { width: 140px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .dim-bar-wrap { flex: 1; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+  .dim-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .dim-bar.low { background: #16a34a; }
+  .dim-bar.mid { background: #d97706; }
+  .dim-bar.high { background: #dc2626; }
+  .dim-score { width: 24px; text-align: right; font-size: 16px; font-weight: 800; flex-shrink: 0; }
+  .dim-weight { width: 36px; text-align: right; font-size: 10px; color: #888; flex-shrink: 0; }
+  .dim-weighted { width: 40px; text-align: right; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 
   /* DS badges */
-  .ds-badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .ds-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
   .ds-sumsub { background: #ede9fe; color: #5b21b6; }
   .ds-elliptic { background: #dbeafe; color: #1e40af; }
   .ds-notabene { background: #d1fae5; color: #065f46; }
@@ -103,27 +107,33 @@
   .ds-manual { background: #fef3c7; color: #92400e; }
   .ds-fatca { background: #fce7f3; color: #9d174d; }
 
-  /* Tables */
-  .t-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
-  .t-table th { background: #fafafa; padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid #e0e0e0; font-size: 10px; text-transform: uppercase; color: #888; }
-  .t-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  /* Summary bar */
+  .summary-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; margin-top: 12px; }
+  .summary-bar .sb-label { font-size: 12px; font-weight: 600; }
+  .summary-bar .sb-value { font-size: 20px; font-weight: 800; }
+  .summary-bar .sb-formula { font-size: 10px; color: #888; font-family: monospace; }
 
-  /* Decision bar */
-  .decision-bar { display: flex; height: 36px; border-radius: 8px; overflow: hidden; margin-top: 12px; }
-  .db-segment { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; text-align: center; line-height: 1.1; }
-  .db-segment.s1 { background: #16a34a; }
-  .db-segment.s2 { background: #65a30d; }
-  .db-segment.s3 { background: #d97706; }
-  .db-segment.s4 { background: #ea580c; }
-  .db-segment.s5 { background: #dc2626; }
-  .decision-legend { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-top: 4px; }
+  /* Decision scale */
+  .decision-scale { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
+  .ds-seg { display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
+  .ds-seg.s1 { background: #16a34a; }
+  .ds-seg.s2 { background: #65a30d; }
+  .ds-seg.s3 { background: #d97706; }
+  .ds-seg.s4 { background: #ea580c; }
+  .ds-seg.s5 { background: #dc2626; }
+  .ds-seg.active { outline: 2px solid #1a1a1a; outline-offset: -2px; }
+  .scale-legend { display: flex; justify-content: space-between; font-size: 9px; color: #aaa; }
 
-  /* Formula */
-  .formula-box { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; margin-top: 12px; line-height: 1.8; }
+  /* Expandable detail */
+  .dim-row { cursor: pointer; }
+  .dim-row:hover { background: #fafafa; }
+  .dim-detail { display: none; padding: 8px 0 8px 20px; }
+  .dim-row.open .dim-detail { display: block; }
+  .dim-detail .dd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
+  .dim-detail .dd-k { color: #888; }
+  .dim-detail .dd-v { font-weight: 500; }
 
-  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 24px 0 12px; }
-  .section-label:first-child { margin-top: 0; }
-  .intro-text { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 20px; }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 20px 0 10px; }
 </style>
 </head>
 <body>
@@ -144,302 +154,310 @@
 </div>
 
 <div class="main">
-  <div class="topbar">📊 Transaction Risk Assessment Model</div>
+  <div class="topbar">
+    <span>📊 Transaction Risk Assessment</span>
+    <span class="tx-id">TX-2026-07-28-0042</span>
+  </div>
   <div class="content">
 
-    <!-- ═══ HERO ═══ -->
-    <div class="hero">
-      <div class="hero-score rl-mid">4.9</div>
-      <div class="hero-label rl-mid">Medium-Low Risk</div>
-      <div class="hero-signal bg-low" style="color:#16a34a">APPROVE + MONITOR · Standard CDD</div>
-      <div class="hero-context">Sample: 3,500 USDT-TEST · Originator: Lorem Mockrime LLC (Qualified Investor) · No red flags triggered</div>
-    </div>
-
-    <p class="intro-text">
-      Every transaction flows through a three-gate decision pipeline.
-      Click each gate below to inspect what was checked and why.
-    </p>
-
-    <!-- ═══ GATE 1: RED FLAGS ═══ -->
-    <div class="story-section expanded" id="sec-redflag">
-      <div class="story-header" onclick="toggleSection('sec-redflag')">
-        <div class="story-num green">✓</div>
-        <div class="story-info">
-          <div class="story-title">Gate 1 — Red Flag Override</div>
-          <div class="story-summary">6 absolute triggers checked · All passed</div>
-        </div>
-        <div class="story-badge bg-low" style="color:#16a34a">PASSED</div>
-        <div class="story-chevron">▶</div>
+    <!-- ═══ THE TRANSACTION ═══ -->
+    <div class="tx-card">
+      <div class="tx-card-header">
+        <div class="tx-card-title">Transfer Details</div>
+        <div class="tx-amount">3,500 <span class="currency">USDT-TEST</span></div>
       </div>
-      <div class="story-body">
-        <p style="font-size:12px;color:#666;margin-bottom:12px">
-          These are hard overrides. If any trigger fires, scoring is bypassed entirely —
-          they cannot be averaged away by other low scores.
-        </p>
-        <div class="sub-card">
-          <div class="sub-card-title">🔍 Entity Screening Flags</div>
-          <div style="font-size:10px;color:#aaa;margin-bottom:8px"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-notabene">Notabene</span> — sanctions, PEP, jurisdiction, VASP registration</div>
-          <div class="red-flag-list">
-            <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>Sanctions match</strong> (OFAC / UN / EU / HMT) on customer, UBO, or counterparty → <strong>HARD REJECT</strong></div></div>
-            <div class="red-flag-item reject"><span class="rf-icon">✕</span> <div><strong>FATF blacklisted jurisdiction</strong> (DPRK, Iran, Myanmar) → <strong>HARD REJECT</strong></div></div>
-            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>PEP with unverified Source of Wealth</strong> → <strong>MANDATORY EDD</strong></div></div>
-            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Unregistered VASP counterparty</strong> in regulated jurisdiction → <strong>MANDATORY REVIEW</strong></div></div>
-          </div>
+      <div class="tx-flow">
+        <div class="tx-party">
+          <div class="tx-party-label">Originator (Sender)</div>
+          <div class="tx-party-name">Lorem Mockrime LLC</div>
+          <div class="tx-party-sub">Qualified Investor · Active NFE · UAE</div>
+          <div class="tx-party-addr">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>
         </div>
-        <div class="sub-card">
-          <div class="sub-card-title">⛓ On-chain Screening Flags</div>
-          <div style="font-size:10px;color:#aaa;margin-bottom:8px"><span class="ds-badge ds-elliptic">Elliptic</span> <span class="ds-badge ds-internal">Internal</span> — address exposure, tx patterns</div>
-          <div class="red-flag-list">
-            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Direct mixer / tumbler exposure</strong> (Elliptic) → <strong>MANDATORY EDD</strong></div></div>
-            <div class="red-flag-item edd"><span class="rf-icon">⚠</span> <div><strong>Structuring detected</strong> — sub-threshold splitting → <strong>MANDATORY REVIEW</strong></div></div>
-          </div>
+        <div class="tx-arrow">→</div>
+        <div class="tx-party">
+          <div class="tx-party-label">Beneficiary (Receiver)</div>
+          <div class="tx-party-name">John Doe</div>
+          <div class="tx-party-sub">Individual · Verified · UAE</div>
+          <div class="tx-party-addr">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>
         </div>
-        <div class="sub-card" style="background:#f0fdf4;border-color:#bbf7d0">
-          <div style="font-size:12px;color:#16a34a;font-weight:600">✓ All screening passed — proceed to scoring.</div>
-        </div>
+      </div>
+      <div class="tx-meta">
+        <div class="tx-meta-item"><span class="k">Chain: </span><span class="v">Sepolia (11155111)</span></div>
+        <div class="tx-meta-item"><span class="k">Asset: </span><span class="v">USDT-TEST (Stablecoin)</span></div>
+        <div class="tx-meta-item"><span class="k">Travel Rule: </span><span class="v">Compliant ✓</span></div>
+        <div class="tx-meta-item"><span class="k">VASP: </span><span class="v">Known + Confirmed ✓</span></div>
+        <div class="tx-meta-item"><span class="k">Threshold: </span><span class="v">At 3,500 USD (VARA)</span></div>
       </div>
     </div>
 
-    <!-- ═══ GATE 2: RISK FACTORS ═══ -->
-    <div class="story-section" id="sec-factors">
-      <div class="story-header" onclick="toggleSection('sec-factors')">
-        <div class="story-num purple">6</div>
-        <div class="story-info">
-          <div class="story-title">Gate 2 — Weighted Risk Scoring</div>
-          <div class="story-summary">6 dimensions scored 0–10, weighted, summed → 4.9</div>
-        </div>
-        <div class="story-badge" style="background:#f0efff;color:#5b4cdb">3.50 WEIGHTED</div>
-        <div class="story-chevron">▶</div>
+    <!-- ═══ DECISION ═══ -->
+    <div class="decision-banner">
+      <div class="decision-score rl-mid">4.9</div>
+      <div class="decision-info">
+        <div class="decision-level rl-mid">Medium-Low Risk</div>
+        <div class="decision-action">Auto-approve with ongoing monitoring · Standard CDD</div>
       </div>
-      <div class="story-body">
-        <p style="font-size:12px;color:#666;margin-bottom:8px">
-          Each dimension is independently scored then weighted. Click any factor for details.
-        </p>
-        <div class="formula-box">
-Combined = (Customer × 0.25) + (Counterparty × 0.20) + (Geographic × 0.15)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (Transaction × 0.15) + (Blockchain × 0.20) + (Asset × 0.05)
+      <div class="decision-badge bg-low" style="color:#16a34a">APPROVE</div>
+    </div>
+
+    <!-- ═══ SCREENING ═══ -->
+    <div class="section-label">Screening Results</div>
+    <div class="screening-grid">
+
+      <!-- Entity Screening -->
+      <div class="screen-panel">
+        <div class="screen-panel-header entity">🔍 Entity Screening <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-notabene">Notabene</span></span></div>
+        <div class="screen-panel-body">
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Sanctions Check</div>
+              <div class="sl-detail">OFAC / UN / EU / HMT — customer + 3 UBOs</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">PEP Screening</div>
+              <div class="sl-detail">No politically exposed persons identified</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Adverse Media / Crime</div>
+              <div class="sl-detail">No adverse media or criminal records</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Jurisdiction Check</div>
+              <div class="sl-detail">UAE — not FATF blacklisted or grey-listed</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Counterparty VASP</div>
+              <div class="sl-detail">Registered VASP · Tier 1 · Relationship confirmed</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Source of Wealth</div>
+              <div class="sl-detail">Documentary proof verified (Qualified Investor)</div>
+            </div>
+            <div class="screen-result pass">VERIFIED</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- On-chain Screening -->
+      <div class="screen-panel">
+        <div class="screen-panel-header onchain">⛓ On-chain Screening <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-elliptic">Elliptic</span></span></div>
+        <div class="screen-panel-body">
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Source Address Risk</div>
+              <div class="sl-detail">0xCA79…2d26 — Score: 3.1 (Low)</div>
+            </div>
+            <div class="screen-result pass">LOW</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Destination Address Risk</div>
+              <div class="sl-detail">0xb20B…0b75 — Score: 2.8 (Low)</div>
+            </div>
+            <div class="screen-result pass">LOW</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Mixer / Tumbler Exposure</div>
+              <div class="sl-detail">No exposure to known mixers within 5 hops</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Darknet / Ransomware</div>
+              <div class="sl-detail">No exposure to darknet markets or ransomware</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Sanctions Address</div>
+              <div class="sl-detail">Neither address on OFAC SDN blockchain list</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+          <div class="screen-item">
+            <div class="screen-icon pass">✓</div>
+            <div class="screen-label">
+              <div class="sl-title">Structuring Detection</div>
+              <div class="sl-detail">No sub-threshold splitting pattern detected</div>
+            </div>
+            <div class="screen-result pass">CLEAR</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ RISK DIMENSIONS ═══ -->
+    <div class="section-label">Risk Dimensions — Weighted Scoring</div>
+    <div class="section">
+      <div class="section-body" style="padding-top:8px">
+
+        <div class="dim-row" onclick="this.classList.toggle('open')">
+          <div class="dim-dot low"></div>
+          <div class="dim-name">Customer</div>
+          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:40%"></div></div>
+          <div class="dim-score rl-low">4</div>
+          <div class="dim-weight">× 25%</div>
+          <div class="dim-weighted">1.00</div>
+          <div class="dim-detail">
+            <div class="dd-row"><span class="dd-k">Investor Type</span><span class="dd-v">Qualified (Active NFE)</span></div>
+            <div class="dd-row"><span class="dd-k">KYB Status</span><span class="dd-v">Verified ✓</span></div>
+            <div class="dd-row"><span class="dd-k">AML Screening</span><span class="dd-v">No hits ✓</span></div>
+            <div class="dd-row"><span class="dd-k">SoW / SoF</span><span class="dd-v">Verified ✓</span></div>
+            <div class="dd-row"><span class="dd-k">UBO Screening</span><span class="dd-v">3 UBOs, all clean ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Why not lower?</span><span class="dd-v">Qualified Investor base = 3–4 (vs Institutional 1–2)</span></div>
+          </div>
         </div>
 
-        <div style="margin-top:12px">
-
-          <div class="factor-row" onclick="this.classList.toggle('expanded')">
-            <div class="factor-dot low"></div>
-            <div class="factor-name">Customer Risk</div>
-            <div class="factor-weight">25% · <span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-manual">SoW/SoF</span></div>
-            <div class="factor-score rl-low">4</div>
-            <div class="factor-detail">
-              <div class="fd-desc">Risk from originator entity — classification, verification depth, AML screening, source of wealth/funds.</div>
-              <div class="fd-row"><span class="fd-k">Investor Type</span><span class="fd-v">Qualified (Active NFE)</span></div>
-              <div class="fd-row"><span class="fd-k">KYB Status</span><span class="fd-v">Verified ✓</span></div>
-              <div class="fd-row"><span class="fd-k">AML Hit</span><span class="fd-v">None ✓</span></div>
-              <div class="fd-row"><span class="fd-k">SoW / SoF</span><span class="fd-v">Verified ✓</span></div>
-              <div class="fd-row"><span class="fd-k">UBO Screening</span><span class="fd-v">3 UBOs, all clean ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>4 × 0.25 = 1.00</strong></span></div>
-            </div>
+        <div class="dim-row" onclick="this.classList.toggle('open')">
+          <div class="dim-dot low"></div>
+          <div class="dim-name">Counterparty</div>
+          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
+          <div class="dim-score rl-low">3</div>
+          <div class="dim-weight">× 20%</div>
+          <div class="dim-weighted">0.60</div>
+          <div class="dim-detail">
+            <div class="dd-row"><span class="dd-k">VASP Known</span><span class="dd-v">Yes — Tier 1 ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Relationship</span><span class="dd-v">Confirmed ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Beneficiary PII</span><span class="dd-v">Full IVMS101 ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Why not lower?</span><span class="dd-v">Cross-VASP transfer adds baseline counterparty risk</span></div>
           </div>
-
-          <div class="factor-row" onclick="this.classList.toggle('expanded')">
-            <div class="factor-dot low"></div>
-            <div class="factor-name">Counterparty Risk</div>
-            <div class="factor-weight">20% · <span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-elliptic">Elliptic</span></div>
-            <div class="factor-score rl-low">3</div>
-            <div class="factor-detail">
-              <div class="fd-desc">Risk from receiving VASP and beneficiary — VASP tier, relationship confirmation, PII completeness.</div>
-              <div class="fd-row"><span class="fd-k">VASP Known</span><span class="fd-v">Yes ✓ (Tier 1)</span></div>
-              <div class="fd-row"><span class="fd-k">Relationship</span><span class="fd-v">Confirmed ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Beneficiary PII</span><span class="fd-v">Full IVMS101 ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>3 × 0.20 = 0.60</strong></span></div>
-            </div>
-          </div>
-
-          <div class="factor-row" onclick="this.classList.toggle('expanded')">
-            <div class="factor-dot mid"></div>
-            <div class="factor-name">Geographic Risk</div>
-            <div class="factor-weight">15% · <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-manual">FATF</span></div>
-            <div class="factor-score rl-mid">5</div>
-            <div class="factor-detail">
-              <div class="fd-desc">Risk from jurisdictions — customer country, counterparty country, cross-border nature, FATF lists.</div>
-              <div class="fd-row"><span class="fd-k">Originator Country</span><span class="fd-v">UAE</span></div>
-              <div class="fd-row"><span class="fd-k">Counterparty Country</span><span class="fd-v">UAE</span></div>
-              <div class="fd-row"><span class="fd-k">FATF Status</span><span class="fd-v">Neither blacklisted ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Cross-Border</span><span class="fd-v">No (domestic)</span></div>
-              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>5 × 0.15 = 0.75</strong></span></div>
-            </div>
-          </div>
-
-          <div class="factor-row" onclick="this.classList.toggle('expanded')">
-            <div class="factor-dot low"></div>
-            <div class="factor-name">Transaction Risk</div>
-            <div class="factor-weight">15% · <span class="ds-badge ds-notabene">Notabene</span> <span class="ds-badge ds-internal">Internal</span></div>
-            <div class="factor-score rl-low">3</div>
-            <div class="factor-detail">
-              <div class="fd-desc">Amount vs threshold, Travel Rule compliance, PII completeness, structuring and velocity anomalies.</div>
-              <div class="fd-row"><span class="fd-k">Amount</span><span class="fd-v">3,500 USD (at threshold)</span></div>
-              <div class="fd-row"><span class="fd-k">Travel Rule</span><span class="fd-v">Compliant ✓</span></div>
-              <div class="fd-row"><span class="fd-k">PII Complete</span><span class="fd-v">Full IVMS101 ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Structuring</span><span class="fd-v">Not detected ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>3 × 0.15 = 0.45</strong></span></div>
-            </div>
-          </div>
-
-          <div class="factor-row" onclick="this.classList.toggle('expanded')">
-            <div class="factor-dot low"></div>
-            <div class="factor-name">Blockchain Risk</div>
-            <div class="factor-weight">20% · <span class="ds-badge ds-elliptic">Elliptic</span></div>
-            <div class="factor-score rl-low">3</div>
-            <div class="factor-detail">
-              <div class="fd-desc">On-chain risk — exposure to mixers, darknet, ransomware, sanctions addresses on source/destination.</div>
-              <div class="fd-row"><span class="fd-k">Source Address</span><span class="fd-v">Score: 3.1 (Low)</span></div>
-              <div class="fd-row"><span class="fd-k">Settlement Address</span><span class="fd-v">Score: 2.8 (Low)</span></div>
-              <div class="fd-row"><span class="fd-k">Categories</span><span class="fd-v">None flagged ✓</span></div>
-              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>3 × 0.20 = 0.60</strong></span></div>
-            </div>
-          </div>
-
-          <div class="factor-row" onclick="this.classList.toggle('expanded')">
-            <div class="factor-dot low"></div>
-            <div class="factor-name">Asset / Product Risk</div>
-            <div class="factor-weight">5% · <span class="ds-badge ds-internal">Internal</span></div>
-            <div class="factor-score rl-low">2</div>
-            <div class="factor-detail">
-              <div class="fd-desc">Asset type (stablecoin vs privacy coin) and wallet type (custodial vs unhosted).</div>
-              <div class="fd-row"><span class="fd-k">Asset Type</span><span class="fd-v">USDT (stablecoin, low)</span></div>
-              <div class="fd-row"><span class="fd-k">Wallet Type</span><span class="fd-v">Custodial (both sides)</span></div>
-              <div class="fd-row"><span class="fd-k">Weighted</span><span class="fd-v"><strong>2 × 0.05 = 0.10</strong></span></div>
-            </div>
-          </div>
-
         </div>
 
-        <div class="sub-card" style="background:#f0efff;border-color:#ddd6fe">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="font-size:13px;font-weight:700">Combined Score</div>
-            <div style="font-size:28px;font-weight:800" class="rl-low">3.50</div>
+        <div class="dim-row" onclick="this.classList.toggle('open')">
+          <div class="dim-dot mid"></div>
+          <div class="dim-name">Geographic</div>
+          <div class="dim-bar-wrap"><div class="dim-bar mid" style="width:50%"></div></div>
+          <div class="dim-score rl-mid">5</div>
+          <div class="dim-weight">× 15%</div>
+          <div class="dim-weighted">0.75</div>
+          <div class="dim-detail">
+            <div class="dd-row"><span class="dd-k">Originator Country</span><span class="dd-v">UAE</span></div>
+            <div class="dd-row"><span class="dd-k">Counterparty Country</span><span class="dd-v">UAE</span></div>
+            <div class="dd-row"><span class="dd-k">FATF Status</span><span class="dd-v">Not blacklisted ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Cross-Border</span><span class="dd-v">No (domestic)</span></div>
+            <div class="dd-row"><span class="dd-k">Why 5?</span><span class="dd-v">UAE has progressive crypto regulation but not yet fully FATF-aligned</span></div>
           </div>
-          <div style="font-size:11px;color:#888;margin-top:4px">1.00 + 0.60 + 0.75 + 0.45 + 0.60 + 0.10 = 3.50 → Medium-Low → Standard CDD</div>
+        </div>
+
+        <div class="dim-row" onclick="this.classList.toggle('open')">
+          <div class="dim-dot low"></div>
+          <div class="dim-name">Transaction</div>
+          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
+          <div class="dim-score rl-low">3</div>
+          <div class="dim-weight">× 15%</div>
+          <div class="dim-weighted">0.45</div>
+          <div class="dim-detail">
+            <div class="dd-row"><span class="dd-k">Amount</span><span class="dd-v">3,500 USD (at VARA threshold)</span></div>
+            <div class="dd-row"><span class="dd-k">Travel Rule</span><span class="dd-v">Compliant ✓</span></div>
+            <div class="dd-row"><span class="dd-k">PII Completeness</span><span class="dd-v">Full IVMS101 ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Structuring</span><span class="dd-v">Not detected ✓</span></div>
+          </div>
+        </div>
+
+        <div class="dim-row" onclick="this.classList.toggle('open')">
+          <div class="dim-dot low"></div>
+          <div class="dim-name">Blockchain</div>
+          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
+          <div class="dim-score rl-low">3</div>
+          <div class="dim-weight">× 20%</div>
+          <div class="dim-weighted">0.60</div>
+          <div class="dim-detail">
+            <div class="dd-row"><span class="dd-k">Source Address</span><span class="dd-v">Score: 3.1 (Low)</span></div>
+            <div class="dd-row"><span class="dd-k">Destination Address</span><span class="dd-v">Score: 2.8 (Low)</span></div>
+            <div class="dd-row"><span class="dd-k">Exposure Categories</span><span class="dd-v">None flagged ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Mixer Distance</span><span class="dd-v">> 5 hops ✓</span></div>
+          </div>
+        </div>
+
+        <div class="dim-row" onclick="this.classList.toggle('open')">
+          <div class="dim-dot low"></div>
+          <div class="dim-name">Asset / Product</div>
+          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:20%"></div></div>
+          <div class="dim-score rl-low">2</div>
+          <div class="dim-weight">× 5%</div>
+          <div class="dim-weighted">0.10</div>
+          <div class="dim-detail">
+            <div class="dd-row"><span class="dd-k">Asset Type</span><span class="dd-v">USDT (stablecoin — low risk)</span></div>
+            <div class="dd-row"><span class="dd-k">Wallet Type</span><span class="dd-v">Custodial (both sides)</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="padding: 0 18px 16px">
+        <div class="summary-bar">
+          <div>
+            <div class="sb-label">Combined Risk Score</div>
+            <div class="sb-formula">1.00 + 0.60 + 0.75 + 0.45 + 0.60 + 0.10</div>
+          </div>
+          <div class="sb-value rl-mid">3.50</div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ GATE 3: DECISION ═══ -->
-    <div class="story-section" id="sec-decision">
-      <div class="story-header" onclick="toggleSection('sec-decision')">
-        <div class="story-num blue">3</div>
-        <div class="story-info">
-          <div class="story-title">Gate 3 — CDD Level Decision</div>
-          <div class="story-summary">Score maps to one of 5 tiers → determines required due diligence</div>
+    <!-- ═══ DECISION SCALE ═══ -->
+    <div class="section-label">Decision Mapping</div>
+    <div class="section">
+      <div class="section-body">
+        <div class="decision-scale">
+          <div class="ds-seg s1" style="width:20%">0–2<br>Low</div>
+          <div class="ds-seg s2 active" style="width:20%">2–4<br>Med-Low</div>
+          <div class="ds-seg s3" style="width:20%">4–6<br>Medium</div>
+          <div class="ds-seg s4" style="width:20%">6–8<br>High</div>
+          <div class="ds-seg s5" style="width:20%">8–10<br>Critical</div>
         </div>
-        <div class="story-badge bg-low" style="color:#16a34a">STANDARD</div>
-        <div class="story-chevron">▶</div>
-      </div>
-      <div class="story-body">
-        <div class="decision-bar">
-          <div class="db-segment s1" style="width:20%">0–2<br>Low</div>
-          <div class="db-segment s2" style="width:20%">2–4<br>Med-Low</div>
-          <div class="db-segment s3" style="width:20%">4–6<br>Medium</div>
-          <div class="db-segment s4" style="width:20%">6–8<br>High</div>
-          <div class="db-segment s5" style="width:20%">8–10<br>Critical</div>
-        </div>
-        <div class="decision-legend">
+        <div class="scale-legend">
           <span>0.0</span><span>2.0</span><span>4.0</span><span>6.0</span><span>8.0</span><span>10.0</span>
         </div>
-
-        <table class="t-table">
-          <tr><th>Score</th><th>Level</th><th>Action</th><th>CDD</th><th>Auto?</th></tr>
-          <tr><td><strong>0.0–2.0</strong></td><td class="rl-low"><strong>Low</strong></td><td>Auto-approve</td><td>Simplified</td><td>✓</td></tr>
-          <tr style="background:#f0fdf4"><td><strong>2.1–4.0</strong></td><td class="rl-low"><strong>Med-Low</strong></td><td>Auto-approve + monitor</td><td>Standard</td><td>✓</td></tr>
-          <tr><td><strong>4.1–6.0</strong></td><td class="rl-mid"><strong>Medium</strong></td><td>Manual review</td><td>Standard</td><td>✗</td></tr>
-          <tr><td><strong>6.1–8.0</strong></td><td class="rl-high"><strong>High</strong></td><td>EDD + senior approval</td><td>Enhanced</td><td>✗</td></tr>
-          <tr><td><strong>8.1–10</strong></td><td class="rl-high"><strong>Critical</strong></td><td>Reject / Freeze / SAR</td><td>Blocked</td><td>✗</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- ═══ CLASSIFICATION GATE ═══ -->
-    <div class="section-label">Foundation — Customer Classification</div>
-    <div class="story-section" id="sec-classify">
-      <div class="story-header" onclick="toggleSection('sec-classify')">
-        <div class="story-num purple">◇</div>
-        <div class="story-info">
-          <div class="story-title">CRS Classification → Investor Category</div>
-          <div class="story-summary">Determines Customer Risk base score & verification requirements</div>
-        </div>
-        <div class="story-chevron">▶</div>
-      </div>
-      <div class="story-body">
-        <p style="font-size:12px;color:#666;margin-bottom:4px">
-          All customers are corporate entities. The CRS Entity Self-Certification form is the first gate —
-          it determines investor category, which sets the Customer Risk base and what additional verification is needed.
-        </p>
-        <div class="gate-split">
-          <div class="gate-col inst">
-            <div class="gate-col-title" style="color:#16a34a">Institutional Investor</div>
-            <div class="gate-col-sub">CRS: Financial Institution / Investment Entity</div>
-            <div class="gc-item"><span class="gc-check">✓</span> KYB: license + registration</div>
-            <div class="gc-item"><span class="gc-check">✓</span> Entity AML screening</div>
-            <div class="gc-item"><span class="gc-x">✕</span> SoW: NOT required</div>
-            <div class="gc-item"><span class="gc-x">✕</span> SoF: NOT required</div>
-            <div class="gc-item"><span class="gc-check">✓</span> UBO structure (controlling persons)</div>
-            <div class="gc-base" style="color:#16a34a">Base Risk: LOW (1–2)</div>
+        <div style="margin-top:14px;display:flex;gap:12px">
+          <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:4px">✓ Decision: Approve + Monitor</div>
+            <div style="font-size:11px;color:#666">Score 3.50 falls in Medium-Low tier (2.1–4.0). Transaction auto-approved. Flagged for ongoing monitoring per Standard CDD requirements.</div>
           </div>
-          <div class="gate-col qual">
-            <div class="gate-col-title" style="color:#d97706">Qualified Investor</div>
-            <div class="gate-col-sub">CRS: Active NFE or Passive NFE</div>
-            <div class="gc-item"><span class="gc-check">✓</span> KYB: incorporation + good standing</div>
-            <div class="gc-item"><span class="gc-check">✓</span> Entity AML screening</div>
-            <div class="gc-item"><span class="gc-check">✓</span> <strong>SoW: REQUIRED</strong></div>
-            <div class="gc-item"><span class="gc-check">✓</span> <strong>SoF: REQUIRED</strong></div>
-            <div class="gc-item"><span class="gc-check">✓</span> UBO structure + deeper screening</div>
-            <div class="gc-item"><span class="gc-check">✓</span> Financial threshold proof</div>
-            <div class="gc-base" style="color:#d97706">Base Risk: MEDIUM (3–4)</div>
+          <div style="flex:1;background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:12px">
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px">CDD Level: Standard</div>
+            <div style="font-size:11px;color:#666">Originator is Qualified Investor (Active NFE). SoW/SoF already verified at onboarding. UBOs screened. Standard ongoing monitoring applies.</div>
           </div>
         </div>
-        <div class="sub-card" style="background:#fffbeb;border-color:#fde68a">
-          <div class="sub-card-title" style="color:#92400e">⚠ Passive NFE Special Case</div>
-          <div style="font-size:11px;color:#666">If CRS = Passive NFE, ALL controlling persons (UBOs) must be individually screened. A single UBO sanctions/PEP hit elevates the entire customer to High Risk regardless of entity-level screening.</div>
-        </div>
       </div>
     </div>
 
-    <!-- ═══ DATA SOURCES ═══ -->
-    <div class="section-label">Reference</div>
-    <div class="story-section" id="sec-sources">
-      <div class="story-header" onclick="toggleSection('sec-sources')">
-        <div class="story-num blue">◈</div>
-        <div class="story-info">
-          <div class="story-title">Data Sources</div>
-          <div class="story-summary">8 sources across 4 services + operational measures</div>
-        </div>
-        <div class="story-chevron">▶</div>
-      </div>
-      <div class="story-body">
-        <table class="t-table">
-          <tr><th>Source</th><th>Provides</th><th>Feeds Into</th></tr>
-          <tr><td><span class="ds-badge ds-sumsub">Sumsub</span> KYB</td><td>Identity verification, incorporation</td><td>Customer Risk</td></tr>
-          <tr><td><span class="ds-badge ds-sumsub">Sumsub</span> AML</td><td>Sanctions, PEP, crime, adverse media</td><td>Customer Risk, Red Flags</td></tr>
-          <tr><td><span class="ds-badge ds-fatca">FATCA/CRS</span></td><td>Entity classification, tax residency, UBO chain</td><td>Customer Gate, Geographic</td></tr>
-          <tr><td><span class="ds-badge ds-elliptic">Elliptic</span> Address</td><td>Wallet risk score (0–10), exposure categories</td><td>Blockchain Risk, Red Flags</td></tr>
-          <tr><td><span class="ds-badge ds-elliptic">Elliptic</span> Transaction</td><td>TX-level risk, source/dest exposure</td><td>Blockchain Risk</td></tr>
-          <tr><td><span class="ds-badge ds-notabene">Notabene</span> PII</td><td>IVMS101 identity data (originator/beneficiary)</td><td>Counterparty, Transaction</td></tr>
-          <tr><td><span class="ds-badge ds-notabene">Notabene</span> VASP</td><td>VASP identity, jurisdiction, relationship</td><td>Counterparty, Geographic</td></tr>
-          <tr><td><span class="ds-badge ds-manual">Operational</span></td><td>SoW/SoF verification, FATF lists, VASP tier</td><td>Customer, Transaction, Geographic</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <div style="text-align:center;padding:20px;color:#aaa;font-size:11px;margin-top:20px">
-      Illustrative model for demo purposes. Production scoring should be calibrated to your institution's regulatory requirements (VARA, FATF) and risk appetite.
+    <div style="text-align:center;padding:16px;color:#aaa;font-size:11px">
+      Illustrative assessment. Production scoring calibrated to institutional risk appetite (VARA / FATF).
     </div>
 
   </div>
 </div>
-
-<script>
-function toggleSection(id) {
-  var sec = document.getElementById(id);
-  sec.classList.toggle('expanded');
-}
-</script>
 
 </body>
 </html>
