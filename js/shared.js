@@ -11,19 +11,35 @@ var IND_CASES = [
   { firstName: 'John', lastName: 'Doe', dob: '1990-01-01', hit: 'No', hitType: '—' }
 ];
 
+var CORP_CASES = [
+  { companyName: 'Lorem Mocksanc LLC', country: 'USA', regNo: 'US-2024-001', hit: 'Yes', hitType: 'Sanctions' },
+  { companyName: 'Lorem Mockrime LLC', country: 'USA', regNo: 'US-2024-002', hit: 'Yes', hitType: 'Crime' },
+  { companyName: 'Lorem Mockmedi LLC', country: 'USA', regNo: 'US-2024-003', hit: 'Yes', hitType: 'Adverse media' }
+];
+
 function populateCustomerSelects() {
-  ['ea', 'eb-ea'].forEach(function(key) {
-    var selId = key === 'eb-ea' ? 'eb-customer-select-ea' : key + '-customer-select';
-    var sel = document.getElementById(selId);
-    if (!sel) return;
-    sel.innerHTML = '<option value="">— choose —</option>';
+  // EA selector: corporate entities (legalPerson)
+  var eaSel = document.getElementById('ea-customer-select');
+  if (eaSel) {
+    eaSel.innerHTML = '<option value="">— choose —</option>';
+    CORP_CASES.forEach(function(c, i) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = c.companyName + ' (' + c.country + ')';
+      eaSel.appendChild(opt);
+    });
+  }
+  // EB selector (on EA page): individual beneficiaries (naturalPerson)
+  var ebSel = document.getElementById('eb-customer-select-ea');
+  if (ebSel) {
+    ebSel.innerHTML = '<option value="">— choose —</option>';
     IND_CASES.forEach(function(c, i) {
       var opt = document.createElement('option');
       opt.value = i;
       opt.textContent = c.firstName + ' ' + c.lastName + (c.dob ? ' (' + c.dob + ')' : '');
-      sel.appendChild(opt);
+      ebSel.appendChild(opt);
     });
-  });
+  }
 }
 
 function updateEaCustomer() {
@@ -31,9 +47,9 @@ function updateEaCustomer() {
   var detail = document.getElementById('ea-customer-detail');
   if (idx === '') { detail.style.display = 'none'; return; }
   detail.style.display = 'block';
-  var c = IND_CASES[parseInt(idx)];
-  fill('ea-customer-name', c.firstName + ' ' + c.lastName);
-  fill('ea-customer-dob', c.dob || '—');
+  var c = CORP_CASES[parseInt(idx)];
+  fill('ea-customer-name', c.companyName);
+  fill('ea-customer-dob', c.country);
   fill('ea-customer-hit', c.hitType + (c.hit === 'Yes' ? ' ⚠' : ''));
 }
 
@@ -422,7 +438,7 @@ async function validatePII(isRevalidate) {
   if (!isRevalidate) {
     var eaCustIdx = document.getElementById('ea-customer-select').value;
     var ebCustIdx = document.getElementById('eb-customer-select-ea').value;
-    var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+    var eaCust = eaCustIdx !== '' ? CORP_CASES[parseInt(eaCustIdx)] : null;
     var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
 
     if (!eaCust && !ebCust) {
@@ -431,11 +447,12 @@ async function validatePII(isRevalidate) {
       return;
     }
 
-    // Pre-fill editor with customer data (only fields the customer has)
+    // Pre-fill editor with customer data
     if (eaCust) {
-      setVal('pii-orig-fn', eaCust.firstName || '');
-      setVal('pii-orig-ln', eaCust.lastName || '');
-      setVal('pii-orig-dob', eaCust.dob || '');
+      // Corporate originator: store company name in a dedicated field
+      setVal('pii-orig-fn', eaCust.companyName || '');
+      setVal('pii-orig-ln', '');
+      setVal('pii-orig-dob', '');
     }
     if (ebCust) {
       setVal('pii-bene-fn', ebCust.firstName || '');
@@ -548,12 +565,12 @@ function showPIIEditor(eaCust, ebCust, eaWallet, ebWallet, missingFields) {
   card.style.display = '';
 
   // Prefill from customer data
-  setVal('pii-orig-fn', eaCust ? eaCust.firstName : '');
-  setVal('pii-orig-ln', eaCust ? eaCust.lastName : '');
-  setVal('pii-orig-dob', eaCust ? (eaCust.dob || '') : '');
+  setVal('pii-orig-fn', eaCust ? eaCust.companyName : '');
+  setVal('pii-orig-ln', '');
+  setVal('pii-orig-dob', '');
   setVal('pii-orig-pob', '');
-  setVal('pii-orig-nid', '');
-  setVal('pii-orig-nidtype', 'PASSPORT');
+  setVal('pii-orig-nid', eaCust ? eaCust.regNo : '');
+  setVal('pii-orig-nidtype', 'RAID');
   setVal('pii-orig-addr', '');
 
   setVal('pii-bene-fn', ebCust ? ebCust.firstName : '');
@@ -631,42 +648,44 @@ function buildIVMS101FromEditor() {
   var ivms101 = {};
   var eaCustIdx = document.getElementById('ea-customer-select').value;
   var ebCustIdx = document.getElementById('eb-customer-select-ea').value;
-  var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+  var eaCust = eaCustIdx !== '' ? CORP_CASES[parseInt(eaCustIdx)] : null;
   var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
 
-  var wallets = {};
-  // Use cached wallet addresses if available
   var eaWallet = '';
   var ebWallet = '';
 
-  // Build originator from editor fields
-  var origFn = getVal('pii-orig-fn');
-  var origLn = getVal('pii-orig-ln');
-  if (origLn || origFn) {
-    var np = {
-      name: { nameIdentifier: [{ primaryIdentifier: origLn, secondaryIdentifier: origFn, naturalPersonNameIdentifierType: 'LEGL' }] }
+  // Build originator as legalPerson (corporate)
+  var origFn = getVal('pii-orig-fn');  // company name
+  if (origFn) {
+    var lp = {
+      name: { nameIdentifier: [{ legalPersonName: origFn, legalPersonNameIdentifierType: 'LEGL' }] }
     };
-    var dob = getVal('pii-orig-dob');
-    var pob = getVal('pii-orig-pob');
-    if (dob || pob) {
-      np.dateAndPlaceOfBirth = {};
-      if (dob) np.dateAndPlaceOfBirth.dateOfBirth = dob;
-      if (pob) np.dateAndPlaceOfBirth.placeOfBirth = pob;
-    }
-    var nid = getVal('pii-orig-nid');
-    if (nid) {
-      np.nationalIdentification = {
-        nationalIdentifierType: getVal('pii-orig-nidtype') || 'PASSPORT',
-        nationalIdentifier: nid
+    // Registration number from customer data or editor
+    var regNo = (eaCust && eaCust.regNo) ? eaCust.regNo : getVal('pii-orig-nid');
+    if (regNo) {
+      lp.nationalIdentification = {
+        nationalIdentifierType: 'RAID',
+        nationalIdentifier: regNo
       };
     }
+    // Customer identification
+    if (eaCust) lp.customerIdentification = 'CIF-ORG-' + String(parseInt(eaCustIdx) + 1).padStart(3, '0');
+    // Address
     var addr = getVal('pii-orig-addr');
-    if (addr) {
-      np.geographicAddress = [{ addressLine: [addr] }];
+    var country = eaCust ? eaCust.country : '';
+    if (addr || country) {
+      lp.geographicAddress = [{
+        addressType: 'BIZZ',
+        addressLine: [addr || 'Business District'],
+        townName: addr ? '' : 'Dubai',
+        countrySubDivision: 'AE-DU',
+        country: country || 'AE'
+      }];
+      if (!addr) lp.geographicAddress[0].addressLine = ['Business District'];
     }
     ivms101.originator = {
       originatorPerson: [{
-        naturalPerson: np,
+        legalPerson: lp,
         accountNumber: ['did:pkh:eip155:11155111:' + eaWallet]
       }]
     };
@@ -776,7 +795,7 @@ async function createTransfer() {
   // Read customer PII from selectors
   var eaCustIdx = document.getElementById('ea-customer-select').value;
   var ebCustIdx = document.getElementById('eb-customer-select-ea').value;
-  var eaCust = eaCustIdx !== '' ? IND_CASES[parseInt(eaCustIdx)] : null;
+  var eaCust = eaCustIdx !== '' ? CORP_CASES[parseInt(eaCustIdx)] : null;
   var ebCust = ebCustIdx !== '' ? IND_CASES[parseInt(ebCustIdx)] : null;
 
   // Build originator — only @id, PII submitted separately via /append
@@ -865,9 +884,11 @@ async function createTransfer() {
       if (eaCust) {
         ivms101.originator = {
           originatorPerson: [{
-            naturalPerson: {
-              name: { nameIdentifier: [{ primaryIdentifier: eaCust.lastName, secondaryIdentifier: eaCust.firstName, naturalPersonNameIdentifierType: 'LEGL' }] },
-              ...(eaCust.dob ? { dateAndPlaceOfBirth: { dateOfBirth: eaCust.dob } } : {})
+            legalPerson: {
+              name: { nameIdentifier: [{ legalPersonName: eaCust.companyName, legalPersonNameIdentifierType: 'LEGL' }] },
+              nationalIdentification: { nationalIdentifierType: 'RAID', nationalIdentifier: eaCust.regNo },
+              customerIdentification: 'CIF-ORG-' + String(parseInt(eaCustIdx) + 1).padStart(3, '0'),
+              geographicAddress: [{ addressType: 'BIZZ', addressLine: ['Business District'], townName: 'Dubai', countrySubDivision: 'AE-DU', country: eaCust.country || 'AE' }]
             },
             accountNumber: ['did:pkh:eip155:11155111:' + eaWallet]
           }]
@@ -910,9 +931,9 @@ async function createTransfer() {
       ? '<span class="tag" style="background:#fef3c7;color:#92400e">No PII Sent — Waiting for EB</span>'
       : '<span class="tag" style="background:#fee2e2;color:#991b1b">PII: ' + esc(piiStatus) + '</span>';
 
-    var eaName = eaCust ? eaCust.firstName + ' ' + eaCust.lastName : '—';
+    var eaName = eaCust ? eaCust.companyName : '—';
     var ebName = ebCust ? ebCust.firstName + ' ' + ebCust.lastName : '—';
-    var eaDob = eaCust && eaCust.dob ? eaCust.dob : '—';
+    var eaDob = eaCust ? eaCust.country : '—';
     var ebDob = ebCust && ebCust.dob ? ebCust.dob : '—';
 
     result.innerHTML =
@@ -926,10 +947,10 @@ async function createTransfer() {
         '</div>' +
         '<div class="card-header" style="border-top:1px solid #e0e0e0;background:#f8f9fa;font-size:10px">Travel Rule PII Transmitted via IVMS101 ' + piiBadge + '</div>' +
         '<div class="card-body">' +
-          '<div style="font-size:10px;font-weight:600;color:#5b4cdb;margin-bottom:4px">ORIGINATOR</div>' +
-          '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(eaName) + '</span></div>' +
+          '<div style="font-size:10px;font-weight:600;color:#5b4cdb;margin-bottom:4px">ORIGINATOR (Corporate)</div>' +
+          '<div class="cred-row"><span class="k">Company</span><span class="v">' + esc(eaName) + '</span></div>' +
           '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">did:pkh:eip155:11155111:' + esc(eaWallet) + '</span></div>' +
-          '<div class="cred-row"><span class="k">DOB</span><span class="v">' + esc(eaDob) + '</span></div>' +
+          '<div class="cred-row"><span class="k">Country</span><span class="v">' + esc(eaDob) + '</span></div>' +
           '<div style="font-size:10px;font-weight:600;color:#06b6d4;margin:8px 0 4px">BENEFICIARY</div>' +
           '<div class="cred-row"><span class="k">Name</span><span class="v">' + esc(ebName) + '</span></div>' +
           '<div class="cred-row"><span class="k">Account</span><span class="v mono" style="font-size:10px">did:pkh:eip155:11155111:' + esc((CASE === 'case6' && window.case6UnregisteredAddress) ? window.case6UnregisteredAddress : ebWallet) + '</span></div>' +

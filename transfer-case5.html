@@ -228,7 +228,7 @@
       <div class="card"><div class="card-body">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
-            <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator (Entity A's customer)</div>
+            <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator (Entity A — Corporate)</div>
             <div class="cred-row" style="margin-bottom:6px">
               <span class="k">Select</span>
               <select id="ea-customer-select" onchange="updateEaCustomer()" style="margin-left:auto;padding:2px 6px;font-size:11px;border:1px solid #e0e0e0;border-radius:3px">
@@ -236,8 +236,8 @@
               </select>
             </div>
             <div id="ea-customer-detail" style="display:none">
-              <div class="cred-row"><span class="k">Name</span><span class="v" id="ea-customer-name">—</span></div>
-              <div class="cred-row"><span class="k">DOB</span><span class="v" id="ea-customer-dob">—</span></div>
+              <div class="cred-row"><span class="k">Company</span><span class="v" id="ea-customer-name">—</span></div>
+              <div class="cred-row"><span class="k">Country</span><span class="v" id="ea-customer-dob">—</span></div>
               <div class="cred-row"><span class="k">AML Hit</span><span class="v" id="ea-customer-hit">—</span></div>
             </div>
           </div>
@@ -347,10 +347,10 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <!-- Originator -->
             <div>
-              <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator</div>
-              <div class="form-group"><label>First Name <span id="pii-warn-orig-fn" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-fn" style="font-size:11px"></div>
-              <div class="form-group"><label>Last Name <span id="pii-warn-orig-ln" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-ln" style="font-size:11px"></div>
-              <div class="form-group"><label>Date of Birth <span id="pii-warn-orig-dob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-dob" placeholder="1990-01-01" style="font-size:11px"></div>
+              <div style="font-size:10px;font-weight:600;color:#5b4cdb;text-transform:uppercase;margin-bottom:6px">Originator (Corporate)</div>
+              <div class="form-group"><label>Company Name <span id="pii-warn-orig-fn" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-fn" style="font-size:11px"></div>
+              <div class="form-group"><label>— <span id="pii-warn-orig-ln" style="display:none" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-ln" style="font-size:11px"></div>
+              <div class="form-group"><label>— <span id="pii-warn-orig-dob" style="display:none" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-dob" placeholder="1990-01-01" style="font-size:11px"></div>
               <div class="form-group"><label>Place of Birth <span id="pii-warn-orig-pob" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-pob" placeholder="AE" style="font-size:11px"></div>
               <div class="form-group"><label>National ID <span id="pii-warn-orig-nid" style="color:#d97706;display:none">⚠</span></label><input type="text" id="pii-orig-nid" placeholder="Passport number" style="font-size:11px"></div>
               <div class="form-group"><label>National ID Type</label><input type="text" id="pii-orig-nidtype" placeholder="PASSPORT" style="font-size:11px"></div>
