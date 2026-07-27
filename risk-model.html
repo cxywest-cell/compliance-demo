@@ -36,7 +36,7 @@
   .section-title:first-child { margin-top: 0; }
 
   /* Risk gauge */
-  .risk-gauge-container { display: flex; align-items: center; justify-content: center; gap: 30px; }
+  .risk-gauge-container { position: relative; display: flex; align-items: center; justify-content: center; gap: 30px; }
   .risk-gauge { position: relative; width: 180px; height: 180px; }
   .risk-score-big { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
   .risk-score-big .num { font-size: 48px; font-weight: 800; line-height: 1; }
@@ -227,15 +227,17 @@
         <div class="card-header">Combined Risk Score — Sample Transaction</div>
         <div class="card-body">
           <div class="risk-gauge-container">
-            <svg class="risk-gauge" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r="85" fill="none" stroke="#f0f0f0" stroke-width="16"/>
-              <circle cx="100" cy="100" r="85" fill="none" stroke="#d97706" stroke-width="16"
-                stroke-dasharray="534" stroke-dashoffset="200"
-                transform="rotate(-90 100 100)" stroke-linecap="round"/>
-            </svg>
-            <div class="risk-score-big">
-              <div class="num rl-mid">4.9</div>
-              <div class="label">Medium-Low</div>
+            <div style="position:relative;width:180px;height:180px">
+              <svg width="180" height="180" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="85" fill="none" stroke="#f0f0f0" stroke-width="16"/>
+                <circle cx="100" cy="100" r="85" fill="none" stroke="#d97706" stroke-width="16"
+                  stroke-dasharray="534" stroke-dashoffset="200"
+                  transform="rotate(-90 100 100)" stroke-linecap="round"/>
+              </svg>
+              <div class="risk-score-big">
+                <div class="num rl-mid">4.9</div>
+                <div class="label">Medium-Low</div>
+              </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px">
               <div style="font-size:11px;color:#888">Sample: 3,500 USDT-TEST transfer<br>Originator: Lorem Mockrime LLC (Active NFE → Qualified)<br>Beneficiary: John Doe<br>On-chain score: 3.1 (Elliptic, clean)</div>
