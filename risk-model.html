@@ -271,7 +271,9 @@
                 </select>
               </span>
             </div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboItem">UBO Structure: 3 UBOs — all screened</span></div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> UBO Structure: 3 UBOs identified</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboIdItem">UBO Identity: All verified</span></div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboScreenItem">UBO Screening: 3/3 screened, all clear</span></div>
           </div>
           <div class="cdd-card">
             <div class="cdd-card-title" id="sourceCardTitle">Source Verification</div>
@@ -483,11 +485,20 @@ function updateCRS() {
   // 3. CDD section
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
 
-  var uboText;
-  if (d.uboScreen === 'all') uboText = 'UBO Structure: 3 UBOs — ALL screened (one hit = High Risk)';
-  else if (d.uboScreen === 'controlling') uboText = 'UBO Structure: 3 UBOs — controlling persons screened';
-  else uboText = 'UBO Structure: 3 UBOs identified (no screening required)';
-  document.getElementById('uboItem').textContent = uboText;
+  // UBO identity + screening are separate properties
+  var uboId = document.getElementById('uboIdItem');
+  var uboScreen = document.getElementById('uboScreenItem');
+
+  if (d.uboScreen === 'none') {
+    uboId.textContent = 'UBO Identity: Not required (FI)';
+    uboScreen.textContent = 'UBO Screening: Not required (FI)';
+  } else if (d.uboScreen === 'controlling') {
+    uboId.textContent = 'UBO Identity: Controlling persons verified';
+    uboScreen.textContent = 'UBO Screening: Controlling UBOs cleared';
+  } else {
+    uboId.textContent = 'UBO Identity: 3/3 verified';
+    uboScreen.textContent = 'UBO Screening: 3/3 screened, all clear';
+  }
 
   // SoW/SoF rows — Institutional (Simplified) doesn't require these
   var sow = document.getElementById('sowRow');
@@ -497,15 +508,10 @@ function updateCRS() {
     sow.style.display = 'none';
     sof.style.display = 'none';
     fin.style.display = 'none';
-    document.getElementById('uboScreenItem').textContent = 'UBO Screening: Not required (FI)';
   } else {
     sow.style.display = '';
     sof.style.display = '';
     fin.style.display = '';
-    document.getElementById('uboScreenItem').textContent =
-      d.uboScreen === 'all' ? 'UBO Screening: 3/3 screened, all clear' :
-      d.uboScreen === 'controlling' ? 'UBO Screening: Controlling UBOs clear' :
-      'UBO Screening: Not required';
   }
 
   // 4. Merchant UBO rule
