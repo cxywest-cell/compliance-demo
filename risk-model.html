@@ -108,6 +108,9 @@
   .rs-reject { background: #fee2e2; color: #dc2626; }
   .rule-note { font-size: 9px; color: #888; margin-top: 3px; }
 
+  .crs-dropdown { font-size: 11px; padding: 3px 6px; border: 1px solid #d0d0d0; border-radius: 4px; background: #fff; font-family: inherit; cursor: pointer; }
+  .crs-dropdown:hover { border-color: #5b4cdb; }
+
   .rules-summary { margin-top: 4px; }
   .rules-summary-box { display: flex; align-items: flex-start; gap: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; font-size: 12px; }
   .rules-summary-icon { font-size: 20px; }
@@ -156,7 +159,7 @@
         <div class="tx-party">
           <div class="tx-party-label">Originator (Sender)</div>
           <div class="tx-party-name">Lorem Mockrime LLC</div>
-          <div class="tx-party-sub">Qualified Investor · Active NFE · UAE</div>
+          <div class="tx-party-sub" id="originatorSub">Qualified Investor · Passive NFE · UAE</div>
           <div class="tx-party-addr">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>
         </div>
         <div class="tx-arrow">→</div>
@@ -173,16 +176,36 @@
         <div class="tx-meta-item"><span class="k">Travel Rule: </span><span class="v">Compliant ✓</span></div>
         <div class="tx-meta-item"><span class="k">VASP: </span><span class="v">Known + Confirmed ✓</span></div>
         <div class="tx-meta-item"><span class="k">Threshold: </span><span class="v">At 3,500 USD (VARA)</span></div>
+        <div class="tx-meta-item"><span class="k">CRS Classification: </span>
+          <select id="crsSelect" class="crs-dropdown" onchange="updateCRS()">
+            <optgroup label="Financial Institution">
+              <option value="depository">Depository Institution</option>
+              <option value="custodial">Custodial Institution</option>
+              <option value="investment">Investment Entity</option>
+              <option value="insurance">Specified Insurance Company</option>
+            </optgroup>
+            <optgroup label="Non-Financial Entity (NFE)">
+              <option value="active-income">Active NFE — by Income</option>
+              <option value="active-public">Active NFE — Publicly Traded</option>
+              <option value="active-gov">Active NFE — Governmental</option>
+              <option value="active-holding">Active NFE — Holding</option>
+              <option value="active-startup">Active NFE — Startup</option>
+              <option value="active-treasury">Active NFE — Treasury Finance</option>
+              <option value="active-npo">Active NFE — Non-Profit</option>
+              <option value="passive" selected>Passive NFE</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
     </div>
 
     <!-- ═══ DECISION ═══ -->
     <div class="decision-banner">
       <div class="decision-info">
-        <div class="decision-level rl-mid">Medium-Low Risk</div>
-        <div class="decision-action">Auto-approve with ongoing monitoring · Standard CDD</div>
+        <div class="decision-level rl-mid" id="decisionLevel">Medium-High Risk</div>
+        <div class="decision-action" id="decisionAction">Enhanced Due Diligence (EDD) · Passive NFE — all UBOs screened</div>
       </div>
-      <div class="decision-badge bg-low" style="color:#16a34a">APPROVE</div>
+      <div class="decision-badge" id="decisionBadge" style="color:#d97706">REVIEW</div>
     </div>
 
     <!-- ═══ SCREENING ═══ -->
@@ -241,20 +264,20 @@
     <div class="section-label">Customer Due Diligence</div>
     <div class="section">
       <div class="section-body">
-        <div class="cdd-grid">
+        <div class="cdd-grid" id="cddGrid">
           <div class="cdd-card">
             <div class="cdd-card-title">Onboarding Status</div>
             <div class="cdd-item"><span class="cdd-check">✓</span> KYB Verified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> CRS Classification: Active NFE</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> Investor Category: Qualified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> UBO Structure: 3 UBOs identified</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="crsItem">CRS Classification: Passive NFE</span></div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="investorItem">Investor Category: Qualified</span></div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboItem">UBO Structure: 3 UBOs — all screened</span></div>
           </div>
           <div class="cdd-card">
-            <div class="cdd-card-title">Source Verification</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> Source of Wealth: Verified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> Source of Funds: Verified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> Financial Threshold: Met</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> UBO Screening: All clear</div>
+            <div class="cdd-card-title" id="sourceCardTitle">Source Verification</div>
+            <div class="cdd-item" id="sowRow"><span class="cdd-check">✓</span> Source of Wealth: Verified</div>
+            <div class="cdd-item" id="sofRow"><span class="cdd-check">✓</span> Source of Funds: Verified</div>
+            <div class="cdd-item" id="finRow"><span class="cdd-check">✓</span> Financial Threshold: Met</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboScreenItem">UBO Screening: All clear</span></div>
           </div>
         </div>
       </div>
@@ -382,9 +405,9 @@
               <td><span class="rs rs-pass">NORMAL ✓</span></td>
             </tr>
 
-            <tr>
+            <tr id="uboRuleRow">
               <td><strong>UBO Controlling Interest</strong><div class="rule-src">CRS / FATCA policy</div></td>
-              <td>Any UBO hit → High Risk</td>
+              <td id="uboThreshold">Any UBO hit → High Risk (Passive NFE)</td>
               <td>3 UBOs, all clear</td>
               <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
@@ -394,9 +417,9 @@
     </div>
 
     <div class="rules-summary">
-      <div class="rules-summary-box">
+      <div class="rules-summary-box" id="rulesSummary">
         <span class="rules-summary-icon">⚖</span>
-        <div>
+        <div id="rulesSummaryText">
           <strong>All rules passed.</strong>
           6/6 universal rules satisfied · 8/8 merchant rules satisfied.
           <br>No rule override triggered. Transaction qualifies for auto-approval under current policy.
@@ -410,6 +433,101 @@
 
   </div>
 </div>
+
+<script>
+// ── CRS classification data model ──
+var CRS = {
+  // Financial Institution → Institutional Investor
+  'depository':  { cat:'FI', label:'Depository Institution',          investor:'Institutional', cdd:'Simplified',     risk:'Low',      riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  'custodial':   { cat:'FI', label:'Custodial Institution',           investor:'Institutional', cdd:'Simplified',     risk:'Low',      riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  'investment':  { cat:'FI', label:'Investment Entity',               investor:'Institutional', cdd:'Simplified',     risk:'Low',      riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  'insurance':   { cat:'FI', label:'Specified Insurance Company',     investor:'Institutional', cdd:'Simplified',     risk:'Low',      riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  // Active NFE → Qualified Investor
+  'active-income':   { cat:'NFE-A', label:'Active NFE — by Income',    investor:'Qualified', cdd:'Standard',          risk:'Medium-Low', riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'controlling' },
+  'active-public':   { cat:'NFE-A', label:'Active NFE — Publicly Traded', investor:'Qualified', cdd:'Standard',       risk:'Low',       riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  'active-gov':      { cat:'NFE-A', label:'Active NFE — Governmental', investor:'Qualified', cdd:'Simplified',        risk:'Low',       riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  'active-holding':  { cat:'NFE-A', label:'Active NFE — Holding',      investor:'Qualified', cdd:'Standard',          risk:'Medium',    riskCls:'rl-mid',  badge:'REVIEW',   badgeColor:'#d97706', uboScreen:'controlling' },
+  'active-startup':  { cat:'NFE-A', label:'Active NFE — Startup',      investor:'Qualified', cdd:'Standard',          risk:'Medium-High', riskCls:'rl-mid', badge:'REVIEW',   badgeColor:'#d97706', uboScreen:'all' },
+  'active-treasury': { cat:'NFE-A', label:'Active NFE — Treasury Finance', investor:'Qualified', cdd:'Standard',      risk:'Medium-Low', riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'controlling' },
+  'active-npo':      { cat:'NFE-A', label:'Active NFE — Non-Profit',   investor:'Qualified', cdd:'Simplified',        risk:'Low',       riskCls:'rl-low',  badge:'APPROVE',  badgeColor:'#16a34a', uboScreen:'none' },
+  // Passive NFE → Qualified Investor (High Risk)
+  'passive':     { cat:'NFE-P', label:'Passive NFE',                  investor:'Qualified', cdd:'Enhanced (EDD)',     risk:'Medium-High', riskCls:'rl-mid', badge:'REVIEW',   badgeColor:'#d97706', uboScreen:'all' },
+};
+
+function updateCRS() {
+  var v = document.getElementById('crsSelect').value;
+  var d = CRS[v];
+  if (!d) return;
+
+  // 1. Originator party sub-text
+  document.getElementById('originatorSub').textContent =
+    d.investor + ' Investor · ' + d.label + ' · UAE';
+
+  // 2. Decision banner
+  var dl = document.getElementById('decisionLevel');
+  dl.textContent = d.risk + ' Risk';
+  dl.className = 'decision-level ' + d.riskCls;
+
+  var actionMap = {
+    'Simplified':     'Simplified CDD · Institutional path — KYB verified',
+    'Standard':       'Standard CDD · SoW/SoF verified · UBOs identified',
+    'Enhanced (EDD)': 'Enhanced Due Diligence (EDD) · ' + d.label + (d.uboScreen === 'all' ? ' — ALL UBOs screened' : ' — controlling UBOs screened'),
+  };
+  document.getElementById('decisionAction').textContent = actionMap[d.cdd];
+
+  var badge = document.getElementById('decisionBadge');
+  badge.textContent = d.badge;
+  badge.style.color = d.badgeColor;
+
+  // 3. CDD section
+  document.getElementById('crsItem').textContent = 'CRS Classification: ' + d.label;
+  document.getElementById('investorItem').textContent = 'Investor Category: ' + d.investor;
+
+  var uboText;
+  if (d.uboScreen === 'all') uboText = 'UBO Structure: 3 UBOs — ALL screened (one hit = High Risk)';
+  else if (d.uboScreen === 'controlling') uboText = 'UBO Structure: 3 UBOs — controlling persons screened';
+  else uboText = 'UBO Structure: 3 UBOs identified (no screening required)';
+  document.getElementById('uboItem').textContent = uboText;
+
+  // SoW/SoF rows — Institutional (Simplified) doesn't require these
+  var sow = document.getElementById('sowRow');
+  var sof = document.getElementById('sofRow');
+  var fin = document.getElementById('finRow');
+  if (d.cdd === 'Simplified') {
+    sow.style.display = 'none';
+    sof.style.display = 'none';
+    fin.style.display = 'none';
+    document.getElementById('uboScreenItem').textContent = 'UBO Screening: Not required (FI)';
+  } else {
+    sow.style.display = '';
+    sof.style.display = '';
+    fin.style.display = '';
+    document.getElementById('uboScreenItem').textContent =
+      d.uboScreen === 'all' ? 'UBO Screening: 3/3 screened, all clear' :
+      d.uboScreen === 'controlling' ? 'UBO Screening: Controlling UBOs clear' :
+      'UBO Screening: Not required';
+  }
+
+  // 4. Merchant UBO rule
+  var uboThresh = document.getElementById('uboThreshold');
+  if (d.uboScreen === 'all') uboThresh.textContent = 'Any UBO hit → High Risk (Passive NFE / Startup)';
+  else if (d.uboScreen === 'controlling') uboThresh.textContent = 'Controlling UBO hit → Enhanced Review';
+  else uboThresh.textContent = 'Not applicable — no UBO screening required';
+
+  // 5. Summary box
+  var box = document.getElementById('rulesSummary');
+  var txt = document.getElementById('rulesSummaryText');
+  if (d.badge === 'APPROVE') {
+    box.style.background = '#f0fdf4';
+    box.style.borderColor = '#bbf7d0';
+    txt.innerHTML = '<strong>All rules passed.</strong> 6/6 universal rules satisfied · 8/8 merchant rules satisfied.<br>No rule override triggered. Transaction qualifies for auto-approval under current policy.';
+  } else {
+    box.style.background = '#fffbeb';
+    box.style.borderColor = '#fcd34d';
+    txt.innerHTML = '<strong>Manual review required.</strong> 6/6 universal rules satisfied · 7/8 merchant rules satisfied.<br>CRS classification (' + d.label + ') triggers ' + d.cdd + '. Compliance officer must approve before settlement.';
+  }
+}
+</script>
 
 </body>
 </html>
