@@ -90,28 +90,27 @@
   .ds-manual { background: #fef3c7; color: #92400e; }
   .ds-fatca { background: #fce7f3; color: #9d174d; }
 
-  /* Risk dimensions */
-  .dim-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
-  .dim-row:last-child { border-bottom: none; }
-  .dim-row:hover { background: #fafafa; }
-  .dim-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .dim-dot.low { background: #16a34a; }
-  .dim-dot.mid { background: #d97706; }
-  .dim-dot.high { background: #dc2626; }
-  .dim-name { width: 140px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-  .dim-bar-wrap { flex: 1; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
-  .dim-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
-  .dim-bar.low { background: #16a34a; }
-  .dim-bar.mid { background: #d97706; }
-  .dim-bar.high { background: #dc2626; }
-  .dim-detail { display: none; padding: 8px 0 8px 20px; }
-  .dim-row.open .dim-detail { display: block; }
-  .dim-detail .dd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
-  .dim-detail .dd-k { color: #888; }
-  .dim-detail .dd-v { font-weight: 500; }
-  .dim-detail .dd-section { font-size: 10px; font-weight: 700; color: #555; margin-top: 8px; margin-bottom: 4px; padding-top: 6px; border-top: 1px solid #e0e0e0; }
-  .dim-detail .dd-automated { color: #5b21b6; }
-  .dim-detail .dd-operational { color: #92400e; }
+  /* Rules engine */
+  .rule-tier-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
+  .rule-tier-badge.universal { background: #1e293b; color: #94a3b8; }
+  .rule-tier-badge.merchant { background: #581c87; color: #e9d5ff; }
+
+  .rules-table { width: 100%; border-collapse: collapse; }
+  .rules-table th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #999; text-align: left; padding: 8px 14px; border-bottom: 1px solid #e0e0e0; background: #fafafa; }
+  .rules-table td { font-size: 11px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  .rules-table tbody tr { cursor: default; }
+  .rules-table .rule-src { font-size: 9px; color: #aaa; margin-top: 2px; }
+
+  .rs { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+  .rs-pass { background: #dcfce7; color: #16a34a; }
+  .rs-skip { background: #f0f0f0; color: #888; }
+  .rs-review { background: #fef3c7; color: #d97706; }
+  .rs-reject { background: #fee2e2; color: #dc2626; }
+  .rule-note { font-size: 9px; color: #888; margin-top: 3px; }
+
+  .rules-summary { margin-top: 4px; }
+  .rules-summary-box { display: flex; align-items: flex-start; gap: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; font-size: 12px; }
+  .rules-summary-icon { font-size: 20px; }
 
   .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 20px 0 10px; }
 
@@ -261,112 +260,151 @@
       </div>
     </div>
 
-    <!-- ═══ RISK DIMENSIONS ═══ -->
-    <div class="section-label">Risk Dimensions</div>
+    <!-- ═══ COMPLIANCE RULES ═══ -->
+    <div class="section-label">Compliance Rules Engine</div>
+
+    <!-- Universal Tier -->
     <div class="section">
-      <div class="section-body" style="padding-top:8px">
+      <div class="section-header">
+        <span class="rule-tier-badge universal">UNIVERSAL</span>
+        <div class="section-title">Regulatory Floor — Applies to All Transactions</div>
+      </div>
+      <div class="section-body" style="padding:0">
+        <table class="rules-table">
+          <thead>
+            <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr onclick="this.classList.toggle('expanded')">
+              <td><strong>Travel Rule</strong><div class="rule-src">FATF R.16 · VARA Rulebook</div></td>
+              <td>≥ 3,500 USD → submit IVMS101</td>
+              <td>3,500 USD</td>
+              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">PII submitted & confirmed</div></td>
+            </tr>
+            <tr><td colspan="4" class="rule-detail-row"><div class="rule-detail">
+              <b>Regulation:</b> FATF Recommendation 16 requires originator and beneficiary information for all VASP transfers meeting the USD 1,000 threshold ( Recommendation 15 type). VARA enforces a 3,500 AED (~950 USD) domestic threshold. This transaction at 3,500 USD meets both.<br>
+              <b>Action on fail:</b> BLOCK transfer, cannot proceed without IVMS101 exchange.
+            </div></td></tr>
 
-        <div class="dim-row" onclick="this.classList.toggle('open')">
-          <div class="dim-dot low"></div>
-          <div class="dim-name">Customer</div>
-          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:40%"></div></div>
-          <div class="dim-detail">
-            <div class="dd-section dd-automated">🔌 Automated (API)</div>
-            <div class="dd-row"><span class="dd-k">Investor Type</span><span class="dd-v">Qualified (Active NFE)</span></div>
-            <div class="dd-row"><span class="dd-k">KYB Status</span><span class="dd-v">Verified ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Entity Screening</span><span class="dd-v">All clear ✓</span></div>
-            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
-            <div class="dd-row"><span class="dd-k">Customer Profiling</span><span class="dd-v">Expected activity aligned ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Customer Tenure</span><span class="dd-v">8 months (established)</span></div>
-            <div class="dd-row"><span class="dd-k">Income Bracket</span><span class="dd-v">High net worth</span></div>
-          </div>
+            <tr>
+              <td><strong>Sanctions Screening</strong><div class="rule-src">UN / OFAC / EU / HMT</div></td>
+              <td>All parties must clear</td>
+              <td>Screened</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>PEP &amp; Adverse Media</strong><div class="rule-src">FATF R.12</div></td>
+              <td>All parties must clear</td>
+              <td>Screened</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Counterparty VASP</strong><div class="rule-src">FATF R.16 · Travel Rule</div></td>
+              <td>Must be registered & confirmed</td>
+              <td>Known + Confirmed</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>On-chain Address Screening</strong><div class="rule-src">FATF R.15 · Internal AML</div></td>
+              <td>No direct sanctions/mixer exposure</td>
+              <td>Screened</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Beneficiary IVMS101</strong><div class="rule-src">FATF R.16</div></td>
+              <td>Required fields present & decrypted</td>
+              <td>Full PII</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Merchant Tier -->
+    <div class="section">
+      <div class="section-header">
+        <span class="rule-tier-badge merchant">MERCHANT</span>
+        <div class="section-title">VASP Policy — This Originator's Internal Rules</div>
+      </div>
+      <div class="section-body" style="padding:0">
+        <table class="rules-table">
+          <thead>
+            <tr><th>Rule</th><th>Threshold</th><th>This Transaction</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>High-Value Review</strong><div class="rule-src">Internal policy</div></td>
+              <td>&gt; 50,000 USD → manual review</td>
+              <td>3,500 USD</td>
+              <td><span class="rs rs-skip">BELOW</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Counterparty Risk Tier</strong><div class="rule-src">Internal tiering</div></td>
+              <td>Tier 1 = auto · Tier 2 = EDD · Tier 3 = reject</td>
+              <td>Tier 1</td>
+              <td><span class="rs rs-pass">AUTO-APPROVE</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Jurisdiction Gate</strong><div class="rule-src">FATF list monitoring</div></td>
+              <td>Blacklist = hard reject · Grey list = EDD</td>
+              <td>UAE (clear)</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Mixer / Darknet Exposure</strong><div class="rule-src">Chain risk policy</div></td>
+              <td>Direct exposure = hard reject</td>
+              <td>None detected</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Structuring Detection</strong><div class="rule-src">AML heuristic</div></td>
+              <td>Sub-threshold pattern within 24h → review</td>
+              <td>Not detected</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>New Customer Watch</strong><div class="rule-src">Onboarding policy</div></td>
+              <td>&lt; 30 days → enhanced monitoring</td>
+              <td>8 months</td>
+              <td><span class="rs rs-skip">STANDARD</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Velocity Limit</strong><div class="rule-src">Fraud prevention</div></td>
+              <td>&gt; 5 tx/hour from same originator → review</td>
+              <td>1 tx in 24h</td>
+              <td><span class="rs rs-pass">NORMAL ✓</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>UBO Controlling Interest</strong><div class="rule-src">CRS / FATCA policy</div></td>
+              <td>Any UBO hit → High Risk</td>
+              <td>3 UBOs, all clear</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rules-summary">
+      <div class="rules-summary-box">
+        <span class="rules-summary-icon">⚖</span>
+        <div>
+          <strong>All rules passed.</strong>
+          6/6 universal rules satisfied · 8/8 merchant rules satisfied.
+          <br>No rule override triggered. Transaction qualifies for auto-approval under current policy.
         </div>
-
-        <div class="dim-row" onclick="this.classList.toggle('open')">
-          <div class="dim-dot low"></div>
-          <div class="dim-name">Counterparty</div>
-          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
-          <div class="dim-detail">
-            <div class="dd-section dd-automated">🔌 Automated (API)</div>
-            <div class="dd-row"><span class="dd-k">VASP Known</span><span class="dd-v">Yes — Tier 1 ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Relationship</span><span class="dd-v">Confirmed ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Beneficiary PII</span><span class="dd-v">Full IVMS101 ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Entity Screening</span><span class="dd-v">All clear ✓</span></div>
-            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
-            <div class="dd-row"><span class="dd-k">VASP Risk Tier</span><span class="dd-v">Tier 1 (fully licensed)</span></div>
-            <div class="dd-row"><span class="dd-k">Counterparty Reputation</span><span class="dd-v">No adverse history</span></div>
-            <div class="dd-row"><span class="dd-k">Address Ownership</span><span class="dd-v">Confirmed ✓</span></div>
-          </div>
-        </div>
-
-        <div class="dim-row" onclick="this.classList.toggle('open')">
-          <div class="dim-dot mid"></div>
-          <div class="dim-name">Geographic</div>
-          <div class="dim-bar-wrap"><div class="dim-bar mid" style="width:50%"></div></div>
-          <div class="dim-detail">
-            <div class="dd-section dd-automated">🔌 Automated (API)</div>
-            <div class="dd-row"><span class="dd-k">Originator Country</span><span class="dd-v">UAE</span></div>
-            <div class="dd-row"><span class="dd-k">Counterparty Country</span><span class="dd-v">UAE</span></div>
-            <div class="dd-row"><span class="dd-k">Cross-Border</span><span class="dd-v">No (domestic)</span></div>
-            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
-            <div class="dd-row"><span class="dd-k">FATF Status</span><span class="dd-v">Not blacklisted ✓</span></div>
-            <div class="dd-row"><span class="dd-k">FATF Grey List</span><span class="dd-v">Not on grey list ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Tax Haven</span><span class="dd-v">No ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Crypto-Restricted</span><span class="dd-v">No ✓</span></div>
-          </div>
-        </div>
-
-        <div class="dim-row" onclick="this.classList.toggle('open')">
-          <div class="dim-dot low"></div>
-          <div class="dim-name">Transaction</div>
-          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
-          <div class="dim-detail">
-            <div class="dd-section dd-automated">🔌 Automated (API)</div>
-            <div class="dd-row"><span class="dd-k">Amount</span><span class="dd-v">3,500 USD (at VARA threshold)</span></div>
-            <div class="dd-row"><span class="dd-k">Travel Rule</span><span class="dd-v">Compliant ✓</span></div>
-            <div class="dd-row"><span class="dd-k">PII Completeness</span><span class="dd-v">Full IVMS101 ✓</span></div>
-            
-            <div class="dd-section dd-automated">🏛️ Counterparty VASP Details</div>
-            <div class="dd-row"><span class="dd-k">VASP Name</span><span class="dd-v">The UCE DMCC</span></div>
-            <div class="dd-row"><span class="dd-k">Jurisdiction</span><span class="dd-v">AE (UAE)</span></div>
-            <div class="dd-row"><span class="dd-k">Regulatory Status</span><span class="dd-v">Exempt</span></div>
-            <div class="dd-row"><span class="dd-k">Verification Status</span><span class="dd-v">Unverified</span></div>
-            <div class="dd-row"><span class="dd-k">Travel Rule Capable</span><span class="dd-v">Yes ✓</span></div>
-            
-            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
-            <div class="dd-row"><span class="dd-k">Structuring Detection</span><span class="dd-v">Not detected ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Velocity Analysis</span><span class="dd-v">Normal frequency</span></div>
-            <div class="dd-row"><span class="dd-k">Purpose Alignment</span><span class="dd-v">Consistent with profile</span></div>
-            <div class="dd-row"><span class="dd-k">Time-based Anomalies</span><span class="dd-v">None detected</span></div>
-          </div>
-        </div>
-
-        <div class="dim-row" onclick="this.classList.toggle('open')">
-          <div class="dim-dot low"></div>
-          <div class="dim-name">Blockchain</div>
-          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
-          <div class="dim-detail">
-            <div class="dd-section dd-automated">🔌 Automated (API)</div>
-            <div class="dd-row"><span class="dd-k">Screening Type</span><span class="dd-v">Address Pair (Outgoing)</span></div>
-            <div class="dd-row"><span class="dd-k">On-chain Screening</span><span class="dd-v">All clear ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Exposure Categories</span><span class="dd-v">None flagged</span></div>
-            <div class="dd-row"><span class="dd-k">Exposure Depth</span><span class="dd-v">&gt; 5 hops</span></div>
-          </div>
-        </div>
-
-        <div class="dim-row" onclick="this.classList.toggle('open')">
-          <div class="dim-dot low"></div>
-          <div class="dim-name">Asset / Product</div>
-          <div class="dim-bar-wrap"><div class="dim-bar low" style="width:20%"></div></div>
-          <div class="dim-detail">
-            <div class="dd-section dd-automated">🔌 Automated (API)</div>
-            <div class="dd-row"><span class="dd-k">Asset Type</span><span class="dd-v">USDT (stablecoin — low risk)</span></div>
-            <div class="dd-row"><span class="dd-k">Wallet Type</span><span class="dd-v">Custodial (both sides)</span></div>
-            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
-            <div class="dd-row"><span class="dd-k">Service Channel</span><span class="dd-v">Standard web platform</span></div>
-          </div>
-        </div>
-
       </div>
     </div>
 
