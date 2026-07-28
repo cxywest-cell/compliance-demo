@@ -121,25 +121,70 @@ bash start.sh
 
 ---
 
-> ### 🚨 **网络代理配置（重要）**
+> ### 🚨 **Network Proxy Configuration (Important)**
 > 
-> **为什么需要代理？**
+> **Why do you need a proxy?**
 > 
-> 本项目需要访问外部 API（Notabene、Sumsub、Elliptic），如果你的网络环境无法直接访问外网，需要配置代理。
+> This project needs to access external APIs (Notabene, Sumsub, Elliptic). If your network environment cannot directly access the internet, you need to configure a proxy.
 > 
-> **如何配置？**
+> **How to configure the proxy?**
 > 
-> 设置环境变量（在启动服务器前）：
+> **Linux / macOS (Bash/Zsh):**
 > ```bash
+> # Set proxy (run before starting the server)
 > export HTTP_PROXY=http://127.0.0.1:7892
 > export HTTPS_PROXY=http://127.0.0.1:7892
+> 
+> # Verify proxy is set
+> echo $HTTP_PROXY
+> 
+> # Start the server
+> node server.js
 > ```
 > 
-> **不同环境的行为：**
-> - ✅ **有代理环境变量** → 自动通过代理访问外部 API
-> - ✅ **无代理环境变量** → 直接连接外部 API（适用于可直连外网的环境）
+> **Windows (PowerShell):**
+> ```powershell
+> # Set proxy
+> $env:HTTP_PROXY="http://127.0.0.1:7892"
+> $env:HTTPS_PROXY="http://127.0.0.1:7892"
 > 
-> **注意：** Node.js 不会自动读取系统代理设置，必须通过环境变量显式配置。代码已内置 `https-proxy-agent` 自动适配两种场景。
+> # Verify proxy is set
+> echo $env:HTTP_PROXY
+> 
+> # Start the server
+> node server.js
+> ```
+> 
+> **Windows (CMD):**
+> ```cmd
+> # Set proxy
+> set HTTP_PROXY=http://127.0.0.1:7892
+> set HTTPS_PROXY=http://127.0.0.1:7892
+> 
+> # Start the server
+> node server.js
+> ```
+> 
+> **How to remove the proxy?**
+> 
+> ```bash
+> # Linux / macOS
+> unset HTTP_PROXY HTTPS_PROXY
+> 
+> # PowerShell
+> Remove-Item Env:HTTP_PROXY
+> Remove-Item Env:HTTPS_PROXY
+> 
+> # CMD
+> set HTTP_PROXY=
+> set HTTPS_PROXY=
+> ```
+> 
+> **Behavior in different environments:**
+> - ✅ **With proxy environment variables** → Automatically uses proxy to access external APIs
+> - ✅ **Without proxy environment variables** → Directly connects to external APIs (suitable for environments with direct internet access)
+> 
+> **Note:** Node.js does not automatically read system proxy settings. You must explicitly configure it through environment variables. The code includes `https-proxy-agent` to automatically adapt to both scenarios.
 
 ---
 
