@@ -111,6 +111,17 @@
   .crs-dropdown { font-size: 11px; padding: 3px 6px; border: 1px solid #d0d0d0; border-radius: 4px; background: #fff; font-family: inherit; cursor: pointer; }
   .crs-dropdown:hover { border-color: #5b4cdb; }
 
+  /* UBO rows */
+  .ubo-row { padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
+  .ubo-row:last-child { border-bottom: none; }
+  .ubo-name { font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .ubo-pct { font-size: 10px; color: #888; font-weight: 400; }
+  .ubo-screen { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+  .ubo-tag { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+  .ubo-tag.ok { background: #dcfce7; color: #16a34a; }
+  .ubo-tag.hit { background: #fee2e2; color: #dc2626; }
+  .ubo-tag.na { background: #f0f0f0; color: #aaa; }
+
   .rules-summary { margin-top: 4px; }
   .rules-summary-box { display: flex; align-items: flex-start; gap: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; font-size: 12px; }
   .rules-summary-icon { font-size: 20px; }
@@ -272,9 +283,36 @@
               </span>
             </div>
             <div class="cdd-item"><span class="cdd-check">✓</span> KYB Verified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> UBO Structure: 3 UBOs identified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboIdItem">UBO Identity: All verified</span></div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboScreenItem">UBO Screening: 3/3 screened, all clear</span></div>
+            <div id="uboSection">
+              <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">UBO Structure &amp; Screening</div>
+              <div class="ubo-row">
+                <div class="ubo-name">Sarah Mitchell<span class="ubo-pct">38%</span></div>
+                <div class="ubo-screen">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanctions ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
+                </div>
+              </div>
+              <div class="ubo-row">
+                <div class="ubo-name">James Okonkwo<span class="ubo-pct">35%</span></div>
+                <div class="ubo-screen">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanctions ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
+                </div>
+              </div>
+              <div class="ubo-row">
+                <div class="ubo-name">Li Wei<span class="ubo-pct">27%</span></div>
+                <div class="ubo-screen">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanctions ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="cdd-card">
             <div class="cdd-card-title" id="sourceCardTitle">Source Verification</div>
@@ -486,19 +524,19 @@ function updateCRS() {
   // 3. CDD section
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
 
-  // UBO identity + screening are separate properties
-  var uboId = document.getElementById('uboIdItem');
-  var uboScreen = document.getElementById('uboScreenItem');
-
+  // UBO section visibility
+  var uboSection = document.getElementById('uboSection');
   if (d.uboScreen === 'none') {
-    uboId.textContent = 'UBO Identity: Not required (FI)';
-    uboScreen.textContent = 'UBO Screening: Not required (FI)';
-  } else if (d.uboScreen === 'controlling') {
-    uboId.textContent = 'UBO Identity: Controlling persons verified';
-    uboScreen.textContent = 'UBO Screening: Controlling UBOs cleared';
+    uboSection.innerHTML = '<div style="font-size:11px;color:#aaa;padding:8px 0">UBO Screening: Not required (Financial Institution)</div>';
   } else {
-    uboId.textContent = 'UBO Identity: 3/3 verified';
-    uboScreen.textContent = 'UBO Screening: 3/3 screened, all clear';
+    uboSection.innerHTML =
+      '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">UBO Structure &amp; Screening</div>' +
+      '<div class="ubo-row"><div class="ubo-name">Sarah Mitchell<span class="ubo-pct">38%</span></div><div class="ubo-screen">' +
+        '<span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanctions ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
+      '<div class="ubo-row"><div class="ubo-name">James Okonkwo<span class="ubo-pct">35%</span></div><div class="ubo-screen">' +
+        '<span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanctions ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
+      '<div class="ubo-row"><div class="ubo-name">Li Wei<span class="ubo-pct">27%</span></div><div class="ubo-screen">' +
+        '<span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanctions ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>';
   }
 
   // SoW/SoF rows — Institutional (Simplified) doesn't require these
