@@ -18,6 +18,7 @@ process.on('uncaughtException', (err) => {
   console.error('[Uncaught]', err.message);
 });
 const https = require('https');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
@@ -678,40 +679,98 @@ async function getNotabeneToken(clientId, clientSecret) {
     grant_type: 'client_credentials',
     audience: NOTABENE_API_BASE
   });
-  const resp = await fetch(NOTABENE_AUTH_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params
+
+  // Use proxy agent for Notabene auth calls
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  const agent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+
+  return new Promise((resolve, reject) => {
+    const url = new URL(NOTABENE_AUTH_URL);
+    const options = {
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(params.toString())
+      },
+      agent
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (!json.access_token) {
+            reject(new Error('Notabene auth failed: ' + data));
+            return;
+          }
+          notabeneTokenCache[clientId] = {
+            token: json.access_token,
+            expiresAt: Date.now() + (json.expires_in - 3600) * 1000
+          };
+          resolve(json.access_token);
+        } catch (e) {
+          reject(new Error('Notabene auth failed: ' + data));
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(new Error('Notabene auth request failed: ' + e.message));
+    });
+
+    req.write(params.toString());
+    req.end();
   });
-  const data = await resp.json();
-  if (!data.access_token) {
-    throw new Error('Notabene auth failed: ' + JSON.stringify(data));
-  }
-  notabeneTokenCache[clientId] = {
-    token: data.access_token,
-    expiresAt: Date.now() + (data.expires_in - 3600) * 1000
-  };
-  return data.access_token;
 }
 
 async function notabeneApi(method, path, token, body) {
-  const url = NOTABENE_API_BASE + path;
+  const url = new URL(NOTABENE_API_BASE + path);
   console.log(`[NOTABENE] ${method} ${path}`);
-  const opts = {
-    method,
+  
+  // Use proxy agent for Notabene API calls
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  const agent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+  
+  const options = {
+    hostname: url.hostname,
+    port: url.port || 443,
+    path: url.pathname + url.search,
+    method: method,
     headers: {
       'Authorization': 'Bearer ' + token,
       'Content-Type': 'application/json'
-    }
+    },
+    agent
   };
-  if (body && method !== 'GET') opts.body = JSON.stringify(body);
 
-  const resp = await fetch(url, opts);
-  const text = await resp.text();
-  let data;
-  try { data = JSON.parse(text); } catch(e) { data = text; }
-  console.log(`[NOTABENE RESULT] ${resp.status}`);
-  return data;
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        console.log(`[NOTABENE RESULT] ${res.statusCode}`);
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          resolve(data);
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      reject(new Error('Notabene API request failed: ' + e.message));
+    });
+
+    if (body && method !== 'GET') {
+      req.write(JSON.stringify(body));
+    }
+    req.end();
+  });
 }
 
 // Get auth token
