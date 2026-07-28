@@ -258,7 +258,6 @@
         <div class="cdd-grid" id="cddGrid">
           <div class="cdd-card">
             <div class="cdd-card-title">Onboarding Status</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> Entity Screening: Clear (sanctions/PEP/crime)</div>
             <div class="cdd-item" style="flex-direction:column;align-items:flex-start;gap:4px">
               <span><span class="cdd-check">✓</span> <span id="customerTypeItem">Customer Type: Qualified Investor</span></span>
               <span style="font-size:10px;color:#888;margin-left:22px">Proof (CRS/FATCA):
@@ -282,9 +281,17 @@
                 </select>
               </span>
             </div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> KYB Verified</div>
-            <div id="uboSection">
-              <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">UBO Structure &amp; Screening</div>
+            <div id="kybSection">
+              <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>
+              <div class="ubo-row">
+                <div class="ubo-name">Corporate Entity — Lorem Mockrime LLC</div>
+                <div class="ubo-screen">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanctions ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
+                </div>
+              </div>
               <div class="ubo-row">
                 <div class="ubo-name">Sarah Mitchell<span class="ubo-pct">38%</span></div>
                 <div class="ubo-screen">
@@ -528,12 +535,18 @@ function updateCRS() {
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
 
   // UBO section visibility
-  var uboSection = document.getElementById('uboSection');
+  var kybSection = document.getElementById('kybSection');
   if (d.uboScreen === 'none') {
-    uboSection.innerHTML = '<div style="font-size:11px;color:#aaa;padding:8px 0">UBO Screening: Not required (Financial Institution)</div>';
+    kybSection.innerHTML =
+      '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
+      '<div class="ubo-row"><div class="ubo-name">Corporate Entity — Lorem Mockrime LLC</div><div class="ubo-screen">' +
+        '<span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanctions ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
+      '<div style="font-size:10px;color:#aaa;padding:4px 0">UBO verification not required (Financial Institution)</div>';
   } else {
-    uboSection.innerHTML =
-      '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">UBO Structure &amp; Screening</div>' +
+    kybSection.innerHTML =
+      '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
+      '<div class="ubo-row"><div class="ubo-name">Corporate Entity — Lorem Mockrime LLC</div><div class="ubo-screen">' +
+        '<span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanctions ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
       '<div class="ubo-row"><div class="ubo-name">Sarah Mitchell<span class="ubo-pct">38%</span></div><div class="ubo-screen">' +
         '<span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanctions ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
       '<div class="ubo-row"><div class="ubo-name">James Okonkwo<span class="ubo-pct">35%</span></div><div class="ubo-screen">' +
