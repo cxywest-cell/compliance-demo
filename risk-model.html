@@ -52,12 +52,26 @@
   .decision-action { font-size: 12px; color: #666; margin-top: 2px; }
   .decision-badge { padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; }
 
+  /* Red flag section */
+  .red-flag-section { background: #fff; border: 2px solid #fee2e2; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .red-flag-header { background: #fef2f2; padding: 14px 18px; border-bottom: 1px solid #fecaca; display: flex; align-items: center; gap: 12px; }
+  .red-flag-title { font-size: 13px; font-weight: 700; color: #dc2626; flex: 1; }
+  .red-flag-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: #dcfce7; color: #16a34a; }
+  .red-flag-body { padding: 16px 18px; }
+  .red-flag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .rf-category { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; }
+  .rf-category-title { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+  .rf-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 11px; }
+  .rf-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+  .rf-icon.clear { background: #dcfce7; color: #16a34a; }
+  .rf-name { flex: 1; }
+  .rf-result { font-size: 10px; font-weight: 700; color: #16a34a; }
+  .rf-action { font-size: 9px; color: #888; margin-left: 4px; }
+
   /* Section */
   .section { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
   .section-header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #f0f0f0; }
-  .section-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
   .section-title { font-size: 13px; font-weight: 700; flex: 1; }
-  .section-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
   .section-body { padding: 16px 18px; }
 
   /* Screening panels */
@@ -114,6 +128,9 @@
   .dim-detail .dd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
   .dim-detail .dd-k { color: #888; }
   .dim-detail .dd-v { font-weight: 500; }
+  .dim-detail .dd-section { font-size: 10px; font-weight: 700; color: #555; margin-top: 8px; margin-bottom: 4px; padding-top: 6px; border-top: 1px solid #e0e0e0; }
+  .dim-detail .dd-automated { color: #5b21b6; }
+  .dim-detail .dd-operational { color: #92400e; }
 
   /* Summary bar */
   .summary-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; margin-top: 12px; }
@@ -196,6 +213,30 @@
       </div>
     </div>
 
+    <!-- ═══ RED FLAG OVERRIDE ═══ -->
+    <div class="red-flag-section">
+      <div class="red-flag-header">
+        <div class="red-flag-title">⚠ Step 1: Red Flag Override Check</div>
+        <div class="red-flag-status">✓ PASSED — No red flags</div>
+      </div>
+      <div class="red-flag-body">
+        <div class="red-flag-grid">
+          <div class="rf-category">
+            <div class="rf-category-title">Entity Screening Red Flags</div>
+            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Sanctions match</div><div class="rf-result">CLEAR</div><div class="rf-action">→ HARD REJECT</div></div>
+            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">High-risk jurisdiction (FATF blacklist)</div><div class="rf-result">CLEAR</div><div class="rf-action">→ HARD REJECT</div></div>
+            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">PEP + no source of wealth</div><div class="rf-result">N/A</div><div class="rf-action">→ MANDATORY EDD</div></div>
+          </div>
+          <div class="rf-category">
+            <div class="rf-category-title">On-chain Screening Red Flags</div>
+            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Direct mixer/tumbler exposure</div><div class="rf-result">CLEAR</div><div class="rf-action">→ MANDATORY EDD</div></div>
+            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Structuring detected</div><div class="rf-result">CLEAR</div><div class="rf-action">→ MANDATORY REVIEW</div></div>
+            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Privacy coin</div><div class="rf-result">N/A</div><div class="rf-action">→ MANDATORY REVIEW</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ DECISION ═══ -->
     <div class="decision-banner">
       <div class="decision-score rl-mid">4.9</div>
@@ -207,7 +248,7 @@
     </div>
 
     <!-- ═══ SCREENING ═══ -->
-    <div class="section-label">Screening Results</div>
+    <div class="section-label">Step 2: Screening Results</div>
     <div class="screening-grid">
 
       <!-- Entity Screening -->
@@ -281,7 +322,7 @@
     </div>
 
     <!-- ═══ RISK DIMENSIONS ═══ -->
-    <div class="section-label">Risk Dimensions — Weighted Scoring</div>
+    <div class="section-label">Step 3: Risk Dimensions — Weighted Scoring</div>
     <div class="section">
       <div class="section-body" style="padding-top:8px">
 
@@ -293,10 +334,14 @@
           <div class="dim-weight">× 25%</div>
           <div class="dim-weighted">1.00</div>
           <div class="dim-detail">
+            <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Investor Type</span><span class="dd-v">Qualified (Active NFE)</span></div>
             <div class="dd-row"><span class="dd-k">KYB Status</span><span class="dd-v">Verified ✓</span></div>
             <div class="dd-row"><span class="dd-k">Entity Screening</span><span class="dd-v">All clear ✓</span></div>
-            <div class="dd-row"><span class="dd-k">SoW / SoF</span><span class="dd-v">Verified ✓</span></div>
+            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
+            <div class="dd-row"><span class="dd-k">Customer Profiling</span><span class="dd-v">Expected activity aligned ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Customer Tenure</span><span class="dd-v">8 months (established)</span></div>
+            <div class="dd-row"><span class="dd-k">Income Bracket</span><span class="dd-v">High net worth</span></div>
             <div class="dd-row"><span class="dd-k">Why not lower?</span><span class="dd-v">Qualified Investor base = 3–4 (vs Institutional 1–2)</span></div>
           </div>
         </div>
@@ -309,10 +354,15 @@
           <div class="dim-weight">× 20%</div>
           <div class="dim-weighted">0.60</div>
           <div class="dim-detail">
+            <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">VASP Known</span><span class="dd-v">Yes — Tier 1 ✓</span></div>
             <div class="dd-row"><span class="dd-k">Relationship</span><span class="dd-v">Confirmed ✓</span></div>
             <div class="dd-row"><span class="dd-k">Beneficiary PII</span><span class="dd-v">Full IVMS101 ✓</span></div>
             <div class="dd-row"><span class="dd-k">Entity Screening</span><span class="dd-v">All clear ✓</span></div>
+            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
+            <div class="dd-row"><span class="dd-k">VASP Risk Tier</span><span class="dd-v">Tier 1 (fully licensed)</span></div>
+            <div class="dd-row"><span class="dd-k">Counterparty Reputation</span><span class="dd-v">No adverse history</span></div>
+            <div class="dd-row"><span class="dd-k">Address Ownership</span><span class="dd-v">Confirmed ✓</span></div>
           </div>
         </div>
 
@@ -324,10 +374,15 @@
           <div class="dim-weight">× 15%</div>
           <div class="dim-weighted">0.75</div>
           <div class="dim-detail">
+            <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Originator Country</span><span class="dd-v">UAE</span></div>
             <div class="dd-row"><span class="dd-k">Counterparty Country</span><span class="dd-v">UAE</span></div>
-            <div class="dd-row"><span class="dd-k">FATF Status</span><span class="dd-v">Not blacklisted ✓</span></div>
             <div class="dd-row"><span class="dd-k">Cross-Border</span><span class="dd-v">No (domestic)</span></div>
+            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
+            <div class="dd-row"><span class="dd-k">FATF Status</span><span class="dd-v">Not blacklisted ✓</span></div>
+            <div class="dd-row"><span class="dd-k">FATF Grey List</span><span class="dd-v">Not on grey list ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Tax Haven</span><span class="dd-v">No ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Crypto-Restricted</span><span class="dd-v">No ✓</span></div>
             <div class="dd-row"><span class="dd-k">Why 5?</span><span class="dd-v">UAE has progressive crypto regulation but not yet fully FATF-aligned</span></div>
           </div>
         </div>
@@ -340,9 +395,15 @@
           <div class="dim-weight">× 15%</div>
           <div class="dim-weighted">0.45</div>
           <div class="dim-detail">
+            <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Amount</span><span class="dd-v">3,500 USD (at VARA threshold)</span></div>
             <div class="dd-row"><span class="dd-k">Travel Rule</span><span class="dd-v">Compliant ✓</span></div>
             <div class="dd-row"><span class="dd-k">PII Completeness</span><span class="dd-v">Full IVMS101 ✓</span></div>
+            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
+            <div class="dd-row"><span class="dd-k">Structuring Detection</span><span class="dd-v">Not detected ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Velocity Analysis</span><span class="dd-v">Normal frequency</span></div>
+            <div class="dd-row"><span class="dd-k">Purpose Alignment</span><span class="dd-v">Consistent with profile</span></div>
+            <div class="dd-row"><span class="dd-k">Time-based Anomalies</span><span class="dd-v">None detected</span></div>
           </div>
         </div>
 
@@ -354,6 +415,7 @@
           <div class="dim-weight">× 20%</div>
           <div class="dim-weighted">0.60</div>
           <div class="dim-detail">
+            <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Screening Type</span><span class="dd-v">Address Pair (Outgoing)</span></div>
             <div class="dd-row"><span class="dd-k">On-chain Screening</span><span class="dd-v">All clear ✓</span></div>
             <div class="dd-row"><span class="dd-k">Exposure Categories</span><span class="dd-v">None flagged</span></div>
@@ -369,8 +431,11 @@
           <div class="dim-weight">× 5%</div>
           <div class="dim-weighted">0.10</div>
           <div class="dim-detail">
+            <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Asset Type</span><span class="dd-v">USDT (stablecoin — low risk)</span></div>
             <div class="dd-row"><span class="dd-k">Wallet Type</span><span class="dd-v">Custodial (both sides)</span></div>
+            <div class="dd-section dd-operational">📋 Operational (Manual)</div>
+            <div class="dd-row"><span class="dd-k">Service Channel</span><span class="dd-v">Standard web platform</span></div>
           </div>
         </div>
 
@@ -388,7 +453,7 @@
     </div>
 
     <!-- ═══ DECISION SCALE ═══ -->
-    <div class="section-label">Decision Mapping</div>
+    <div class="section-label">Step 4: Decision Mapping</div>
     <div class="section">
       <div class="section-body">
         <div class="decision-scale">
