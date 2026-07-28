@@ -122,6 +122,12 @@
   .ubo-tag.hit { background: #fee2e2; color: #dc2626; }
   .ubo-tag.na { background: #f0f0f0; color: #aaa; }
 
+  /* KYB rows */
+  .kyb-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
+  .kyb-row:last-child { border-bottom: none; }
+  .kyb-name { font-size: 11px; font-weight: 600; min-width: 160px; }
+  .kyb-props { display: flex; flex-wrap: wrap; gap: 3px; }
+
   .rules-summary { margin-top: 4px; }
   .rules-summary-box { display: flex; align-items: flex-start; gap: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; font-size: 12px; }
   .rules-summary-icon { font-size: 20px; }
@@ -283,20 +289,40 @@
             </div>
             <div id="kybSection">
               <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div>
-                  <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Identity Verification</div>
-                  <div class="ubo-row"><div class="ubo-name">Lorem Mockrime LLC</div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>
-                  <div class="ubo-row"><div class="ubo-name">Sarah Mitchell<span class="ubo-pct">38%</span></div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>
-                  <div class="ubo-row"><div class="ubo-name">James Okonkwo<span class="ubo-pct">35%</span></div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>
-                  <div class="ubo-row"><div class="ubo-name">Li Wei<span class="ubo-pct">27%</span></div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>
+              <div class="kyb-row">
+                <div class="kyb-name">Lorem Mockrime LLC</div>
+                <div class="kyb-props">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanc ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
                 </div>
-                <div>
-                  <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Screening Results</div>
-                  <div class="ubo-row"><div class="ubo-name">Lorem Mockrime LLC</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>
-                  <div class="ubo-row"><div class="ubo-name">Sarah Mitchell</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>
-                  <div class="ubo-row"><div class="ubo-name">James Okonkwo</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>
-                  <div class="ubo-row"><div class="ubo-name">Li Wei</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>
+              </div>
+              <div class="kyb-row">
+                <div class="kyb-name">Sarah Mitchell<span class="ubo-pct">38%</span></div>
+                <div class="kyb-props">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanc ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
+                </div>
+              </div>
+              <div class="kyb-row">
+                <div class="kyb-name">James Okonkwo<span class="ubo-pct">35%</span></div>
+                <div class="kyb-props">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanc ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
+                </div>
+              </div>
+              <div class="kyb-row">
+                <div class="kyb-name">Li Wei<span class="ubo-pct">27%</span></div>
+                <div class="kyb-props">
+                  <span class="ubo-tag ok">Identity ✓</span>
+                  <span class="ubo-tag ok">Sanc ✓</span>
+                  <span class="ubo-tag ok">PEP ✓</span>
+                  <span class="ubo-tag ok">Crime ✓</span>
                 </div>
               </div>
             </div>
@@ -514,31 +540,20 @@ function updateCRS() {
   // 3. CDD section
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
 
-  // KYB section — separate identity verification from screening
+  // KYB section — one row per person, identity + screening as properties
   var kybSection = document.getElementById('kybSection');
-  var corpRow = '<div class="ubo-row"><div class="ubo-name">Lorem Mockrime LLC</div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>';
-  var corpScreen = '<div class="ubo-row"><div class="ubo-name">Lorem Mockrime LLC</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>';
+  var corp = '<div class="kyb-row"><div class="kyb-name">Lorem Mockrime LLC</div><div class="kyb-props"><span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>';
 
-  var uboIdRows = '<div class="ubo-row"><div class="ubo-name">Sarah Mitchell<span class="ubo-pct">38%</span></div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>' +
-    '<div class="ubo-row"><div class="ubo-name">James Okonkwo<span class="ubo-pct">35%</span></div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>' +
-    '<div class="ubo-row"><div class="ubo-name">Li Wei<span class="ubo-pct">27%</span></div><div class="ubo-screen"><span class="ubo-tag ok">Verified ✓</span></div></div>';
-
-  var uboScreenRows = '<div class="ubo-row"><div class="ubo-name">Sarah Mitchell</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
-    '<div class="ubo-row"><div class="ubo-name">James Okonkwo</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
-    '<div class="ubo-row"><div class="ubo-name">Li Wei</div><div class="ubo-screen"><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>';
-
-  var uboNotReq = '<div style="font-size:10px;color:#aaa;padding:4px 0">UBO verification not required (FI)</div>';
+  var ubos = '<div class="kyb-row"><div class="kyb-name">Sarah Mitchell<span class="ubo-pct">38%</span></div><div class="kyb-props"><span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
+    '<div class="kyb-row"><div class="kyb-name">James Okonkwo<span class="ubo-pct">35%</span></div><div class="kyb-props"><span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>' +
+    '<div class="kyb-row"><div class="kyb-name">Li Wei<span class="ubo-pct">27%</span></div><div class="kyb-props"><span class="ubo-tag ok">Identity ✓</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div></div>';
 
   kybSection.innerHTML =
     '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-      '<div><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Identity Verification</div>' +
-        corpRow + (d.uboScreen === 'none' ? uboNotReq : uboIdRows) +
-      '</div>' +
-      '<div><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Screening Results</div>' +
-        corpScreen + (d.uboScreen === 'none' ? uboNotReq : uboScreenRows) +
-      '</div>' +
-    '</div>';
+    corp +
+    (d.uboScreen === 'none'
+      ? '<div style="font-size:10px;color:#aaa;padding:4px 0">UBO verification not required (FI)</div>'
+      : ubos);
 
   // SoW/SoF rows — Institutional (Simplified) doesn't require these
   var sow = document.getElementById('sowRow');
