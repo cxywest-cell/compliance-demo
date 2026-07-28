@@ -176,26 +176,6 @@
         <div class="tx-meta-item"><span class="k">Travel Rule: </span><span class="v">Compliant ✓</span></div>
         <div class="tx-meta-item"><span class="k">VASP: </span><span class="v">Known + Confirmed ✓</span></div>
         <div class="tx-meta-item"><span class="k">Threshold: </span><span class="v">At 3,500 USD (VARA)</span></div>
-        <div class="tx-meta-item"><span class="k">CRS Classification: </span>
-          <select id="crsSelect" class="crs-dropdown" onchange="updateCRS()">
-            <optgroup label="Financial Institution">
-              <option value="depository">Depository Institution</option>
-              <option value="custodial">Custodial Institution</option>
-              <option value="investment">Investment Entity</option>
-              <option value="insurance">Specified Insurance Company</option>
-            </optgroup>
-            <optgroup label="Non-Financial Entity (NFE)">
-              <option value="active-income">Active NFE — by Income</option>
-              <option value="active-public">Active NFE — Publicly Traded</option>
-              <option value="active-gov">Active NFE — Governmental</option>
-              <option value="active-holding">Active NFE — Holding</option>
-              <option value="active-startup">Active NFE — Startup</option>
-              <option value="active-treasury">Active NFE — Treasury Finance</option>
-              <option value="active-npo">Active NFE — Non-Profit</option>
-              <option value="passive" selected>Passive NFE</option>
-            </optgroup>
-          </select>
-        </div>
       </div>
     </div>
 
@@ -268,7 +248,26 @@
           <div class="cdd-card">
             <div class="cdd-card-title">Onboarding Status</div>
             <div class="cdd-item"><span class="cdd-check">✓</span> KYB Verified</div>
-            <div class="cdd-item"><span class="cdd-check">✓</span> <span id="crsItem">CRS Classification: Passive NFE</span></div>
+            <div class="cdd-item"><span class="k">CRS Classification:</span>
+              <select id="crsSelect" class="crs-dropdown" onchange="updateCRS()">
+                <optgroup label="Financial Institution">
+                  <option value="depository">Depository Institution</option>
+                  <option value="custodial">Custodial Institution</option>
+                  <option value="investment">Investment Entity</option>
+                  <option value="insurance">Specified Insurance Company</option>
+                </optgroup>
+                <optgroup label="Non-Financial Entity (NFE)">
+                  <option value="active-income">Active NFE — by Income</option>
+                  <option value="active-public">Active NFE — Publicly Traded</option>
+                  <option value="active-gov">Active NFE — Governmental</option>
+                  <option value="active-holding">Active NFE — Holding</option>
+                  <option value="active-startup">Active NFE — Startup</option>
+                  <option value="active-treasury">Active NFE — Treasury Finance</option>
+                  <option value="active-npo">Active NFE — Non-Profit</option>
+                  <option value="passive" selected>Passive NFE</option>
+                </optgroup>
+              </select>
+            </div>
             <div class="cdd-item"><span class="cdd-check">✓</span> <span id="investorItem">Investor Category: Qualified</span></div>
             <div class="cdd-item"><span class="cdd-check">✓</span> <span id="uboItem">UBO Structure: 3 UBOs — all screened</span></div>
           </div>
@@ -480,7 +479,6 @@ function updateCRS() {
   badge.style.color = d.badgeColor;
 
   // 3. CDD section
-  document.getElementById('crsItem').textContent = 'CRS Classification: ' + d.label;
   document.getElementById('investorItem').textContent = 'Investor Category: ' + d.investor;
 
   var uboText;
