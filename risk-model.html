@@ -315,31 +315,13 @@
             </div>
             <div class="cdd-item" id="sowRow" style="margin-top:8px"><span class="cdd-check">✓</span> Source of Wealth: Verified</div>
             <div class="cdd-item" id="sofRow"><span class="cdd-check">✓</span> Source of Funds: Verified</div>
-            <div class="cdd-item" id="finRow" style="flex-direction:column;align-items:flex-start;gap:4px">
-              <span><span class="cdd-check">✓</span> Financial Threshold: <span id="finLabel">Met</span></span>
-              <span style="font-size:10px;color:#888;margin-left:22px">Proof:
-                <select id="finSelect" class="crs-dropdown" onchange="updateFin()">
-                  <optgroup label="Asset-Based">
-                    <option value="net-assets-5m">Net Assets ≥ $5,000,000</option>
-                    <option value="net-assets-1m">Net Assets ≥ $1,000,000</option>
-                    <option value="aum-25m">AUM ≥ $25,000,000 (Pro)</option>
-                  </optgroup>
-                  <optgroup label="Income-Based">
-                    <option value="revenue-5m">Annual Turnover ≥ $5,000,000</option>
-                    <option value="income-200k">Individual Income ≥ $200,000</option>
-                    <option value="income-300k-joint">Joint Income ≥ $300,000</option>
-                  </optgroup>
-                  <optgroup label="Investment-Based">
-                    <option value="invest-100k">Committed Investment ≥ $100,000</option>
-                    <option value="invest-250k">Committed Investment ≥ $250,000</option>
-                  </optgroup>
-                  <optgroup label="Professional Qualification">
-                    <option value="cert-cfa">CFA / CPA / Licensed</option>
-                    <option value="cert-regulated">Regulated Entity (Exempt)</option>
-                    <option value="cert-board">Board Resolution (Corporate)</option>
-                  </optgroup>
-                </select>
-              </span>
+            <div class="cdd-item" id="finRow"><span class="cdd-check">✓</span> Financial Threshold:
+              <select id="finSelect" class="crs-dropdown" onchange="updateFin()">
+                <option value="Met" selected>Met</option>
+                <option value="Exempt">Exempt</option>
+                <option value="Not Met">Not Met</option>
+                <option value="Pending">Pending</option>
+              </select>
             </div>
           </div>
         </div>
@@ -595,23 +577,26 @@ function updateCRS() {
 }
 
 var FIN = {
-  'net-assets-5m':   'Net Assets ≥ $5M',
-  'net-assets-1m':   'Net Assets ≥ $1M',
-  'aum-25m':         'AUM ≥ $25M (Professional)',
-  'revenue-5m':      'Annual Turnover ≥ $5M',
-  'income-200k':     'Individual Income ≥ $200K',
-  'income-300k-joint':'Joint Income ≥ $300K',
-  'invest-100k':     'Committed Investment ≥ $100K',
-  'invest-250k':     'Committed Investment ≥ $250K',
-  'cert-cfa':        'Professional Qualification (CFA/CPA)',
-  'cert-regulated':  'Regulated Entity (Exempt)',
-  'cert-board':      'Board Resolution (Corporate)',
+  'Met':     'Met',
+  'Exempt':  'Exempt',
+  'Not Met': 'Not Met',
+  'Pending': 'Pending',
 };
 
 function updateFin() {
   var sel = document.getElementById('finSelect');
-  var label = document.getElementById('finLabel');
-  label.textContent = FIN[sel.value] || 'Met';
+  // Color the checkmark based on status
+  var check = sel.parentElement.querySelector('.cdd-check');
+  if (sel.value === 'Not Met') {
+    check.textContent = '✗';
+    check.style.color = '#dc2626';
+  } else if (sel.value === 'Pending') {
+    check.textContent = '⏳';
+    check.style.color = '#d97706';
+  } else {
+    check.textContent = '✓';
+    check.style.color = '#16a34a';
+  }
 }
 </script>
 
