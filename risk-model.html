@@ -275,16 +275,12 @@
             <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
           </thead>
           <tbody>
-            <tr onclick="this.classList.toggle('expanded')">
+            <tr>
               <td><strong>Travel Rule</strong><div class="rule-src">FATF R.16 · VARA Rulebook</div></td>
               <td>≥ 3,500 USD → submit IVMS101</td>
               <td>3,500 USD</td>
               <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">PII submitted & confirmed</div></td>
             </tr>
-            <tr><td colspan="4" class="rule-detail-row"><div class="rule-detail">
-              <b>Regulation:</b> FATF Recommendation 16 requires originator and beneficiary information for all VASP transfers meeting the USD 1,000 threshold ( Recommendation 15 type). VARA enforces a 3,500 AED (~950 USD) domestic threshold. This transaction at 3,500 USD meets both.<br>
-              <b>Action on fail:</b> BLOCK transfer, cannot proceed without IVMS101 exchange.
-            </div></td></tr>
 
             <tr>
               <td><strong>Sanctions Screening</strong><div class="rule-src">UN / OFAC / EU / HMT</div></td>
