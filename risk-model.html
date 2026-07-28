@@ -46,27 +46,10 @@
 
   /* Decision banner */
   .decision-banner { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
-  .decision-score { font-size: 40px; font-weight: 800; line-height: 1; }
   .decision-info { flex: 1; }
-  .decision-level { font-size: 14px; font-weight: 700; }
+  .decision-level { font-size: 16px; font-weight: 700; }
   .decision-action { font-size: 12px; color: #666; margin-top: 2px; }
   .decision-badge { padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; }
-
-  /* Red flag section */
-  .red-flag-section { background: #fff; border: 2px solid #fee2e2; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
-  .red-flag-header { background: #fef2f2; padding: 14px 18px; border-bottom: 1px solid #fecaca; display: flex; align-items: center; gap: 12px; }
-  .red-flag-title { font-size: 13px; font-weight: 700; color: #dc2626; flex: 1; }
-  .red-flag-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: #dcfce7; color: #16a34a; }
-  .red-flag-body { padding: 16px 18px; }
-  .red-flag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .rf-category { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; }
-  .rf-category-title { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
-  .rf-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 11px; }
-  .rf-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
-  .rf-icon.clear { background: #dcfce7; color: #16a34a; }
-  .rf-name { flex: 1; }
-  .rf-result { font-size: 10px; font-weight: 700; color: #16a34a; }
-  .rf-action { font-size: 9px; color: #888; margin-left: 4px; }
 
   /* Section */
   .section { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
@@ -96,6 +79,7 @@
   .rule-result.clear { color: #16a34a; }
   .rule-result.hit { color: #dc2626; }
   .rule-result.warn { color: #d97706; }
+  .rule-action { font-size: 9px; color: #888; margin-left: 4px; }
 
   /* DS badges */
   .ds-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -120,9 +104,6 @@
   .dim-bar.low { background: #16a34a; }
   .dim-bar.mid { background: #d97706; }
   .dim-bar.high { background: #dc2626; }
-  .dim-score { width: 24px; text-align: right; font-size: 16px; font-weight: 800; flex-shrink: 0; }
-  .dim-weight { width: 36px; text-align: right; font-size: 10px; color: #888; flex-shrink: 0; }
-  .dim-weighted { width: 40px; text-align: right; font-size: 11px; font-weight: 700; flex-shrink: 0; }
   .dim-detail { display: none; padding: 8px 0 8px 20px; }
   .dim-row.open .dim-detail { display: block; }
   .dim-detail .dd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
@@ -131,23 +112,6 @@
   .dim-detail .dd-section { font-size: 10px; font-weight: 700; color: #555; margin-top: 8px; margin-bottom: 4px; padding-top: 6px; border-top: 1px solid #e0e0e0; }
   .dim-detail .dd-automated { color: #5b21b6; }
   .dim-detail .dd-operational { color: #92400e; }
-
-  /* Summary bar */
-  .summary-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; margin-top: 12px; }
-  .summary-bar .sb-label { font-size: 12px; font-weight: 600; }
-  .summary-bar .sb-value { font-size: 20px; font-weight: 800; }
-  .summary-bar .sb-formula { font-size: 10px; color: #888; font-family: monospace; }
-
-  /* Decision scale */
-  .decision-scale { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
-  .ds-seg { display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
-  .ds-seg.s1 { background: #16a34a; }
-  .ds-seg.s2 { background: #65a30d; }
-  .ds-seg.s3 { background: #d97706; }
-  .ds-seg.s4 { background: #ea580c; }
-  .ds-seg.s5 { background: #dc2626; }
-  .ds-seg.active { outline: 2px solid #1a1a1a; outline-offset: -2px; }
-  .scale-legend { display: flex; justify-content: space-between; font-size: 9px; color: #aaa; }
 
   .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 20px 0 10px; }
 
@@ -213,33 +177,8 @@
       </div>
     </div>
 
-    <!-- ═══ RED FLAG OVERRIDE ═══ -->
-    <div class="red-flag-section">
-      <div class="red-flag-header">
-        <div class="red-flag-title">⚠ Red Flag Override</div>
-        <div class="red-flag-status">✓ PASSED — No red flags</div>
-      </div>
-      <div class="red-flag-body">
-        <div class="red-flag-grid">
-          <div class="rf-category">
-            <div class="rf-category-title">Entity Screening Red Flags</div>
-            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Sanctions match</div><div class="rf-result">CLEAR</div><div class="rf-action">→ HARD REJECT</div></div>
-            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">High-risk jurisdiction (FATF blacklist)</div><div class="rf-result">CLEAR</div><div class="rf-action">→ HARD REJECT</div></div>
-            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">PEP + no source of wealth</div><div class="rf-result">N/A</div><div class="rf-action">→ MANDATORY EDD</div></div>
-          </div>
-          <div class="rf-category">
-            <div class="rf-category-title">On-chain Screening Red Flags</div>
-            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Direct mixer/tumbler exposure</div><div class="rf-result">CLEAR</div><div class="rf-action">→ MANDATORY EDD</div></div>
-            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Structuring detected</div><div class="rf-result">CLEAR</div><div class="rf-action">→ MANDATORY REVIEW</div></div>
-            <div class="rf-item"><div class="rf-icon clear">✓</div><div class="rf-name">Privacy coin</div><div class="rf-result">N/A</div><div class="rf-action">→ MANDATORY REVIEW</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- ═══ DECISION ═══ -->
     <div class="decision-banner">
-      <div class="decision-score rl-mid">4.9</div>
       <div class="decision-info">
         <div class="decision-level rl-mid">Medium-Low Risk</div>
         <div class="decision-action">Auto-approve with ongoing monitoring · Standard CDD</div>
@@ -262,13 +201,13 @@
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Crime</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Adverse Media</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Jurisdiction Risk</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Jurisdiction Risk</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ HARD REJECT if FATF blacklist</div></div>
           </div>
 
           <div class="screened-party">
             <div class="sp-header">Destination Agent — John Doe (Beneficiary)</div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY EDD if PEP + no SoW</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Crime</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Adverse Media</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">VASP Registration</div><div class="rule-result clear">REGISTERED</div></div>
@@ -285,11 +224,12 @@
           <div class="screened-party">
             <div class="sp-header">Address Pair Screening (Outgoing)</div>
             <div style="font-size:10px;color:#888;margin-bottom:8px">0xCA79…2d26 → 0xb20B…0b75</div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Mixer / Tumbler</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Mixer / Tumbler</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY EDD if direct exposure</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Darknet Market</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Ransomware</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions Address</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Theft / Scam</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Structuring</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY REVIEW if detected</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Exposure Depth</div><div class="rule-result clear">&gt; 5 HOPS</div></div>
           </div>
 
@@ -322,7 +262,7 @@
     </div>
 
     <!-- ═══ RISK DIMENSIONS ═══ -->
-    <div class="section-label">Risk Dimensions — Weighted Scoring</div>
+    <div class="section-label">Risk Dimensions</div>
     <div class="section">
       <div class="section-body" style="padding-top:8px">
 
@@ -330,9 +270,6 @@
           <div class="dim-dot low"></div>
           <div class="dim-name">Customer</div>
           <div class="dim-bar-wrap"><div class="dim-bar low" style="width:40%"></div></div>
-          <div class="dim-score rl-low">4</div>
-          <div class="dim-weight">× 25%</div>
-          <div class="dim-weighted">1.00</div>
           <div class="dim-detail">
             <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Investor Type</span><span class="dd-v">Qualified (Active NFE)</span></div>
@@ -342,7 +279,6 @@
             <div class="dd-row"><span class="dd-k">Customer Profiling</span><span class="dd-v">Expected activity aligned ✓</span></div>
             <div class="dd-row"><span class="dd-k">Customer Tenure</span><span class="dd-v">8 months (established)</span></div>
             <div class="dd-row"><span class="dd-k">Income Bracket</span><span class="dd-v">High net worth</span></div>
-            <div class="dd-row"><span class="dd-k">Why not lower?</span><span class="dd-v">Qualified Investor base = 3–4 (vs Institutional 1–2)</span></div>
           </div>
         </div>
 
@@ -350,9 +286,6 @@
           <div class="dim-dot low"></div>
           <div class="dim-name">Counterparty</div>
           <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
-          <div class="dim-score rl-low">3</div>
-          <div class="dim-weight">× 20%</div>
-          <div class="dim-weighted">0.60</div>
           <div class="dim-detail">
             <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">VASP Known</span><span class="dd-v">Yes — Tier 1 ✓</span></div>
@@ -370,9 +303,6 @@
           <div class="dim-dot mid"></div>
           <div class="dim-name">Geographic</div>
           <div class="dim-bar-wrap"><div class="dim-bar mid" style="width:50%"></div></div>
-          <div class="dim-score rl-mid">5</div>
-          <div class="dim-weight">× 15%</div>
-          <div class="dim-weighted">0.75</div>
           <div class="dim-detail">
             <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Originator Country</span><span class="dd-v">UAE</span></div>
@@ -383,7 +313,6 @@
             <div class="dd-row"><span class="dd-k">FATF Grey List</span><span class="dd-v">Not on grey list ✓</span></div>
             <div class="dd-row"><span class="dd-k">Tax Haven</span><span class="dd-v">No ✓</span></div>
             <div class="dd-row"><span class="dd-k">Crypto-Restricted</span><span class="dd-v">No ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Why 5?</span><span class="dd-v">UAE has progressive crypto regulation but not yet fully FATF-aligned</span></div>
           </div>
         </div>
 
@@ -391,9 +320,6 @@
           <div class="dim-dot low"></div>
           <div class="dim-name">Transaction</div>
           <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
-          <div class="dim-score rl-low">3</div>
-          <div class="dim-weight">× 15%</div>
-          <div class="dim-weighted">0.45</div>
           <div class="dim-detail">
             <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Amount</span><span class="dd-v">3,500 USD (at VARA threshold)</span></div>
@@ -411,9 +337,6 @@
           <div class="dim-dot low"></div>
           <div class="dim-name">Blockchain</div>
           <div class="dim-bar-wrap"><div class="dim-bar low" style="width:30%"></div></div>
-          <div class="dim-score rl-low">3</div>
-          <div class="dim-weight">× 20%</div>
-          <div class="dim-weighted">0.60</div>
           <div class="dim-detail">
             <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Screening Type</span><span class="dd-v">Address Pair (Outgoing)</span></div>
@@ -427,9 +350,6 @@
           <div class="dim-dot low"></div>
           <div class="dim-name">Asset / Product</div>
           <div class="dim-bar-wrap"><div class="dim-bar low" style="width:20%"></div></div>
-          <div class="dim-score rl-low">2</div>
-          <div class="dim-weight">× 5%</div>
-          <div class="dim-weighted">0.10</div>
           <div class="dim-detail">
             <div class="dd-section dd-automated">🔌 Automated (API)</div>
             <div class="dd-row"><span class="dd-k">Asset Type</span><span class="dd-v">USDT (stablecoin — low risk)</span></div>
@@ -439,43 +359,6 @@
           </div>
         </div>
 
-      </div>
-
-      <div style="padding: 0 18px 16px">
-        <div class="summary-bar">
-          <div>
-            <div class="sb-label">Combined Risk Score</div>
-            <div class="sb-formula">1.00 + 0.60 + 0.75 + 0.45 + 0.60 + 0.10</div>
-          </div>
-          <div class="sb-value rl-mid">3.50</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ DECISION SCALE ═══ -->
-    <div class="section-label">Decision Mapping</div>
-    <div class="section">
-      <div class="section-body">
-        <div class="decision-scale">
-          <div class="ds-seg s1" style="width:20%">0–2<br>Low</div>
-          <div class="ds-seg s2 active" style="width:20%">2–4<br>Med-Low</div>
-          <div class="ds-seg s3" style="width:20%">4–6<br>Medium</div>
-          <div class="ds-seg s4" style="width:20%">6–8<br>High</div>
-          <div class="ds-seg s5" style="width:20%">8–10<br>Critical</div>
-        </div>
-        <div class="scale-legend">
-          <span>0.0</span><span>2.0</span><span>4.0</span><span>6.0</span><span>8.0</span><span>10.0</span>
-        </div>
-        <div style="margin-top:14px;display:flex;gap:12px">
-          <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px">
-            <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:4px">✓ Decision: Approve + Monitor</div>
-            <div style="font-size:11px;color:#666">Score 3.50 falls in Medium-Low tier (2.1–4.0). Transaction auto-approved. Flagged for ongoing monitoring per Standard CDD requirements.</div>
-          </div>
-          <div style="flex:1;background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;padding:12px">
-            <div style="font-size:12px;font-weight:700;margin-bottom:4px">CDD Level: Standard</div>
-            <div style="font-size:11px;color:#666">Originator is Qualified Investor (Active NFE). SoW/SoF already verified at onboarding. UBOs screened. Standard ongoing monitoring applies.</div>
-          </div>
-        </div>
       </div>
     </div>
 
