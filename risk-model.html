@@ -67,23 +67,35 @@
   .screen-panel-header.entity { background: #f5f3ff; }
   .screen-panel-header.onchain { background: #eff6ff; }
   .screen-panel-body { padding: 12px 14px; }
-  .screen-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 11px; border-bottom: 1px solid #f5f5f5; }
-  .screen-item:last-child { border-bottom: none; }
-  .screen-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 1px; }
-  .screen-icon.pass { background: #dcfce7; color: #16a34a; }
-  .screen-icon.fail { background: #fee2e2; color: #dc2626; }
-  .screen-icon.warn { background: #fef3c7; color: #d97706; }
-  .screen-label { flex: 1; }
-  .screen-label .sl-title { font-weight: 600; }
-  .screen-label .sl-detail { font-size: 10px; color: #888; margin-top: 1px; }
-  .screen-result { font-size: 10px; font-weight: 700; flex-shrink: 0; }
-  .screen-result.pass { color: #16a34a; }
-  .screen-result.fail { color: #dc2626; }
-  .screen-result.warn { color: #d97706; }
+
+  /* Screened parties */
+  .screened-party { margin-bottom: 12px; }
+  .screened-party:last-child { margin-bottom: 0; }
+  .sp-header { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; }
+  .rule-hit { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 11px; }
+  .rule-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+  .rule-icon.clear { background: #dcfce7; color: #16a34a; }
+  .rule-icon.hit { background: #fee2e2; color: #dc2626; }
+  .rule-icon.warn { background: #fef3c7; color: #d97706; }
+  .rule-name { flex: 1; }
+  .rule-result { font-size: 10px; font-weight: 700; }
+  .rule-result.clear { color: #16a34a; }
+  .rule-result.hit { color: #dc2626; }
+  .rule-result.warn { color: #d97706; }
+
+  /* DS badges */
+  .ds-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .ds-sumsub { background: #ede9fe; color: #5b21b6; }
+  .ds-elliptic { background: #dbeafe; color: #1e40af; }
+  .ds-notabene { background: #d1fae5; color: #065f46; }
+  .ds-internal { background: #f0f0f0; color: #666; }
+  .ds-manual { background: #fef3c7; color: #92400e; }
+  .ds-fatca { background: #fce7f3; color: #9d174d; }
 
   /* Risk dimensions */
-  .dim-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .dim-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
   .dim-row:last-child { border-bottom: none; }
+  .dim-row:hover { background: #fafafa; }
   .dim-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .dim-dot.low { background: #16a34a; }
   .dim-dot.mid { background: #d97706; }
@@ -97,15 +109,11 @@
   .dim-score { width: 24px; text-align: right; font-size: 16px; font-weight: 800; flex-shrink: 0; }
   .dim-weight { width: 36px; text-align: right; font-size: 10px; color: #888; flex-shrink: 0; }
   .dim-weighted { width: 40px; text-align: right; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-
-  /* DS badges */
-  .ds-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
-  .ds-sumsub { background: #ede9fe; color: #5b21b6; }
-  .ds-elliptic { background: #dbeafe; color: #1e40af; }
-  .ds-notabene { background: #d1fae5; color: #065f46; }
-  .ds-internal { background: #f0f0f0; color: #666; }
-  .ds-manual { background: #fef3c7; color: #92400e; }
-  .ds-fatca { background: #fce7f3; color: #9d174d; }
+  .dim-detail { display: none; padding: 8px 0 8px 20px; }
+  .dim-row.open .dim-detail { display: block; }
+  .dim-detail .dd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
+  .dim-detail .dd-k { color: #888; }
+  .dim-detail .dd-v { font-weight: 500; }
 
   /* Summary bar */
   .summary-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f8f9fa; border-radius: 8px; margin-top: 12px; }
@@ -124,16 +132,14 @@
   .ds-seg.active { outline: 2px solid #1a1a1a; outline-offset: -2px; }
   .scale-legend { display: flex; justify-content: space-between; font-size: 9px; color: #aaa; }
 
-  /* Expandable detail */
-  .dim-row { cursor: pointer; }
-  .dim-row:hover { background: #fafafa; }
-  .dim-detail { display: none; padding: 8px 0 8px 20px; }
-  .dim-row.open .dim-detail { display: block; }
-  .dim-detail .dd-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
-  .dim-detail .dd-k { color: #888; }
-  .dim-detail .dd-v { font-weight: 500; }
-
   .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 20px 0 10px; }
+
+  /* CDD panel */
+  .cdd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cdd-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; }
+  .cdd-card-title { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; }
+  .cdd-item { font-size: 11px; padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+  .cdd-check { color: #16a34a; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -206,56 +212,27 @@
 
       <!-- Entity Screening -->
       <div class="screen-panel">
-        <div class="screen-panel-header entity">🔍 Entity Screening <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-fatca">CRS</span> <span class="ds-badge ds-notabene">Notabene</span></span></div>
+        <div class="screen-panel-header entity">🔍 Entity Screening <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-notabene">Notabene</span></span></div>
         <div class="screen-panel-body">
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Sanctions Check</div>
-              <div class="sl-detail">OFAC / UN / EU / HMT — customer + 3 UBOs</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
+
+          <div class="screened-party">
+            <div class="sp-header">Source Agent — Lorem Mockrime LLC (Originator)</div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Crime</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Adverse Media</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Jurisdiction Risk</div><div class="rule-result clear">CLEAR</div></div>
           </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">PEP Screening</div>
-              <div class="sl-detail">No politically exposed persons identified</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
+
+          <div class="screened-party">
+            <div class="sp-header">Destination Agent — John Doe (Beneficiary)</div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Crime</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Adverse Media</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">VASP Registration</div><div class="rule-result clear">REGISTERED</div></div>
           </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Adverse Media / Crime</div>
-              <div class="sl-detail">No adverse media or criminal records</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Jurisdiction Check</div>
-              <div class="sl-detail">UAE — not FATF blacklisted or grey-listed</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Counterparty VASP</div>
-              <div class="sl-detail">Registered VASP · Tier 1 · Relationship confirmed</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Source of Wealth</div>
-              <div class="sl-detail">Documentary proof verified (Qualified Investor)</div>
-            </div>
-            <div class="screen-result pass">VERIFIED</div>
-          </div>
+
         </div>
       </div>
 
@@ -263,57 +240,44 @@
       <div class="screen-panel">
         <div class="screen-panel-header onchain">⛓ On-chain Screening <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-elliptic">Elliptic</span></span></div>
         <div class="screen-panel-body">
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Source Address Risk</div>
-              <div class="sl-detail">0xCA79…2d26 — Score: 3.1 (Low)</div>
-            </div>
-            <div class="screen-result pass">LOW</div>
+
+          <div class="screened-party">
+            <div class="sp-header">Address Pair Screening (Outgoing)</div>
+            <div style="font-size:10px;color:#888;margin-bottom:8px">0xCA79…2d26 → 0xb20B…0b75</div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Mixer / Tumbler</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Darknet Market</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Ransomware</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions Address</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Theft / Scam</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Exposure Depth</div><div class="rule-result clear">&gt; 5 HOPS</div></div>
           </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Destination Address Risk</div>
-              <div class="sl-detail">0xb20B…0b75 — Score: 2.8 (Low)</div>
-            </div>
-            <div class="screen-result pass">LOW</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Mixer / Tumbler Exposure</div>
-              <div class="sl-detail">No exposure to known mixers within 5 hops</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Darknet / Ransomware</div>
-              <div class="sl-detail">No exposure to darknet markets or ransomware</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Sanctions Address</div>
-              <div class="sl-detail">Neither address on OFAC SDN blockchain list</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
-          <div class="screen-item">
-            <div class="screen-icon pass">✓</div>
-            <div class="screen-label">
-              <div class="sl-title">Structuring Detection</div>
-              <div class="sl-detail">No sub-threshold splitting pattern detected</div>
-            </div>
-            <div class="screen-result pass">CLEAR</div>
-          </div>
+
         </div>
       </div>
 
+    </div>
+
+    <!-- ═══ CUSTOMER DUE DILIGENCE ═══ -->
+    <div class="section-label">Customer Due Diligence</div>
+    <div class="section">
+      <div class="section-body">
+        <div class="cdd-grid">
+          <div class="cdd-card">
+            <div class="cdd-card-title">Onboarding Status</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> KYB Verified</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> CRS Classification: Active NFE</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> Investor Category: Qualified</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> UBO Structure: 3 UBOs identified</div>
+          </div>
+          <div class="cdd-card">
+            <div class="cdd-card-title">Source Verification</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> Source of Wealth: Verified</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> Source of Funds: Verified</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> Financial Threshold: Met</div>
+            <div class="cdd-item"><span class="cdd-check">✓</span> UBO Screening: All clear</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ RISK DIMENSIONS ═══ -->
@@ -331,9 +295,8 @@
           <div class="dim-detail">
             <div class="dd-row"><span class="dd-k">Investor Type</span><span class="dd-v">Qualified (Active NFE)</span></div>
             <div class="dd-row"><span class="dd-k">KYB Status</span><span class="dd-v">Verified ✓</span></div>
-            <div class="dd-row"><span class="dd-k">AML Screening</span><span class="dd-v">No hits ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Entity Screening</span><span class="dd-v">All clear ✓</span></div>
             <div class="dd-row"><span class="dd-k">SoW / SoF</span><span class="dd-v">Verified ✓</span></div>
-            <div class="dd-row"><span class="dd-k">UBO Screening</span><span class="dd-v">3 UBOs, all clean ✓</span></div>
             <div class="dd-row"><span class="dd-k">Why not lower?</span><span class="dd-v">Qualified Investor base = 3–4 (vs Institutional 1–2)</span></div>
           </div>
         </div>
@@ -349,7 +312,7 @@
             <div class="dd-row"><span class="dd-k">VASP Known</span><span class="dd-v">Yes — Tier 1 ✓</span></div>
             <div class="dd-row"><span class="dd-k">Relationship</span><span class="dd-v">Confirmed ✓</span></div>
             <div class="dd-row"><span class="dd-k">Beneficiary PII</span><span class="dd-v">Full IVMS101 ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Why not lower?</span><span class="dd-v">Cross-VASP transfer adds baseline counterparty risk</span></div>
+            <div class="dd-row"><span class="dd-k">Entity Screening</span><span class="dd-v">All clear ✓</span></div>
           </div>
         </div>
 
@@ -380,7 +343,6 @@
             <div class="dd-row"><span class="dd-k">Amount</span><span class="dd-v">3,500 USD (at VARA threshold)</span></div>
             <div class="dd-row"><span class="dd-k">Travel Rule</span><span class="dd-v">Compliant ✓</span></div>
             <div class="dd-row"><span class="dd-k">PII Completeness</span><span class="dd-v">Full IVMS101 ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Structuring</span><span class="dd-v">Not detected ✓</span></div>
           </div>
         </div>
 
@@ -392,10 +354,10 @@
           <div class="dim-weight">× 20%</div>
           <div class="dim-weighted">0.60</div>
           <div class="dim-detail">
-            <div class="dd-row"><span class="dd-k">Source Address</span><span class="dd-v">Score: 3.1 (Low)</span></div>
-            <div class="dd-row"><span class="dd-k">Destination Address</span><span class="dd-v">Score: 2.8 (Low)</span></div>
-            <div class="dd-row"><span class="dd-k">Exposure Categories</span><span class="dd-v">None flagged ✓</span></div>
-            <div class="dd-row"><span class="dd-k">Mixer Distance</span><span class="dd-v">> 5 hops ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Screening Type</span><span class="dd-v">Address Pair (Outgoing)</span></div>
+            <div class="dd-row"><span class="dd-k">On-chain Screening</span><span class="dd-v">All clear ✓</span></div>
+            <div class="dd-row"><span class="dd-k">Exposure Categories</span><span class="dd-v">None flagged</span></div>
+            <div class="dd-row"><span class="dd-k">Exposure Depth</span><span class="dd-v">&gt; 5 hops</span></div>
           </div>
         </div>
 
