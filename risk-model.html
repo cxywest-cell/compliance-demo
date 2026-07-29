@@ -231,84 +231,26 @@
     </div>
 
     <!-- ═══ SCREENING ═══ -->
-    <div class="section-label">Screening Results</div>
+    <div class="section-label">Screening Results
+      <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
+        <select id="txDirection" class="crs-dropdown" onchange="updateDirection()">
+          <option value="outgoing" selected>Outgoing</option>
+          <option value="incoming">Incoming</option>
+        </select>
+      </span>
+    </div>
     <div class="screening-grid">
 
       <!-- Counterparty VASP Identity + Screening -->
       <div class="screen-panel">
         <div class="screen-panel-header entity">🔍 Counterparty</div>
-        <div class="screen-panel-body">
-
-          <!-- VASP Identity (from directory) -->
-          <div class="screened-party">
-            <div class="sp-header">Counterparty VASP</div>
-            <div class="vasp-prop"><span class="vasp-key">Name</span><span class="vasp-val">The UCE DMCC</span></div>
-            <div class="vasp-prop"><span class="vasp-key">Jurisdiction</span><span class="vasp-val">AE (UAE)</span></div>
-            <div class="vasp-prop"><span class="vasp-key">Status</span><span class="vasp-val">Exempt</span></div>
-            <div class="vasp-prop"><span class="vasp-key">Regulatory</span><span class="vasp-val">Unverified</span></div>
-            <div class="vasp-prop"><span class="vasp-key">TR Capable</span><span class="vasp-val">Yes ✓</span></div>
-            <div class="vasp-prop"><span class="vasp-key">DID</span><span class="vasp-val" style="font-family:monospace;font-size:9px">did:web:cregisio-8f89b...am</span></div>
-          </div>
-
-          <!-- Beneficiary Screening Results -->
-          <div class="screened-party">
-            <div class="sp-header">Beneficiary Screening — John Doe</div>
-            <div class="screen-tags">
-              <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">OFAC SDN</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">EU List</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">UN Security</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">PEP</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Adverse Media</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Criminal</span>
-            </div>
-          </div>
-
-        </div>
+        <div class="screen-panel-body" id="counterpartyBody"></div>
       </div>
 
       <!-- On-chain Screening -->
       <div class="screen-panel">
-        <div class="screen-panel-header onchain">⛓ On-chain Screening
-          <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
-            <select id="txDirection" class="crs-dropdown" onchange="updateDirection()">
-              <option value="outgoing" selected>Outgoing</option>
-              <option value="incoming">Incoming</option>
-            </select>
-          </span>
-        </div>
-        <div class="screen-panel-body" id="onchainBody">
-
-          <!-- Outgoing: screen both addresses -->
-          <div class="screened-party">
-            <div class="sp-header">Originator Address <span style="font-weight:400;color:#888">· Outgoing</span></div>
-            <div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>
-            <div class="screen-tags">
-              <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Mixer</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Darknet</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Ransomware</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Sanctions Addr</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Theft/Scam</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Structuring</span>
-            </div>
-          </div>
-
-          <div class="screened-party">
-            <div class="sp-header">Beneficiary Address <span style="font-weight:400;color:#888">· Outgoing</span></div>
-            <div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>
-            <div class="screen-tags">
-              <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Mixer</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Darknet</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Ransomware</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Sanctions Addr</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Theft/Scam</span>
-              <span class="screen-tag" onclick="toggleScreenTag(this)">Structuring</span>
-            </div>
-          </div>
-
-        </div>
+        <div class="screen-panel-header onchain">⛓ On-chain Screening</div>
+        <div class="screen-panel-body" id="onchainBody"></div>
       </div>
 
     </div>
@@ -670,9 +612,14 @@ function updateFin() {
 
 function updateDirection() {
   var dir = document.getElementById('txDirection').value;
-  var body = document.getElementById('onchainBody');
 
-  var chainTagHtml = function() {
+  // Entity screening tags
+  var entityTags = function() {
+    return screenTags(ENTITY_HIT_LABELS);
+  };
+
+  // Chain screening tags
+  var chainTags = function() {
     return '<div class="screen-tags">' +
       '<span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>' +
       '<span class="screen-tag" onclick="toggleScreenTag(this)">Mixer</span>' +
@@ -684,24 +631,52 @@ function updateDirection() {
     '</div>';
   };
 
+  // VASP identity (always shown)
+  var vaspHtml =
+    '<div class="screened-party">' +
+      '<div class="sp-header">Counterparty VASP</div>' +
+      '<div class="vasp-prop"><span class="vasp-key">Name</span><span class="vasp-val">The UCE DMCC</span></div>' +
+      '<div class="vasp-prop"><span class="vasp-key">Jurisdiction</span><span class="vasp-val">AE (UAE)</span></div>' +
+      '<div class="vasp-prop"><span class="vasp-key">Status</span><span class="vasp-val">Exempt</span></div>' +
+      '<div class="vasp-prop"><span class="vasp-key">Regulatory</span><span class="vasp-val">Unverified</span></div>' +
+      '<div class="vasp-prop"><span class="vasp-key">TR Capable</span><span class="vasp-val">Yes ✓</span></div>' +
+      '<div class="vasp-prop"><span class="vasp-key">DID</span><span class="vasp-val" style="font-family:monospace;font-size:9px">did:web:cregisio-8f89b...am</span></div>' +
+    '</div>';
+
+  // Counterparty panel: VASP identity + entity screening (originator or beneficiary)
+  var cpBody = document.getElementById('counterpartyBody');
+  var onBody = document.getElementById('onchainBody');
+
   if (dir === 'outgoing') {
-    body.innerHTML =
+    cpBody.innerHTML = vaspHtml +
+      '<div class="screened-party">' +
+        '<div class="sp-header">Originator Screening — Lorem Mockrime LLC</div>' +
+        entityTags() +
+      '</div>';
+
+    onBody.innerHTML =
       '<div class="screened-party">' +
         '<div class="sp-header">Originator Address <span style="font-weight:400;color:#888">· Outgoing</span></div>' +
         '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>' +
-        chainTagHtml() +
+        chainTags() +
       '</div>' +
       '<div class="screened-party">' +
         '<div class="sp-header">Beneficiary Address <span style="font-weight:400;color:#888">· Outgoing</span></div>' +
         '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>' +
-        chainTagHtml() +
+        chainTags() +
       '</div>';
   } else {
-    body.innerHTML =
+    cpBody.innerHTML = vaspHtml +
+      '<div class="screened-party">' +
+        '<div class="sp-header">Beneficiary Screening — John Doe</div>' +
+        entityTags() +
+      '</div>';
+
+    onBody.innerHTML =
       '<div class="screened-party">' +
         '<div class="sp-header">Incoming Transaction <span style="font-weight:400;color:#888">· Incoming</span></div>' +
         '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20B…0b75 ← 0xCA79…2d26 · 3,500 USDT</div>' +
-        chainTagHtml() +
+        chainTags() +
       '</div>';
   }
 }
@@ -790,6 +765,7 @@ function renderRules() {
 }
 
 renderRules();
+updateDirection();
 </script>
 
 </body>
