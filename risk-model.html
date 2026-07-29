@@ -731,7 +731,7 @@ function renderFactorCatalog() {
   var sel = document.getElementById('factorDirection');
   var dir = sel ? sel.value : 'outgoing';
   var rows = '<tr>' +
-    '<td><span class="factor-domain">DIRECTION</span></td>' +
+    '<td><span class="factor-domain">BASICS</span></td>' +
     '<td>Transaction Direction</td>' +
     '<td><select id="factorDirection" onchange="renderFactorCatalog()" style="font-family:monospace;font-size:10px;padding:1px 4px;border:1px solid #d0d0d0;border-radius:3px;background:#fff">' +
       '<option value="outgoing"' + (dir==='outgoing'?' selected':'') + '>tx_direction: outgoing</option>' +
@@ -740,7 +740,7 @@ function renderFactorCatalog() {
   '</tr>';
 
   var common = [
-    { d:'AMOUNT',       f:'Amount Threshold',    field:'amount_threshold (USD)' },
+    { d:'BASICS',       f:'Amount Threshold',    field:'amount_threshold (USD)' },
     { d:'TRAVEL RULE',  f:'Jurisdiction',        field:'counterparty_jurisdiction' },
     { d:'TRAVEL RULE',  f:'VASP Status',         field:'vasp_status' },
     { d:'TRAVEL RULE',  f:'Regulatory',          field:'vasp_regulatory' },
