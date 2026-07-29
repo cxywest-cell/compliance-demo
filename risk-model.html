@@ -192,30 +192,20 @@
   <div class="content">
 
     <!-- ═══ THE TRANSACTION ═══ -->
+    <!-- ═══ BASICS ═══ -->
+    <div class="section-label">Basics
+      <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
+        <select id="txDirection" class="crs-dropdown" onchange="updateDirection()">
+          <option value="outgoing" selected>Outgoing</option>
+          <option value="incoming">Incoming</option>
+        </select>
+      </span>
+    </div>
     <div class="tx-card">
       <div class="tx-card-header">
-        <div class="tx-card-title">Transfer Details</div>
-        <div class="tx-amount">3,500 <span class="currency">USDT-TEST</span></div>
+        <div class="tx-card-title">3,500 <span class="currency">USDT-TEST</span> · Sepolia</div>
       </div>
-      <div class="tx-flow">
-        <div class="tx-party">
-          <div class="tx-party-label">Originator (Sender)</div>
-          <div class="tx-party-name">Lorem Mockrime LLC</div>
-          <div class="tx-party-sub" id="originatorSub">Qualified Investor · Passive NFE · UAE</div>
-          <div class="tx-party-addr">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>
-        </div>
-        <div class="tx-arrow">→</div>
-        <div class="tx-party">
-          <div class="tx-party-label">Beneficiary (Receiver)</div>
-          <div class="tx-party-name">John Doe</div>
-          <div class="tx-party-sub">Individual · Verified · UAE</div>
-          <div class="tx-party-addr">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>
-        </div>
-      </div>
-      <div class="tx-meta">
-        <div class="tx-meta-item"><span class="k">Chain: </span><span class="v">Sepolia (11155111)</span></div>
-        <div class="tx-meta-item"><span class="k">Asset: </span><span class="v">USDT-TEST (Stablecoin)</span></div>
-      </div>
+      <div class="tx-flow" id="basicsBody"></div>
     </div>
 
     <!-- ═══ TRAVEL RULE ═══ -->
@@ -261,14 +251,7 @@
     </div>
 
     <!-- ═══ SCREENING ═══ -->
-    <div class="section-label">Screening Results
-      <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
-        <select id="txDirection" class="crs-dropdown" onchange="updateDirection()">
-          <option value="outgoing" selected>Outgoing</option>
-          <option value="incoming">Incoming</option>
-        </select>
-      </span>
-    </div>
+    <div class="section-label">Screening Results</div>
     <div class="screening-grid">
 
       <!-- Entity Screening -->
@@ -652,6 +635,45 @@ function updateDirection() {
       '<div class="sp-header">VASP Screening — The UCE DMCC</div>' +
       entityTags() +
     '</div>';
+
+  // Basics: our customer (full details) + counterparty (address only)
+  var basicsBody = document.getElementById('basicsBody');
+
+  var corpParty = function(label) {
+    return '<div class="tx-party">' +
+      '<div class="tx-party-label">' + label + '</div>' +
+      '<div class="tx-party-name">Lorem Mockrime LLC</div>' +
+      '<div class="tx-party-sub">Unit: Treasury · Account: Primary Pay-Out</div>' +
+      '<div class="tx-party-addr">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>' +
+    '</div>';
+  };
+  var indParty = function(label) {
+    return '<div class="tx-party">' +
+      '<div class="tx-party-label">' + label + '</div>' +
+      '<div class="tx-party-name">John Doe</div>' +
+      '<div class="tx-party-sub">Unit: Retail · Account: Primary Pay-In</div>' +
+      '<div class="tx-party-addr">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>' +
+    '</div>';
+  };
+  var counterpartyAddr = function(label, addr) {
+    return '<div class="tx-party">' +
+      '<div class="tx-party-label">' + label + '</div>' +
+      '<div class="tx-party-name" style="color:#888">Counterparty</div>' +
+      '<div class="tx-party-addr">' + addr + '</div>' +
+    '</div>';
+  };
+
+  if (dir === 'outgoing') {
+    basicsBody.innerHTML =
+      corpParty('Originator (Our Customer)') +
+      '<div class="tx-arrow">→</div>' +
+      counterpartyAddr('Beneficiary (Counterparty)', '0xb20BED6c015a8e9579eae17762aA65d78d2E0b75');
+  } else {
+    basicsBody.innerHTML =
+      counterpartyAddr('Originator (Counterparty)', '0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26') +
+      '<div class="tx-arrow">→</div>' +
+      indParty('Beneficiary (Our Customer)');
+  }
 
   // Entity screening panel: VASP screening + entity screening (originator or beneficiary)
   var cpBody = document.getElementById('counterpartyBody');
