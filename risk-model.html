@@ -820,10 +820,9 @@ function renderFactorCatalog() {
   }
 
   if (dir === 'outgoing') {
-    rows += factorRow('DECISION', 'Auto Reject',     'decision.auto_reject');
-    rows += factorRow('DECISION', 'Submit for Review', 'decision.review');
+    rows += factorRow('DECISION', 'Decision', 'decision (auto_reject | submit_for_review)');
   } else {
-    rows += factorRow('DECISION', 'Hold for Review', 'decision.hold_review');
+    rows += factorRow('DECISION', 'Decision', 'decision (hold_for_review)');
   }
 
   document.getElementById('factorTbody').innerHTML = rows;
