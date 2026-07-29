@@ -309,6 +309,12 @@
     <div class="section-label">Customer Due Diligence</div>
     <div class="section">
       <div class="section-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;align-items:center">
+          <span style="font-size:14px">✓</span>
+          <span style="font-size:12px;font-weight:700;color:#16a34a">Onboarding Complete</span>
+          <span style="font-size:11px;color:#666" id="onboardSummary">Qualified Investor · CRS: Passive NFE · KYB Verified · SoW/SoF Verified · Threshold Met</span>
+        </div>
+
         <div class="cdd-grid" id="cddGrid">
           <div class="cdd-card">
             <div class="cdd-card-title">Onboarding Status</div>
@@ -418,11 +424,52 @@
     <!-- ═══ COMPLIANCE RULES ═══ -->
     <div class="section-label">Compliance Rules Engine</div>
 
-    <!-- Universal Tier -->
+    <!-- 1. Amount Threshold -->
     <div class="section">
       <div class="section-header">
-        <span class="rule-tier-badge universal">UNIVERSAL</span>
-        <div class="section-title">Regulatory Floor — Applies to All Transactions</div>
+        <span class="rule-tier-badge universal">AMOUNT</span>
+        <div class="section-title">Transaction Threshold Decision</div>
+      </div>
+      <div class="section-body" style="padding:0">
+        <table class="rules-table">
+          <thead>
+            <tr><th>Rule</th><th>Threshold</th><th>This Transaction</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Travel Rule Threshold</strong><div class="rule-src">FATF R.16 · VARA Rulebook</div></td>
+              <td>≥ 3,500 USD → submit IVMS101</td>
+              <td>3,500 USD</td>
+              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">PII submitted & confirmed</div></td>
+            </tr>
+            <tr>
+              <td><strong>High-Value Review</strong><div class="rule-src">Internal policy</div></td>
+              <td>&gt; 50,000 USD → manual review</td>
+              <td>3,500 USD</td>
+              <td><span class="rs rs-skip">BELOW</span></td>
+            </tr>
+            <tr>
+              <td><strong>Structuring Detection</strong><div class="rule-src">AML heuristic</div></td>
+              <td>Sub-threshold pattern within 24h → review</td>
+              <td>Not detected</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+            <tr>
+              <td><strong>Velocity Limit</strong><div class="rule-src">Fraud prevention</div></td>
+              <td>&gt; 5 tx/hour → review</td>
+              <td>1 tx in 24h</td>
+              <td><span class="rs rs-pass">NORMAL ✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. Counterparty VASP -->
+    <div class="section">
+      <div class="section-header">
+        <span class="rule-tier-badge universal">COUNTERPARTY</span>
+        <div class="section-title">Counterparty VASP Decision</div>
       </div>
       <div class="section-body" style="padding:0">
         <table class="rules-table">
@@ -431,40 +478,29 @@
           </thead>
           <tbody>
             <tr>
-              <td><strong>Travel Rule</strong><div class="rule-src">FATF R.16 · VARA Rulebook</div></td>
-              <td>≥ 3,500 USD → submit IVMS101</td>
-              <td>3,500 USD</td>
-              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">PII submitted & confirmed</div></td>
+              <td><strong>Jurisdiction Gate</strong><div class="rule-src">FATF list monitoring</div></td>
+              <td>Blacklist = reject · Grey list = EDD</td>
+              <td>AE (UAE)</td>
+              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">Not on FATF blacklist/grey list</div></td>
             </tr>
-
             <tr>
-              <td><strong>Sanctions Screening</strong><div class="rule-src">UN / OFAC / EU / HMT</div></td>
-              <td>All parties must clear</td>
-              <td>Screened</td>
+              <td><strong>Status</strong><div class="rule-src">VASP directory</div></td>
+              <td>Must be active or exempt</td>
+              <td>Exempt</td>
+              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">Exempt = institutional-only</div></td>
+            </tr>
+            <tr>
+              <td><strong>Regulatory</strong><div class="rule-src">VASP directory</div></td>
+              <td>Verified = auto · Unverified = EDD</td>
+              <td>Unverified</td>
+              <td><span class="rs rs-review">REVIEW</span><div class="rule-note">Manual verification required</div></td>
+            </tr>
+            <tr>
+              <td><strong>TR Capable</strong><div class="rule-src">FATF R.16</div></td>
+              <td>Must support Travel Rule messaging</td>
+              <td>Yes</td>
               <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
-
-            <tr>
-              <td><strong>PEP &amp; Adverse Media</strong><div class="rule-src">FATF R.12</div></td>
-              <td>All parties must clear</td>
-              <td>Screened</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-
-            <tr>
-              <td><strong>Counterparty VASP</strong><div class="rule-src">FATF R.16 · Travel Rule</div></td>
-              <td>Must be registered & confirmed</td>
-              <td>Known + Confirmed</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-
-            <tr>
-              <td><strong>On-chain Address Screening</strong><div class="rule-src">FATF R.15 · Internal AML</div></td>
-              <td>No direct sanctions/mixer exposure</td>
-              <td>Screened</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-
             <tr>
               <td><strong>Beneficiary IVMS101</strong><div class="rule-src">FATF R.16</div></td>
               <td>Required fields present & decrypted</td>
@@ -476,71 +512,87 @@
       </div>
     </div>
 
-    <!-- Merchant Tier -->
+    <!-- 3. Onboarding -->
     <div class="section">
       <div class="section-header">
-        <span class="rule-tier-badge merchant">MERCHANT</span>
-        <div class="section-title">VASP Policy — This Originator's Internal Rules</div>
+        <span class="rule-tier-badge merchant">ONBOARDING</span>
+        <div class="section-title">Customer Onboarding Decision</div>
       </div>
       <div class="section-body" style="padding:0">
         <table class="rules-table">
           <thead>
-            <tr><th>Rule</th><th>Threshold</th><th>This Transaction</th><th>Result</th></tr>
+            <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>High-Value Review</strong><div class="rule-src">Internal policy</div></td>
-              <td>&gt; 50,000 USD → manual review</td>
-              <td>3,500 USD</td>
-              <td><span class="rs rs-skip">BELOW</span></td>
+              <td><strong>Customer Type</strong><div class="rule-src">CRS / FATCA</div></td>
+              <td>Institutional = KYB only · Qualified = SoW/SoF</td>
+              <td id="onboardTypeResult">Qualified Investor (Passive NFE)</td>
+              <td id="onboardTypeBadge"><span class="rs rs-review">REVIEW</span><div class="rule-note">Passive NFE → EDD</div></td>
             </tr>
-
             <tr>
-              <td><strong>Counterparty Risk Tier</strong><div class="rule-src">Internal tiering</div></td>
-              <td>Tier 1 = auto · Tier 2 = EDD · Tier 3 = reject</td>
-              <td>Tier 1</td>
-              <td><span class="rs rs-pass">AUTO-APPROVE</span></td>
-            </tr>
-
-            <tr>
-              <td><strong>Jurisdiction Gate</strong><div class="rule-src">FATF list monitoring</div></td>
-              <td>Blacklist = hard reject · Grey list = EDD</td>
-              <td>UAE (clear)</td>
+              <td><strong>KYB</strong><div class="rule-src">FATF R.10 · R.24</div></td>
+              <td>Corporate identity verified + all UBOs identified</td>
+              <td>Verified</td>
               <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
-
             <tr>
-              <td><strong>Mixer / Darknet Exposure</strong><div class="rule-src">Chain risk policy</div></td>
-              <td>Direct exposure = hard reject</td>
-              <td>None detected</td>
+              <td><strong>Screening Clear</strong><div class="rule-src">UN / OFAC / EU / HMT</div></td>
+              <td>Corporate + all UBOs must clear</td>
+              <td id="onboardScreenResult">Screened</td>
               <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
-
-            <tr>
-              <td><strong>Structuring Detection</strong><div class="rule-src">AML heuristic</div></td>
-              <td>Sub-threshold pattern within 24h → review</td>
-              <td>Not detected</td>
+            <tr id="sowRuleRow">
+              <td><strong>Source of Wealth / Funds</strong><div class="rule-src">FATF R.10</div></td>
+              <td>Verified for Qualified Investors</td>
+              <td>Verified</td>
               <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
-
+            <tr id="finRuleRow">
+              <td><strong>Financial Threshold</strong><div class="rule-src">Internal policy</div></td>
+              <td>Met = approved · Not Met = reject</td>
+              <td>Met</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
+            <tr id="uboRuleRow">
+              <td><strong>UBO Controlling Interest</strong><div class="rule-src">CRS / FATCA policy</div></td>
+              <td id="uboThreshold">Any UBO hit → High Risk (Passive NFE)</td>
+              <td>3 UBOs, all clear</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
+            </tr>
             <tr>
               <td><strong>New Customer Watch</strong><div class="rule-src">Onboarding policy</div></td>
               <td>&lt; 30 days → enhanced monitoring</td>
               <td>8 months</td>
               <td><span class="rs rs-skip">STANDARD</span></td>
             </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
+    <!-- 4. On-chain -->
+    <div class="section">
+      <div class="section-header">
+        <span class="rule-tier-badge merchant">ON-CHAIN</span>
+        <div class="section-title">Blockchain Address Decision</div>
+      </div>
+      <div class="section-body" style="padding:0">
+        <table class="rules-table">
+          <thead>
+            <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
+          </thead>
+          <tbody>
             <tr>
-              <td><strong>Velocity Limit</strong><div class="rule-src">Fraud prevention</div></td>
-              <td>&gt; 5 tx/hour from same originator → review</td>
-              <td>1 tx in 24h</td>
-              <td><span class="rs rs-pass">NORMAL ✓</span></td>
+              <td><strong>On-chain Screening</strong><div class="rule-src">FATF R.15 · Internal AML</div></td>
+              <td>No direct sanctions/mixer exposure</td>
+              <td>Screened</td>
+              <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
-
-            <tr id="uboRuleRow">
-              <td><strong>UBO Controlling Interest</strong><div class="rule-src">CRS / FATCA policy</div></td>
-              <td id="uboThreshold">Any UBO hit → High Risk (Passive NFE)</td>
-              <td>3 UBOs, all clear</td>
+            <tr>
+              <td><strong>Mixer / Darknet Exposure</strong><div class="rule-src">Chain risk policy</div></td>
+              <td>Direct exposure = hard reject</td>
+              <td>None detected</td>
               <td><span class="rs rs-pass">PASS ✓</span></td>
             </tr>
           </tbody>
@@ -611,8 +663,31 @@ function updateCRS() {
   badge.textContent = d.badge;
   badge.style.color = d.badgeColor;
 
-  // 3. CDD section
+  // 3. CDD onboarding summary + rules sync
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
+
+  // Update onboarding summary banner
+  var sowText = d.cdd === 'Simplified' ? 'N/A (Institutional)' : 'Verified';
+  var thresholdText = document.getElementById('finSelect') ? document.getElementById('finSelect').value : 'Met';
+  document.getElementById('onboardSummary').textContent =
+    d.investor + ' Investor · CRS: ' + d.label + ' · KYB Verified · SoW/SoF ' + sowText + ' · Threshold ' + thresholdText;
+
+  // Update onboarding rules
+  var typeResult = document.getElementById('onboardTypeResult');
+  var typeBadge = document.getElementById('onboardTypeBadge');
+  if (typeResult) {
+    typeResult.textContent = d.investor + ' Investor (' + d.label + ')';
+    if (d.badge === 'APPROVE') {
+      typeBadge.innerHTML = '<span class="rs rs-pass">PASS ✓</span><div class="rule-note">' + d.cdd + '</div>';
+    } else {
+      typeBadge.innerHTML = '<span class="rs rs-review">REVIEW</span><div class="rule-note">' + d.label + ' → ' + d.cdd + '</div>';
+    }
+  }
+
+  // SoW/SoF rule visibility
+  var sowRule = document.getElementById('sowRuleRow');
+  if (sowRule) sowRule.style.display = d.cdd === 'Simplified' ? 'none' : '';
+}
 
 function toggleScreenTag(el) {
   el.classList.toggle('active');
@@ -687,11 +762,11 @@ kybSection.innerHTML =
   if (d.badge === 'APPROVE') {
     box.style.background = '#f0fdf4';
     box.style.borderColor = '#bbf7d0';
-    txt.innerHTML = '<strong>All rules passed.</strong> 6/6 universal rules satisfied · 8/8 merchant rules satisfied.<br>No rule override triggered. Transaction qualifies for auto-approval under current policy.';
+    txt.innerHTML = '<strong>All decisions passed.</strong> Amount: 4/4 · Counterparty: 5/5 · Onboarding: 7/7 · On-chain: 2/2.<br>No rule override triggered. Transaction qualifies for auto-approval under current policy.';
   } else {
     box.style.background = '#fffbeb';
     box.style.borderColor = '#fcd34d';
-    txt.innerHTML = '<strong>Manual review required.</strong> 6/6 universal rules satisfied · 7/8 merchant rules satisfied.<br>CRS classification (' + d.label + ') triggers ' + d.cdd + '. Compliance officer must approve before settlement.';
+    txt.innerHTML = '<strong>All decisions passed.</strong> Amount: 4/4 · Counterparty: 4/5 (1 review) · Onboarding: 6/7 (1 review) · On-chain: 2/2.<br>Counterparty VASP Unverified and Passive NFE require manual compliance review before settlement.';
   }
 }
 
