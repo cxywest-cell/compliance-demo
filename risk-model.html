@@ -81,6 +81,10 @@
   .rule-result.warn { color: #d97706; }
   .rule-action { font-size: 9px; color: #888; margin-left: 4px; }
 
+  /* VASP identity properties */
+  .vasp-prop { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: 11px; }
+  .vasp-key { color: #888; min-width: 120px; font-size: 10px; }
+
   /* DS badges */
   .ds-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
   .ds-sumsub { background: #ede9fe; color: #5b21b6; }
@@ -210,18 +214,29 @@
     <div class="section-label">Screening Results</div>
     <div class="screening-grid">
 
-      <!-- Entity Screening -->
+      <!-- Counterparty VASP Identity + Screening -->
       <div class="screen-panel">
-        <div class="screen-panel-header entity">🔍 Counterparty Screening <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-notabene">Notabene</span></span></div>
+        <div class="screen-panel-header entity">🔍 Counterparty <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto"><span class="ds-badge ds-sumsub">Sumsub</span> <span class="ds-badge ds-notabene">Notabene</span></span></div>
         <div class="screen-panel-body">
 
+          <!-- VASP Identity (from directory) -->
           <div class="screened-party">
-            <div class="sp-header">Beneficiary — John Doe (Destination)</div>
+            <div class="sp-header">Counterparty VASP — The UCE DMCC</div>
+            <div class="vasp-prop"><span class="vasp-key">Jurisdiction</span><span class="vasp-val">AE (UAE)</span></div>
+            <div class="vasp-prop"><span class="vasp-key">Regulatory Status</span><span class="vasp-val">Exempt</span></div>
+            <div class="vasp-prop"><span class="vasp-key">Verification</span><span class="vasp-val">Unverified</span></div>
+            <div class="vasp-prop"><span class="vasp-key">Travel Rule Capable</span><span class="vasp-val">Yes ✓</span></div>
+            <div class="vasp-prop"><span class="vasp-key">Website</span><span class="vasp-val">theuce.io</span></div>
+            <div class="vasp-prop"><span class="vasp-key">DID</span><span class="vasp-val" style="font-family:monospace;font-size:9px">did:web:cregisio-8f89b...am</span></div>
+          </div>
+
+          <!-- Beneficiary Screening Results -->
+          <div class="screened-party">
+            <div class="sp-header">Beneficiary Screening — John Doe</div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY EDD if PEP + no SoW</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Crime</div><div class="rule-result clear">CLEAR</div></div>
             <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Adverse Media</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">VASP Registration</div><div class="rule-result clear">REGISTERED</div></div>
           </div>
 
         </div>
