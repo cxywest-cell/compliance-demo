@@ -122,6 +122,12 @@
   .rs-pass { background: #dcfce7; color: #16a34a; }
   .rs-skip { background: #f0f0f0; color: #888; }
   .rs-review { background: #fef3c7; color: #d97706; }
+  .action-pass { background: #dcfce7; color: #16a34a; }
+  .action-reject { background: #fee2e2; color: #dc2626; }
+  .action-review { background: #fef3c7; color: #d97706; }
+  .rule-triggered td { background: #fffbeb; }
+  .rule-miss td { opacity: 0.5; }
+  .factor-domain { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 8px; font-weight: 700; letter-spacing: 0.5px; background: #f0f0f0; color: #888; }
   .rs-reject { background: #fee2e2; color: #dc2626; }
   .rule-note { font-size: 9px; color: #888; margin-top: 3px; }
 
@@ -426,195 +432,65 @@
     <!-- ═══ COMPLIANCE RULES ═══ -->
     <div class="section-label">Compliance Rules Engine</div>
 
-    <!-- 1. Amount Threshold -->
+    <!-- Risk Factor Catalog (collapsible reference) -->
     <div class="section">
-      <div class="section-header">
-        <span class="rule-tier-badge universal">AMOUNT</span>
-        <div class="section-title">Transaction Threshold Decision</div>
+      <div class="section-header" onclick="var b=document.getElementById('factorBody');var t=document.getElementById('factorArrow');if(b.style.display==='none'){b.style.display='';t.textContent='▼'}else{b.style.display='none';t.textContent='▶'}" style="cursor:pointer">
+        <span class="rule-tier-badge universal">FACTORS</span>
+        <div class="section-title">Risk Factor Catalog</div>
+        <span style="margin-left:auto;font-size:11px;color:#999" id="factorArrow">▼</span>
       </div>
-      <div class="section-body" style="padding:0">
+      <div class="section-body" id="factorBody" style="padding:0">
         <table class="rules-table">
           <thead>
-            <tr><th>Rule</th><th>Threshold</th><th>This Transaction</th><th>Result</th></tr>
+            <tr><th style="width:120px">Domain</th><th>Factor</th><th>This Transaction</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>Travel Rule Threshold</strong><div class="rule-src">FATF R.16 · VARA Rulebook</div></td>
-              <td>≥ 3,500 USD → submit IVMS101</td>
-              <td>3,500 USD</td>
-              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">PII submitted & confirmed</div></td>
-            </tr>
-            <tr>
-              <td><strong>High-Value Review</strong><div class="rule-src">Internal policy</div></td>
-              <td>&gt; 50,000 USD → manual review</td>
-              <td>3,500 USD</td>
-              <td><span class="rs rs-skip">BELOW</span></td>
-            </tr>
-            <tr>
-              <td><strong>Structuring Detection</strong><div class="rule-src">AML heuristic</div></td>
-              <td>Sub-threshold pattern within 24h → review</td>
-              <td>Not detected</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr>
-              <td><strong>Velocity Limit</strong><div class="rule-src">Fraud prevention</div></td>
-              <td>&gt; 5 tx/hour → review</td>
-              <td>1 tx in 24h</td>
-              <td><span class="rs rs-pass">NORMAL ✓</span></td>
-            </tr>
+            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Transaction Amount</td><td><strong>3,500 USD</strong> <span style="color:#aaa">(at TR threshold)</span></td></tr>
+            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Velocity</td><td>1 tx / 24h</td></tr>
+            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Structuring Pattern</td><td style="color:#16a34a">Not detected</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Jurisdiction</td><td><strong>AE</strong> (UAE)</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>FATF List</td><td style="color:#16a34a">Not listed</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>VASP Status</td><td>Exempt</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Regulatory</td><td style="color:#d97706;font-weight:600">Unverified</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Travel Rule Capable</td><td style="color:#16a34a;font-weight:600">Yes</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>IVMS101 PII</td><td style="color:#16a34a">Full, decrypted</td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Customer Type</td><td id="factorCustType"><strong>Qualified Investor</strong> <span style="color:#aaa">(Passive NFE)</span></td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>KYB</td><td style="color:#16a34a">Verified</td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Entity + UBO Screening</td><td style="color:#16a34a">Clear</td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>SoW / SoF</td><td id="factorSow" style="color:#16a34a">Verified</td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Financial Threshold</td><td id="factorFin">Met</td></tr>
+            <tr><td><span class="factor-domain">ON-CHAIN</span></td><td>Address Exposure</td><td style="color:#16a34a">None detected</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- 2. Counterparty VASP -->
+    <!-- Active Rules -->
     <div class="section">
       <div class="section-header">
-        <span class="rule-tier-badge universal">COUNTERPARTY</span>
-        <div class="section-title">Counterparty VASP Decision</div>
+        <span class="rule-tier-badge universal">RULES</span>
+        <div class="section-title">Active Rules <span style="font-weight:400;color:#aaa;font-size:11px">— each rule is independent, evaluated against this transaction</span></div>
       </div>
       <div class="section-body" style="padding:0">
         <table class="rules-table">
           <thead>
-            <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
+            <tr><th style="width:180px">Rule</th><th>Condition (When)</th><th style="width:130px">Action</th><th style="width:170px">Result</th></tr>
           </thead>
-          <tbody>
-            <tr>
-              <td><strong>Jurisdiction Gate</strong><div class="rule-src">FATF list monitoring</div></td>
-              <td>Blacklist = reject · Grey list = EDD</td>
-              <td>AE (UAE)</td>
-              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">Not on FATF blacklist/grey list</div></td>
-            </tr>
-            <tr>
-              <td><strong>Status</strong><div class="rule-src">VASP directory</div></td>
-              <td>Must be active or exempt</td>
-              <td>Exempt</td>
-              <td><span class="rs rs-pass">PASS ✓</span><div class="rule-note">Exempt = institutional-only</div></td>
-            </tr>
-            <tr>
-              <td><strong>Regulatory</strong><div class="rule-src">VASP directory</div></td>
-              <td>Verified = auto · Unverified = EDD</td>
-              <td>Unverified</td>
-              <td><span class="rs rs-review">REVIEW</span><div class="rule-note">Manual verification required</div></td>
-            </tr>
-            <tr>
-              <td><strong>TR Capable</strong><div class="rule-src">FATF R.16</div></td>
-              <td>Must support Travel Rule messaging</td>
-              <td>Yes</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr>
-              <td><strong>Beneficiary IVMS101</strong><div class="rule-src">FATF R.16</div></td>
-              <td>Required fields present & decrypted</td>
-              <td>Full PII</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-          </tbody>
+          <tbody id="rulesBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 3. Onboarding -->
-    <div class="section">
-      <div class="section-header">
-        <span class="rule-tier-badge merchant">ONBOARDING</span>
-        <div class="section-title">Customer Onboarding Decision</div>
-      </div>
-      <div class="section-body" style="padding:0">
-        <table class="rules-table">
-          <thead>
-            <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Customer Type</strong><div class="rule-src">CRS / FATCA</div></td>
-              <td>Institutional = KYB only · Qualified = SoW/SoF</td>
-              <td id="onboardTypeResult">Qualified Investor (Passive NFE)</td>
-              <td id="onboardTypeBadge"><span class="rs rs-review">REVIEW</span><div class="rule-note">Passive NFE → EDD</div></td>
-            </tr>
-            <tr>
-              <td><strong>KYB</strong><div class="rule-src">FATF R.10 · R.24</div></td>
-              <td>Corporate identity verified + all UBOs identified</td>
-              <td>Verified</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr>
-              <td><strong>Screening Clear</strong><div class="rule-src">UN / OFAC / EU / HMT</div></td>
-              <td>Corporate + all UBOs must clear</td>
-              <td id="onboardScreenResult">Screened</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr id="sowRuleRow">
-              <td><strong>Source of Wealth / Funds</strong><div class="rule-src">FATF R.10</div></td>
-              <td>Verified for Qualified Investors</td>
-              <td>Verified</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr id="finRuleRow">
-              <td><strong>Financial Threshold</strong><div class="rule-src">Internal policy</div></td>
-              <td>Met = approved · Not Met = reject</td>
-              <td>Met</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr id="uboRuleRow">
-              <td><strong>UBO Controlling Interest</strong><div class="rule-src">CRS / FATCA policy</div></td>
-              <td id="uboThreshold">Any UBO hit → High Risk (Passive NFE)</td>
-              <td>3 UBOs, all clear</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr>
-              <td><strong>New Customer Watch</strong><div class="rule-src">Onboarding policy</div></td>
-              <td>&lt; 30 days → enhanced monitoring</td>
-              <td>8 months</td>
-              <td><span class="rs rs-skip">STANDARD</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- 4. On-chain -->
-    <div class="section">
-      <div class="section-header">
-        <span class="rule-tier-badge merchant">ON-CHAIN</span>
-        <div class="section-title">Blockchain Address Decision</div>
-      </div>
-      <div class="section-body" style="padding:0">
-        <table class="rules-table">
-          <thead>
-            <tr><th>Rule</th><th>Condition</th><th>This Transaction</th><th>Result</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>On-chain Screening</strong><div class="rule-src">FATF R.15 · Internal AML</div></td>
-              <td>No direct sanctions/mixer exposure</td>
-              <td>Screened</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-            <tr>
-              <td><strong>Mixer / Darknet Exposure</strong><div class="rule-src">Chain risk policy</div></td>
-              <td>Direct exposure = hard reject</td>
-              <td>None detected</td>
-              <td><span class="rs rs-pass">PASS ✓</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+    <!-- Evaluation -->
     <div class="rules-summary">
       <div class="rules-summary-box" id="rulesSummary">
         <span class="rules-summary-icon">⚖</span>
-        <div id="rulesSummaryText">
-          <strong>All rules passed.</strong>
-          6/6 universal rules satisfied · 8/8 merchant rules satisfied.
-          <br>No rule override triggered. Transaction qualifies for auto-approval under current policy.
-        </div>
+        <div id="rulesSummaryText"></div>
       </div>
     </div>
 
-    <div style="text-align:center;padding:16px;color:#aaa;font-size:11px">
-      Illustrative assessment. Production scoring calibrated to institutional risk appetite (VARA / FATF).
+    <div style="text-align:center;padding:12px;color:#aaa;font-size:10px">
+      Priority: Auto Reject &gt; Submit for Review &gt; Auto Pass. If multiple rules trigger, the most severe action wins.
     </div>
 
   </div>
@@ -674,21 +550,46 @@ function updateCRS() {
   document.getElementById('onboardSummary').textContent =
     d.investor + ' Investor · CRS: ' + d.label + ' · KYB Verified · SoW/SoF ' + sowText + ' · Threshold ' + thresholdText;
 
-  // Update onboarding rules
-  var typeResult = document.getElementById('onboardTypeResult');
-  var typeBadge = document.getElementById('onboardTypeBadge');
-  if (typeResult) {
-    typeResult.textContent = d.investor + ' Investor (' + d.label + ')';
-    if (d.badge === 'APPROVE') {
-      typeBadge.innerHTML = '<span class="rs rs-pass">PASS ✓</span><div class="rule-note">' + d.cdd + '</div>';
-    } else {
-      typeBadge.innerHTML = '<span class="rs rs-review">REVIEW</span><div class="rule-note">' + d.label + ' → ' + d.cdd + '</div>';
-    }
-  }
+  // Update factor catalog + rules
+  var fc = document.getElementById('factorCustType');
+  if (fc) fc.innerHTML = '<strong>' + d.investor + ' Investor</strong> <span style="color:#aaa">(' + d.label + '</span>)';
+  var fs = document.getElementById('factorSow');
+  if (fs) { fs.textContent = d.cdd === 'Simplified' ? 'N/A (Institutional)' : 'Verified'; fs.style.color = d.cdd === 'Simplified' ? '#aaa' : '#16a34a'; }
 
-  // SoW/SoF rule visibility
-  var sowRule = document.getElementById('sowRuleRow');
-  if (sowRule) sowRule.style.display = d.cdd === 'Simplified' ? 'none' : '';
+  // Sync onboarding rules to CRS
+  RULES[6].hit = (d.cat === 'FI');
+  RULES[6].hitNote = d.cat === 'FI' ? 'CRS = ' + d.label : 'CRS = ' + d.label + ' (not FI)';
+  RULES[7].hit = (d.label === 'Passive NFE');
+  RULES[7].hitNote = d.label === 'Passive NFE' ? 'Customer is Passive NFE' : 'CRS = ' + d.label + ' (not Passive NFE)';
+  renderRules();
+
+  var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
+
+  var kybSection = document.getElementById('kybSection');
+  kybSection.innerHTML =
+  '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
+  '<div class="kyb-row">' +
+    '<div class="kyb-name">Lorem Mockrime LLC</div>' +
+    '<div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span></div>' +
+    '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenTags(ENTITY_HIT_LABELS) + '</div>' +
+    (d.uboScreen === 'none'
+      ? ''
+      : '<div class="kyb-sub-tier">' + ubos + '</div>') +
+  '</div>';
+
+  // SoW/SoF rows — Institutional (Simplified) doesn't require these
+  var sow = document.getElementById('sowRow');
+  var sof = document.getElementById('sofRow');
+  var fin = document.getElementById('finRow');
+  if (d.cdd === 'Simplified') {
+    sow.style.display = 'none';
+    sof.style.display = 'none';
+    fin.style.display = 'none';
+  } else {
+    sow.style.display = '';
+    sof.style.display = '';
+    fin.style.display = '';
+  }
 }
 
 function toggleScreenTag(el) {
@@ -723,54 +624,6 @@ function uboRow(name, pct) {
     '<div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>' +
     '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenTags(ENTITY_HIT_LABELS) + '</div>' +
   '</div>';
-}
-
-var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
-
-var kybSection = document.getElementById('kybSection');
-kybSection.innerHTML =
-  '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
-  '<div class="kyb-row">' +
-    '<div class="kyb-name">Lorem Mockrime LLC</div>' +
-    '<div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span></div>' +
-    '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenTags(ENTITY_HIT_LABELS) + '</div>' +
-    (d.uboScreen === 'none'
-      ? ''
-      : '<div class="kyb-sub-tier">' + ubos + '</div>') +
-  '</div>';
-
-  // SoW/SoF rows — Institutional (Simplified) doesn't require these
-  var sow = document.getElementById('sowRow');
-  var sof = document.getElementById('sofRow');
-  var fin = document.getElementById('finRow');
-  if (d.cdd === 'Simplified') {
-    sow.style.display = 'none';
-    sof.style.display = 'none';
-    fin.style.display = 'none';
-  } else {
-    sow.style.display = '';
-    sof.style.display = '';
-    fin.style.display = '';
-  }
-
-  // 4. Merchant UBO rule
-  var uboThresh = document.getElementById('uboThreshold');
-  if (d.uboScreen === 'all') uboThresh.textContent = 'Any UBO hit → High Risk (Passive NFE / Startup)';
-  else if (d.uboScreen === 'controlling') uboThresh.textContent = 'Controlling UBO hit → Enhanced Review';
-  else uboThresh.textContent = 'Not applicable — no UBO screening required';
-
-  // 5. Summary box
-  var box = document.getElementById('rulesSummary');
-  var txt = document.getElementById('rulesSummaryText');
-  if (d.badge === 'APPROVE') {
-    box.style.background = '#f0fdf4';
-    box.style.borderColor = '#bbf7d0';
-    txt.innerHTML = '<strong>All decisions passed.</strong> Amount: 4/4 · Counterparty: 5/5 · Onboarding: 7/7 · On-chain: 2/2.<br>No rule override triggered. Transaction qualifies for auto-approval under current policy.';
-  } else {
-    box.style.background = '#fffbeb';
-    box.style.borderColor = '#fcd34d';
-    txt.innerHTML = '<strong>All decisions passed.</strong> Amount: 4/4 · Counterparty: 4/5 (1 review) · Onboarding: 6/7 (1 review) · On-chain: 2/2.<br>Counterparty VASP Unverified and Passive NFE require manual compliance review before settlement.';
-  }
 }
 
 var FIN = {
@@ -833,6 +686,103 @@ function updateDirection() {
       '</div>';
   }
 }
+
+// ── Rule Engine ──
+var RULES = [
+  { name:'Travel Rule Threshold', src:'FATF R.16 · VARA',
+    cond:'Amount ≥ 3,500 USD',
+    action:'review',
+    hit:true, hitNote:'3,500 ≥ threshold' },
+  { name:'High-Value Review', src:'Internal policy',
+    cond:'Amount > 50,000 USD',
+    action:'review',
+    hit:false, hitNote:'3,500 < 50,000' },
+  { name:'Structuring Auto-Reject', src:'AML heuristic',
+    cond:'Sub-threshold pattern in 24h',
+    action:'reject',
+    hit:false, hitNote:'No pattern detected' },
+  { name:'FATF Blacklist Reject', src:'FATF list monitoring',
+    cond:'Jurisdiction on FATF Blacklist',
+    action:'reject',
+    hit:false, hitNote:'AE not on blacklist' },
+  { name:'Unverified VASP Review', src:'VASP directory',
+    cond:'Regulatory = Unverified',
+    action:'review',
+    hit:true, hitNote:'Counterparty is Unverified' },
+  { name:'Non-TR Reject', src:'FATF R.16',
+    cond:'Travel Rule Capable = No',
+    action:'reject',
+    hit:false, hitNote:'TR Capable = Yes' },
+  { name:'Simplified Due Diligence', src:'CRS / FATCA',
+    cond:'CRS = Financial Institution',
+    action:'pass',
+    hit:false, hitNote:'CRS = Passive NFE' },
+  { name:'Enhanced Due Diligence', src:'CRS / FATCA',
+    cond:'CRS = Passive NFE',
+    action:'review',
+    hit:true, hitNote:'Customer is Passive NFE' },
+  { name:'Sanctions Hit Reject', src:'UN / OFAC / EU',
+    cond:'Entity or UBO screening = Hit',
+    action:'reject',
+    hit:false, hitNote:'All clear' },
+  { name:'Clean Chain Auto-Pass', src:'Chain risk policy',
+    cond:'No mixer/darknet/sanctions exposure',
+    action:'pass',
+    hit:true, hitNote:'No exposure detected' },
+  { name:'Mixer Exposure Reject', src:'Chain risk policy',
+    cond:'Direct mixer exposure',
+    action:'reject',
+    hit:false, hitNote:'No mixer exposure' },
+];
+
+var ACTION_META = {
+  pass:   { label:'Auto Pass',         cls:'action-pass' },
+  reject: { label:'Auto Reject',       cls:'action-reject' },
+  review: { label:'Submit for Review', cls:'action-review' },
+};
+
+function renderRules() {
+  var body = document.getElementById('rulesBody');
+  if (!body) return;
+  var html = '';
+  for (var i = 0; i < RULES.length; i++) {
+    var r = RULES[i];
+    var a = ACTION_META[r.action];
+    html += '<tr class="' + (r.hit ? 'rule-triggered' : 'rule-miss') + '">';
+    html += '<td><strong>' + r.name + '</strong><div class="rule-src">' + r.src + '</div></td>';
+    html += '<td style="font-size:11px">' + r.cond + '</td>';
+    html += '<td><span class="rs ' + a.cls + '">' + a.label + '</span></td>';
+    if (r.hit) {
+      html += '<td><span style="color:#d97706;font-weight:600">✓ Triggered</span><div class="rule-note">' + r.hitNote + '</div></td>';
+    } else {
+      html += '<td><span style="color:#aaa">○ Not triggered</span><div class="rule-note">' + r.hitNote + '</div></td>';
+    }
+    html += '</tr>';
+  }
+  body.innerHTML = html;
+
+  var hits = RULES.filter(function(r) { return r.hit; });
+  var anyReject = hits.some(function(r) { return r.action === 'reject'; });
+  var anyReview = hits.some(function(r) { return r.action === 'review'; });
+
+  var box = document.getElementById('rulesSummary');
+  var txt = document.getElementById('rulesSummaryText');
+
+  if (anyReject) {
+    box.style.background = '#fef2f2'; box.style.borderColor = '#fecaca';
+    var rejectNames = hits.filter(function(r){return r.action==='reject';}).map(function(r){return r.name;}).join(' · ');
+    txt.innerHTML = '<strong style="color:#dc2626">FINAL: AUTO REJECT</strong><br>' + rejectNames;
+  } else if (anyReview) {
+    box.style.background = '#fffbeb'; box.style.borderColor = '#fcd34d';
+    var reviewNames = hits.filter(function(r){return r.action==='review';}).map(function(r){return r.name;}).join(' · ');
+    txt.innerHTML = '<strong style="color:#d97706">FINAL: SUBMIT FOR REVIEW</strong><br>' + reviewNames;
+  } else {
+    box.style.background = '#f0fdf4'; box.style.borderColor = '#bbf7d0';
+    txt.innerHTML = '<strong style="color:#16a34a">FINAL: AUTO APPROVE</strong><br>All triggered rules are Auto Pass.';
+  }
+}
+
+renderRules();
 </script>
 
 </body>
