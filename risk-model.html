@@ -91,6 +91,8 @@
   .screen-tag.active { background: #fee2e2; color: #dc2626; border-color: #dc2626; font-weight: 600; }
   .screen-clear-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; background: #dcfce7; color: #16a34a; }
   .screen-clear-badge.hidden { display: none; }
+  .screen-or { font-size: 10px; color: #aaa; font-weight: 500; }
+  .screen-or.hidden { display: none; }
 
   /* VASP identity properties */
   .vasp-prop { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: 11px; }
@@ -246,7 +248,7 @@
           <div class="screened-party">
             <div class="sp-header">Beneficiary Screening — John Doe</div>
             <div class="screen-tags">
-              <span class="screen-clear-badge">CLEAR</span>
+              <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">OFAC SDN</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">EU List</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">UN Security</span>
@@ -276,7 +278,7 @@
             <div class="sp-header">Originator Address <span style="font-weight:400;color:#888">· Outgoing</span></div>
             <div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>
             <div class="screen-tags">
-              <span class="screen-clear-badge">CLEAR</span>
+              <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">Mixer</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">Darknet</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">Ransomware</span>
@@ -290,7 +292,7 @@
             <div class="sp-header">Beneficiary Address <span style="font-weight:400;color:#888">· Outgoing</span></div>
             <div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>
             <div class="screen-tags">
-              <span class="screen-clear-badge">CLEAR</span>
+              <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">Mixer</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">Darknet</span>
               <span class="screen-tag" onclick="toggleScreenTag(this)">Ransomware</span>
@@ -348,7 +350,7 @@
                 <div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span></div>
                 <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                   <div class="screen-tags">
-                    <span class="screen-clear-badge">CLEAR</span>
+                    <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
                     <span class="screen-tag" onclick="toggleScreenTag(this)">OFAC SDN</span>
                     <span class="screen-tag" onclick="toggleScreenTag(this)">EU List</span>
                     <span class="screen-tag" onclick="toggleScreenTag(this)">UN Security</span>
@@ -363,7 +365,7 @@
                     <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                       <div class="screen-tags">
-                        <span class="screen-clear-badge">CLEAR</span>
+                        <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">OFAC SDN</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">EU List</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">UN Security</span>
@@ -378,7 +380,7 @@
                     <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                       <div class="screen-tags">
-                        <span class="screen-clear-badge">CLEAR</span>
+                        <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">OFAC SDN</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">EU List</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">UN Security</span>
@@ -393,7 +395,7 @@
                     <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                       <div class="screen-tags">
-                        <span class="screen-clear-badge">CLEAR</span>
+                        <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">OFAC SDN</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">EU List</span>
                         <span class="screen-tag" onclick="toggleScreenTag(this)">UN Security</span>
@@ -693,9 +695,10 @@ function toggleScreenTag(el) {
   el.classList.toggle('active');
   var container = el.closest('.screen-tags');
   var clearBadge = container.querySelector('.screen-clear-badge');
+  var orEl = container.querySelector('.screen-or');
   var anyActive = container.querySelectorAll('.screen-tag.active').length > 0;
-  if (anyActive) clearBadge.classList.add('hidden');
-  else clearBadge.classList.remove('hidden');
+  if (anyActive) { clearBadge.classList.add('hidden'); orEl.classList.add('hidden'); }
+  else { clearBadge.classList.remove('hidden'); orEl.classList.remove('hidden'); }
 }
 
 var ENTITY_HIT_LABELS = ['OFAC SDN', 'EU List', 'UN Security', 'PEP', 'Adverse Media', 'Criminal'];
@@ -704,7 +707,7 @@ var CHAIN_HIT_LABELS = ['Mixer', 'Darknet', 'Ransomware', 'Sanctions Addr', 'The
 function screenTags(labels) {
   var id = 'sc_' + (screenIdCounter++);
   var html = '<div class="screen-tags">';
-  html += '<span class="screen-clear-badge">CLEAR</span>';
+  html += '<span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>';
   for (var i = 0; i < labels.length; i++) {
     html += '<span class="screen-tag" onclick="toggleScreenTag(this)">' + labels[i] + '</span>';
   }
@@ -799,7 +802,7 @@ function updateDirection() {
 
   var chainTagHtml = function() {
     return '<div class="screen-tags">' +
-      '<span class="screen-clear-badge">CLEAR</span>' +
+      '<span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>' +
       '<span class="screen-tag" onclick="toggleScreenTag(this)">Mixer</span>' +
       '<span class="screen-tag" onclick="toggleScreenTag(this)">Darknet</span>' +
       '<span class="screen-tag" onclick="toggleScreenTag(this)">Ransomware</span>' +
