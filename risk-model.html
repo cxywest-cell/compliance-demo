@@ -414,13 +414,6 @@
         <span style="margin-left:auto;font-size:11px;color:#999" id="factorArrow">▼</span>
       </div>
       <div class="section-body" id="factorBody" style="padding:0">
-        <div style="padding:8px 14px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:10px">
-          <label style="font-size:11px;font-weight:600;color:#555">Direction:</label>
-          <select id="factorDirection" onchange="renderFactorCatalog()" style="font-size:11px;padding:3px 8px;border:1px solid #d0d0d0;border-radius:4px;background:#fff">
-            <option value="outgoing">Outgoing</option>
-            <option value="incoming">Incoming</option>
-          </select>
-        </div>
         <table class="rules-table">
           <thead>
             <tr><th style="width:120px">Domain</th><th>Factor</th><th style="width:200px">Field</th></tr>
@@ -735,8 +728,18 @@ function updateDirection() {
 
 // ── Factor Catalog (direction-aware) ──
 function renderFactorCatalog() {
-  var dir = document.getElementById('factorDirection').value;
-  var rows = [
+  var sel = document.getElementById('factorDirection');
+  var dir = sel ? sel.value : 'outgoing';
+  var rows = '<tr>' +
+    '<td><span class="factor-domain">DIRECTION</span></td>' +
+    '<td>Transaction Direction</td>' +
+    '<td><select id="factorDirection" onchange="renderFactorCatalog()" style="font-family:monospace;font-size:10px;padding:1px 4px;border:1px solid #d0d0d0;border-radius:3px;background:#fff">' +
+      '<option value="outgoing"' + (dir==='outgoing'?' selected':'') + '>tx_direction: outgoing</option>' +
+      '<option value="incoming"' + (dir==='incoming'?' selected':'') + '>tx_direction: incoming</option>' +
+    '</select></td>' +
+  '</tr>';
+
+  var common = [
     { d:'AMOUNT',       f:'Amount Threshold',    field:'amount_threshold (USD)' },
     { d:'COUNTERPARTY', f:'Jurisdiction',        field:'counterparty_jurisdiction' },
     { d:'COUNTERPARTY', f:'VASP Status',         field:'vasp_status' },
@@ -746,28 +749,32 @@ function renderFactorCatalog() {
     { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarded' },
   ];
 
-  if (dir === 'outgoing') {
-    rows.push(
-      { d:'SCREENING', f:'VASP Screening',       field:'screening.vasp' },
-      { d:'SCREENING', f:'Beneficiary Screening',field:'screening.beneficiary_entity' },
-      { d:'SCREENING', f:'Originator Address',   field:'screening.originator_address' },
-      { d:'SCREENING', f:'Beneficiary Address',  field:'screening.beneficiary_address' }
-    );
-  } else {
-    rows.push(
-      { d:'SCREENING', f:'VASP Screening',       field:'screening.vasp' },
-      { d:'SCREENING', f:'Originator Screening', field:'screening.originator_entity' },
-      { d:'SCREENING', f:'Incoming Transaction', field:'screening.incoming_tx' }
-    );
-  }
-
-  rows.push({ d:'ON-CHAIN', f:'Address Exposure', field:'chain_exposure' });
-
-  document.getElementById('factorTbody').innerHTML = rows.map(function(r) {
-    return '<tr><td><span class="factor-domain">' + r.d + '</span></td>' +
+  common.forEach(function(r) {
+    rows += '<tr><td><span class="factor-domain">' + r.d + '</span></td>' +
       '<td>' + r.f + '</td>' +
       '<td style="font-family:monospace;font-size:10px;color:#666">' + r.field + '</td></tr>';
-  }).join('');
+  });
+
+  if (dir === 'outgoing') {
+    rows += factorRow('SCREENING', 'VASP Screening',        'screening.vasp');
+    rows += factorRow('SCREENING', 'Beneficiary Screening', 'screening.beneficiary_entity');
+    rows += factorRow('SCREENING', 'Originator Address',    'screening.originator_address');
+    rows += factorRow('SCREENING', 'Beneficiary Address',   'screening.beneficiary_address');
+  } else {
+    rows += factorRow('SCREENING', 'VASP Screening',        'screening.vasp');
+    rows += factorRow('SCREENING', 'Originator Screening',  'screening.originator_entity');
+    rows += factorRow('SCREENING', 'Incoming Transaction',  'screening.incoming_tx');
+  }
+
+  rows += factorRow('ON-CHAIN', 'Address Exposure', 'chain_exposure');
+
+  document.getElementById('factorTbody').innerHTML = rows;
+}
+
+function factorRow(d, f, field) {
+  return '<tr><td><span class="factor-domain">' + d + '</span></td>' +
+    '<td>' + f + '</td>' +
+    '<td style="font-family:monospace;font-size:10px;color:#666">' + field + '</td></tr>';
 }
 
 // ── Rule Engine ──
