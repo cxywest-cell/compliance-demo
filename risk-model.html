@@ -215,16 +215,12 @@
       <div class="tx-meta">
         <div class="tx-meta-item"><span class="k">Chain: </span><span class="v">Sepolia (11155111)</span></div>
         <div class="tx-meta-item"><span class="k">Asset: </span><span class="v">USDT-TEST (Stablecoin)</span></div>
-        <div class="tx-meta-item"><span class="k">Travel Rule: </span><span class="v">Compliant ✓</span></div>
-        <div class="tx-meta-item"><span class="k">VASP: </span><span class="v">Known + Confirmed ✓</span></div>
-        <div class="tx-meta-item"><span class="k">Threshold: </span><span class="v">At 3,500 USD (VARA)</span></div>
       </div>
     </div>
 
     <!-- ═══ DECISION ═══ -->
     <div class="decision-banner">
       <div class="decision-info">
-        <div class="decision-level rl-mid" id="decisionLevel">Medium-High Risk</div>
         <div class="decision-action" id="decisionAction">Enhanced Due Diligence (EDD) · Passive NFE — all UBOs screened</div>
       </div>
       <div class="decision-badge" id="decisionBadge" style="color:#d97706">REVIEW</div>
@@ -461,10 +457,6 @@ function updateCRS() {
     d.investor + ' Investor · ' + d.label + ' · UAE';
 
   // 2. Decision banner
-  var dl = document.getElementById('decisionLevel');
-  dl.textContent = d.risk + ' Risk';
-  dl.className = 'decision-level ' + d.riskCls;
-
   var actionMap = {
     'Simplified':     'Simplified CDD · Institutional path — KYB verified',
     'Standard':       'Standard CDD · SoW/SoF verified · UBOs identified',
