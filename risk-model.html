@@ -454,11 +454,7 @@
             <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Regulatory</td><td style="color:#d97706;font-weight:600">Unverified</td></tr>
             <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Travel Rule Capable</td><td style="color:#16a34a;font-weight:600">Yes</td></tr>
             <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>IVMS101 PII</td><td style="color:#16a34a">Full, decrypted</td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Customer Type</td><td id="factorCustType"><strong>Qualified Investor</strong> <span style="color:#aaa">(Passive NFE)</span></td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>KYB</td><td style="color:#16a34a">Verified</td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Entity + UBO Screening</td><td style="color:#16a34a">Clear</td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>SoW / SoF</td><td id="factorSow" style="color:#16a34a">Verified</td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Financial Threshold</td><td id="factorFin">Met</td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Onboarding Status</td><td id="factorSow" style="color:#16a34a">Onboarded ✓</td></tr>
             <tr><td><span class="factor-domain">ON-CHAIN</span></td><td>Address Exposure</td><td style="color:#16a34a">None detected</td></tr>
           </tbody>
         </table>
@@ -550,12 +546,6 @@ function updateCRS() {
   document.getElementById('onboardSummary').textContent =
     d.investor + ' Investor · CRS: ' + d.label + ' · KYB Verified · SoW/SoF ' + sowText + ' · Threshold ' + thresholdText;
 
-  // Factor catalog updates with CRS
-  var fc = document.getElementById('factorCustType');
-  if (fc) fc.innerHTML = '<strong>' + d.investor + ' Investor</strong> <span style="color:#aaa">(' + d.label + ')</span>';
-  var fs = document.getElementById('factorSow');
-  if (fs) { fs.textContent = d.cdd === 'Simplified' ? 'N/A (Institutional)' : 'Verified'; fs.style.color = d.cdd === 'Simplified' ? '#aaa' : '#16a34a'; }
-
   renderRules();
 
   var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
@@ -595,6 +585,43 @@ function toggleScreenTag(el) {
   var anyActive = container.querySelectorAll('.screen-tag.active').length > 0;
   if (anyActive) { clearBadge.classList.add('hidden'); orEl.classList.add('hidden'); }
   else { clearBadge.classList.remove('hidden'); orEl.classList.remove('hidden'); }
+
+  // If this tag is inside the KYB section, update the onboarding & screening rule
+  var kybSection = document.getElementById('kybSection');
+  if (kybSection && kybSection.contains(el)) {
+    updateOnboardingRule();
+  }
+}
+
+function updateOnboardingRule() {
+  var kybSection = document.getElementById('kybSection');
+  if (!kybSection) return;
+  var activeTags = kybSection.querySelectorAll('.screen-tag.active');
+  // Find the Onboarding & Screening rule
+  var rule = null;
+  for (var i = 0; i < RULES.length; i++) {
+    if (RULES[i].name === 'Onboarding & Screening') { rule = RULES[i]; break; }
+  }
+  if (!rule) return;
+
+  if (activeTags.length > 0) {
+    var hits = [];
+    for (var j = 0; j < activeTags.length; j++) {
+      var tag = activeTags[j];
+      var label = tag.textContent;
+      // Walk up to find who this tag belongs to
+      var row = tag.closest('.kyb-row');
+      var nameEl = row ? row.querySelector('.kyb-name') : null;
+      var person = nameEl ? nameEl.textContent.trim() : 'Unknown';
+      hits.push(person + ': ' + label);
+    }
+    rule.hit = true;
+    rule.hitNote = 'Onboarded ⚠ · ' + hits.join(' · ');
+  } else {
+    rule.hit = false;
+    rule.hitNote = 'Onboarded ✓ · All screening clear';
+  }
+  renderRules();
 }
 
 var ENTITY_HIT_LABELS = ['OFAC SDN', 'EU List', 'UN Security', 'PEP', 'Adverse Media', 'Criminal'];
@@ -708,14 +735,10 @@ var RULES = [
     cond:'Travel Rule Capable = No',
     action:'reject',
     hit:false, hitNote:'TR Capable = Yes' },
-  { name:'Not Onboarded', src:'Onboarding',
-    cond:'Customer not onboarded',
+  { name:'Onboarding & Screening', src:'KYB / FATF R.10',
+    cond:'Not onboarded, or entity/UBO screening = Hit',
     action:'reject',
-    hit:false, hitNote:'Customer is onboarded ✓' },
-  { name:'Sanctions Hit Reject', src:'UN / OFAC / EU',
-    cond:'Entity or UBO screening = Hit',
-    action:'reject',
-    hit:false, hitNote:'All clear' },
+    hit:false, hitNote:'Onboarded ✓ · All screening clear' },
   { name:'Clean Chain Auto-Pass', src:'Chain risk policy',
     cond:'No mixer/darknet/sanctions exposure',
     action:'pass',
