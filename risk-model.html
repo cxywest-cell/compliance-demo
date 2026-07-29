@@ -248,8 +248,15 @@
 
       <!-- On-chain Screening -->
       <div class="screen-panel">
-        <div class="screen-panel-header onchain">⛓ On-chain Screening</div>
-        <div class="screen-panel-body">
+        <div class="screen-panel-header onchain">⛓ On-chain Screening
+          <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
+            <select id="txDirection" class="crs-dropdown" onchange="updateDirection()">
+              <option value="outgoing" selected>Outgoing</option>
+              <option value="incoming">Incoming</option>
+            </select>
+          </span>
+        </div>
+        <div class="screen-panel-body" id="onchainBody">
 
           <!-- Outgoing: screen both addresses -->
           <div class="screened-party">
@@ -617,6 +624,35 @@ function updateFin() {
   } else {
     check.textContent = '✓';
     check.style.color = '#16a34a';
+  }
+}
+
+function updateDirection() {
+  var dir = document.getElementById('txDirection').value;
+  var body = document.getElementById('onchainBody');
+
+  if (dir === 'outgoing') {
+    body.innerHTML =
+      '<div class="screened-party">' +
+        '<div class="sp-header">Originator Address <span style="font-weight:400;color:#888">· Outgoing</span></div>' +
+        '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>' +
+        '<div class="screen-summary"><span class="rule-icon clear">✓</span><span class="rule-result clear">CLEAR</span>' +
+        '<span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft. Exposure depth &gt; 5 hops</span></div>' +
+      '</div>' +
+      '<div class="screened-party">' +
+        '<div class="sp-header">Beneficiary Address <span style="font-weight:400;color:#888">· Outgoing</span></div>' +
+        '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>' +
+        '<div class="screen-summary"><span class="rule-icon clear">✓</span><span class="rule-result clear">CLEAR</span>' +
+        '<span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft. Exposure depth &gt; 5 hops</span></div>' +
+      '</div>';
+  } else {
+    body.innerHTML =
+      '<div class="screened-party">' +
+        '<div class="sp-header">Incoming Transaction <span style="font-weight:400;color:#888">· Incoming</span></div>' +
+        '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20B…0b75 ← 0xCA79…2d26 · 3,500 USDT</div>' +
+        '<div class="screen-summary"><span class="rule-icon clear">✓</span><span class="rule-result clear">CLEAR</span>' +
+        '<span style="font-size:10px;color:#888;margin-left:4px">Tx hash verified on-chain. No exposure: mixer, darknet, ransomware, sanctions, theft. Counterparty VASP screening relied upon.</span></div>' +
+      '</div>';
   }
 }
 </script>
