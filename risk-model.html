@@ -756,13 +756,13 @@ function renderFactorCatalog() {
   });
 
   if (dir === 'outgoing') {
-    rows += factorRow('SCREENING', 'VASP Screening',        'screening.vasp');
-    rows += factorRow('SCREENING', 'Beneficiary Screening', 'screening.beneficiary_entity');
-    rows += factorRow('SCREENING', 'Originator Address',    'screening.originator_address');
-    rows += factorRow('SCREENING', 'Beneficiary Address',   'screening.beneficiary_address');
+    rows += factorRow('SCREENING', 'Counterparty VASP Screening', 'screening.counterparty_vasp');
+    rows += factorRow('SCREENING', 'Beneficiary Screening',       'screening.beneficiary_entity');
+    rows += factorRow('SCREENING', 'Originator Address',          'screening.originator_address');
+    rows += factorRow('SCREENING', 'Beneficiary Address',         'screening.beneficiary_address');
   } else {
-    rows += factorRow('SCREENING', 'VASP Screening',        'screening.vasp');
-    rows += factorRow('SCREENING', 'Originator Screening',  'screening.originator_entity');
+    rows += factorRow('SCREENING', 'Counterparty VASP Screening', 'screening.counterparty_vasp');
+    rows += factorRow('SCREENING', 'Originator Screening',        'screening.originator_entity');
     rows += factorRow('SCREENING', 'Incoming Transaction',  'screening.incoming_tx');
   }
 
