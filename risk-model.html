@@ -218,6 +218,48 @@
       </div>
     </div>
 
+    <!-- ═══ TRAVEL RULE ═══ -->
+    <div class="section-label">Travel Rule</div>
+    <div class="screening-grid">
+
+      <!-- Counterparty VASP Identity -->
+      <div class="screen-panel">
+        <div class="screen-panel-header entity">Counterparty VASP</div>
+        <div class="screen-panel-body">
+          <div class="vasp-prop"><span class="vasp-key">Name</span><span class="vasp-val">The UCE DMCC</span></div>
+          <div class="vasp-prop"><span class="vasp-key">Jurisdiction</span><span class="vasp-val">AE (UAE)</span></div>
+          <div class="vasp-prop"><span class="vasp-key">Status</span><span class="vasp-val">Exempt</span></div>
+          <div class="vasp-prop"><span class="vasp-key">Regulatory</span><span class="vasp-val">Unverified</span></div>
+          <div class="vasp-prop"><span class="vasp-key">TR Capable</span><span class="vasp-val">Yes ✓</span></div>
+          <div class="vasp-prop"><span class="vasp-key">DID</span><span class="vasp-val" style="font-family:monospace;font-size:9px">did:web:cregisio-8f89b...am</span></div>
+        </div>
+      </div>
+
+      <!-- PII / IVMS101 Status -->
+      <div class="screen-panel">
+        <div class="screen-panel-header entity">IVMS101 PII Exchange</div>
+        <div class="screen-panel-body">
+          <div class="screened-party">
+            <div class="sp-header">Originator <span style="font-weight:400;color:#16a34a">· Complete ✓</span></div>
+            <div style="font-size:10px;color:#666;line-height:1.8">
+              <div><strong>Lorem Mockrime LLC</strong> (legalPerson)</div>
+              <div>natId: US-2024-002 · Country: USA</div>
+              <div>Address: 123 Business Ave, Dubai, AE</div>
+            </div>
+          </div>
+          <div class="screened-party">
+            <div class="sp-header">Beneficiary <span style="font-weight:400;color:#16a34a">· Complete ✓</span></div>
+            <div style="font-size:10px;color:#666;line-height:1.8">
+              <div><strong>John Doe</strong> (naturalPerson)</div>
+              <div>natId: AE-1990-12345 · Country: UAE</div>
+              <div>Address: 456 Palm St, Dubai, AE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
     <!-- ═══ SCREENING ═══ -->
     <div class="section-label">Screening Results
       <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
@@ -229,9 +271,9 @@
     </div>
     <div class="screening-grid">
 
-      <!-- Counterparty VASP Identity + Screening -->
+      <!-- Entity Screening -->
       <div class="screen-panel">
-        <div class="screen-panel-header entity">🔍 Counterparty</div>
+        <div class="screen-panel-header entity">🔍 Entity Screening</div>
         <div class="screen-panel-body" id="counterpartyBody"></div>
       </div>
 
@@ -604,28 +646,19 @@ function updateDirection() {
     '</div>';
   };
 
-  // VASP identity (always shown)
-  var vaspHtml =
-    '<div class="screened-party">' +
-      '<div class="sp-header">Counterparty VASP</div>' +
-      '<div class="vasp-prop"><span class="vasp-key">Name</span><span class="vasp-val">The UCE DMCC</span></div>' +
-      '<div class="vasp-prop"><span class="vasp-key">Jurisdiction</span><span class="vasp-val">AE (UAE)</span></div>' +
-      '<div class="vasp-prop"><span class="vasp-key">Status</span><span class="vasp-val">Exempt</span></div>' +
-      '<div class="vasp-prop"><span class="vasp-key">Regulatory</span><span class="vasp-val">Unverified</span></div>' +
-      '<div class="vasp-prop"><span class="vasp-key">TR Capable</span><span class="vasp-val">Yes ✓</span></div>' +
-      '<div class="vasp-prop"><span class="vasp-key">DID</span><span class="vasp-val" style="font-family:monospace;font-size:9px">did:web:cregisio-8f89b...am</span></div>' +
-    '</div>' +
+  // VASP screening (always shown)
+  var vaspScreenHtml =
     '<div class="screened-party">' +
       '<div class="sp-header">VASP Screening — The UCE DMCC</div>' +
       entityTags() +
     '</div>';
 
-  // Counterparty panel: VASP identity + entity screening (originator or beneficiary)
+  // Entity screening panel: VASP screening + entity screening (originator or beneficiary)
   var cpBody = document.getElementById('counterpartyBody');
   var onBody = document.getElementById('onchainBody');
 
   if (dir === 'outgoing') {
-    cpBody.innerHTML = vaspHtml +
+    cpBody.innerHTML = vaspScreenHtml +
       '<div class="screened-party">' +
         '<div class="sp-header">Beneficiary Screening — John Doe</div>' +
         entityTags() +
@@ -643,7 +676,7 @@ function updateDirection() {
         chainTags() +
       '</div>';
   } else {
-    cpBody.innerHTML = vaspHtml +
+    cpBody.innerHTML = vaspScreenHtml +
       '<div class="screened-party">' +
         '<div class="sp-header">Originator Screening — Lorem Mockrime LLC</div>' +
         entityTags() +
