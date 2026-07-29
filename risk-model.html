@@ -158,6 +158,12 @@
   .rules-summary-icon { font-size: 20px; }
 
   .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 20px 0 10px; }
+  .tab-bar { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 16px; }
+  .tab-btn { padding: 10px 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: none; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+  .tab-btn.active { color: #5b4cdb; border-bottom-color: #5b4cdb; }
+  .tab-btn:hover { color: #555; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
   /* CDD panel */
   .cdd-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
@@ -191,7 +197,15 @@
   </div>
   <div class="content">
 
-    <!-- ═══ THE TRANSACTION ═══ -->
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('tx')">Transaction</button>
+      <button class="tab-btn" onclick="switchTab('rules')">Rules Engine</button>
+    </div>
+
+    <!-- ═══ TAB 1: TRANSACTION ═══ -->
+    <div class="tab-content active" id="tab-tx">
+
     <!-- ═══ BASICS ═══ -->
     <div class="section-label">Basics
       <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
@@ -384,6 +398,9 @@
       </div>
     </div>
 
+    <!-- ═══ TAB 2: RULES ENGINE ═══ -->
+    <div class="tab-content" id="tab-rules">
+
     <!-- ═══ COMPLIANCE RULES ═══ -->
     <div class="section-label">Compliance Rules Engine</div>
 
@@ -440,6 +457,8 @@
     <div style="text-align:center;padding:12px;color:#aaa;font-size:10px">
       Priority: Auto Reject &gt; Submit for Review &gt; Auto Pass. If multiple rules trigger, the most severe action wins.
     </div>
+
+    </div><!-- /tab-rules -->
 
   </div>
 </div>
@@ -798,6 +817,13 @@ function renderRules() {
 
 renderRules();
 updateDirection();
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
 </script>
 
 </body>
