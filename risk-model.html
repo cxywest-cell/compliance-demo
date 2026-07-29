@@ -318,7 +318,7 @@
               <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>
               <div class="kyb-row">
                 <div class="kyb-name">Lorem Mockrime LLC</div>
-                <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
+                <div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span></div>
                 <div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>
               </div>
               <div class="kyb-row">
@@ -554,18 +554,22 @@ function updateCRS() {
   // KYB section — each person has two sub-rows: identity + screening
   var kybSection = document.getElementById('kybSection');
 
-  function personRow(name, pct) {
+  function personRow(name, pct, isCorp) {
     var label = pct ? name + '<span class="ubo-pct">' + pct + '</span>' : name;
+    var idLabel = isCorp ? 'Corporate Identity' : 'Identity';
+    var idResult = isCorp
+      ? '<span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span>'
+      : '<span class="ubo-tag ok">Verified ✓</span>';
     return '<div class="kyb-row">' +
       '<div class="kyb-name">' + label + '</div>' +
-      '<div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>' +
+      '<div class="kyb-prop"><span class="kyb-prop-label">' + idLabel + '</span>' + idResult + '</div>' +
       '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>' +
     '</div>';
   }
 
   kybSection.innerHTML =
     '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
-    personRow('Lorem Mockrime LLC') +
+    personRow('Lorem Mockrime LLC', null, true) +
     (d.uboScreen === 'none'
       ? '<div style="font-size:10px;color:#aaa;padding:4px 0 0 12px">UBO verification not required (FI)</div>'
       : personRow('Sarah Mitchell', '38%') + personRow('James Okonkwo', '35%') + personRow('Li Wei', '27%'));
