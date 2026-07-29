@@ -81,6 +81,9 @@
   .rule-result.warn { color: #d97706; }
   .rule-action { font-size: 9px; color: #888; margin-left: 4px; }
 
+  /* Screening summary (clear state) */
+  .screen-summary { display: flex; align-items: center; gap: 6px; padding: 6px 0; }
+
   /* VASP identity properties */
   .vasp-prop { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: 11px; }
   .vasp-key { color: #888; min-width: 120px; font-size: 10px; }
@@ -233,10 +236,11 @@
           <!-- Beneficiary Screening Results -->
           <div class="screened-party">
             <div class="sp-header">Beneficiary Screening — John Doe</div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">PEP</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY EDD if PEP + no SoW</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Crime</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Adverse Media</div><div class="rule-result clear">CLEAR</div></div>
+            <div class="screen-summary">
+              <span class="rule-icon clear">✓</span>
+              <span class="rule-result clear">CLEAR</span>
+              <span style="font-size:10px;color:#888;margin-left:4px">No hits across sanctions, PEP, crime, adverse media</span>
+            </div>
           </div>
 
         </div>
@@ -250,13 +254,11 @@
           <div class="screened-party">
             <div class="sp-header">Address Pair Screening (Outgoing)</div>
             <div style="font-size:10px;color:#888;margin-bottom:8px">0xCA79…2d26 → 0xb20B…0b75</div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Mixer / Tumbler</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY EDD if direct exposure</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Darknet Market</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Ransomware</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Sanctions Address</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Theft / Scam</div><div class="rule-result clear">CLEAR</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Structuring</div><div class="rule-result clear">CLEAR</div><div class="rule-action">→ MANDATORY REVIEW if detected</div></div>
-            <div class="rule-hit"><div class="rule-icon clear">✓</div><div class="rule-name">Exposure Depth</div><div class="rule-result clear">&gt; 5 HOPS</div></div>
+            <div class="screen-summary">
+              <span class="rule-icon clear">✓</span>
+              <span class="rule-result clear">CLEAR</span>
+              <span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft, structuring. Exposure depth &gt; 5 hops</span>
+            </div>
           </div>
 
         </div>
