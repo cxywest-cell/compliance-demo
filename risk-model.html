@@ -423,7 +423,7 @@
       <div class="section-body" id="factorBody" style="padding:0">
         <table class="rules-table">
           <thead>
-            <tr><th style="width:120px">Domain</th><th>Factor</th><th style="width:200px">Field</th></tr>
+            <tr><th style="width:100px">Domain</th><th style="width:180px">Factor</th><th>Field</th></tr>
           </thead>
           <tbody id="factorTbody">
           </tbody>
@@ -787,19 +787,19 @@ function renderFactorCatalog() {
     '<td><span class="factor-domain">BASICS</span></td>' +
     '<td>Transaction Direction</td>' +
     '<td><select id="factorDirection" onchange="renderFactorCatalog()" style="font-family:monospace;font-size:10px;padding:1px 4px;border:1px solid #d0d0d0;border-radius:3px;background:#fff">' +
-      '<option value="outgoing"' + (dir==='outgoing'?' selected':'') + '>tx_direction: outgoing</option>' +
-      '<option value="incoming"' + (dir==='incoming'?' selected':'') + '>tx_direction: incoming</option>' +
+      '<option value="outgoing"' + (dir==='outgoing'?' selected':'') + '>tx_direction (outgoing | incoming): outgoing</option>' +
+      '<option value="incoming"' + (dir==='incoming'?' selected':'') + '>tx_direction (outgoing | incoming): incoming</option>' +
     '</select></td>' +
   '</tr>';
 
   var common = [
-    { d:'BASICS',       f:'Amount Threshold',    field:'amount_threshold (USD)' },
-    { d:'TRAVEL RULE',  f:'Jurisdiction',        field:'counterparty_jurisdiction' },
-    { d:'TRAVEL RULE',  f:'VASP Status',         field:'vasp_status' },
-    { d:'TRAVEL RULE',  f:'Regulatory',          field:'vasp_regulatory' },
-    { d:'TRAVEL RULE',  f:'Travel Rule Capable', field:'tr_capable' },
-    { d:'TRAVEL RULE',  f:'IVMS101 PII',         field:'ivms101_valid' },
-    { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarding_state' },
+    { d:'BASICS',       f:'Amount Threshold',    field:'amount_threshold (USD)  [≥ 0]' },
+    { d:'TRAVEL RULE',  f:'Jurisdiction',        field:'counterparty_jurisdiction (ISO 3166 country)' },
+    { d:'TRAVEL RULE',  f:'VASP Status',         field:'vasp_status (Registered | Exempt | Unlicensed)' },
+    { d:'TRAVEL RULE',  f:'Regulatory',          field:'vasp_regulatory (Verified | Unverified)' },
+    { d:'TRAVEL RULE',  f:'Travel Rule Capable', field:'tr_capable (Yes | No)' },
+    { d:'TRAVEL RULE',  f:'IVMS101 PII',         field:'ivms101_valid (Valid | Invalid)' },
+    { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarding_state (onboarded | pending | labeled | frozen | offboarded)' },
   ];
 
   common.forEach(function(r) {
@@ -809,14 +809,14 @@ function renderFactorCatalog() {
   });
 
   if (dir === 'outgoing') {
-    rows += factorRow('SCREENING', 'Counterparty VASP Screening', 'screening.counterparty_vasp');
-    rows += factorRow('SCREENING', 'Beneficiary Screening',       'screening.beneficiary_entity');
-    rows += factorRow('SCREENING', 'Originator Address',          'screening.originator_address');
-    rows += factorRow('SCREENING', 'Beneficiary Address',         'screening.beneficiary_address');
+    rows += factorRow('SCREENING', 'Counterparty VASP Screening', 'screening.counterparty_vasp (CLEAR | OFAC SDN | EU List | UN Security | PEP | Adverse Media | Criminal)');
+    rows += factorRow('SCREENING', 'Beneficiary Screening',       'screening.beneficiary_entity (CLEAR | OFAC SDN | EU List | UN Security | PEP | Adverse Media | Criminal)');
+    rows += factorRow('SCREENING', 'Originator Address',          'screening.originator_address (CLEAR | Mixer | Darknet | Ransomware | Sanctions Addr | Theft/Scam | Structuring)');
+    rows += factorRow('SCREENING', 'Beneficiary Address',         'screening.beneficiary_address (CLEAR | Mixer | Darknet | Ransomware | Sanctions Addr | Theft/Scam | Structuring)');
   } else {
-    rows += factorRow('SCREENING', 'Counterparty VASP Screening', 'screening.counterparty_vasp');
-    rows += factorRow('SCREENING', 'Originator Screening',        'screening.originator_entity');
-    rows += factorRow('SCREENING', 'Incoming Transaction',  'screening.incoming_tx');
+    rows += factorRow('SCREENING', 'Counterparty VASP Screening', 'screening.counterparty_vasp (CLEAR | OFAC SDN | EU List | UN Security | PEP | Adverse Media | Criminal)');
+    rows += factorRow('SCREENING', 'Originator Screening',        'screening.originator_entity (CLEAR | OFAC SDN | EU List | UN Security | PEP | Adverse Media | Criminal)');
+    rows += factorRow('SCREENING', 'Incoming Transaction',        'screening.incoming_tx (CLEAR | Mixer | Darknet | Ransomware | Sanctions Addr | Theft/Scam | Structuring)');
   }
 
   if (dir === 'outgoing') {
