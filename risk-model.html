@@ -446,8 +446,6 @@
           </thead>
           <tbody>
             <tr><td><span class="factor-domain">AMOUNT</span></td><td>Transaction Amount</td><td style="font-family:monospace;font-size:10px;color:#666">amount (USD)</td></tr>
-            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Velocity</td><td style="font-family:monospace;font-size:10px;color:#666">tx_count_24h</td></tr>
-            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Structuring Pattern</td><td style="font-family:monospace;font-size:10px;color:#666">sub_threshold_pattern</td></tr>
             <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Jurisdiction</td><td style="font-family:monospace;font-size:10px;color:#666">counterparty_jurisdiction</td></tr>
             <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>FATF List</td><td style="font-family:monospace;font-size:10px;color:#666">fatf_list_status</td></tr>
             <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>VASP Status</td><td style="font-family:monospace;font-size:10px;color:#666">vasp_status</td></tr>
@@ -719,10 +717,6 @@ var RULES = [
     cond:'Amount > 50,000 USD',
     action:'review',
     hit:false, hitNote:'3,500 < 50,000' },
-  { name:'Structuring Auto-Reject', src:'AML heuristic',
-    cond:'Sub-threshold pattern in 24h',
-    action:'reject',
-    hit:false, hitNote:'No pattern detected' },
   { name:'FATF Blacklist Reject', src:'FATF list monitoring',
     cond:'Jurisdiction on FATF Blacklist',
     action:'reject',
