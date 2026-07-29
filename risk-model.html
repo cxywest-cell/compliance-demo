@@ -218,14 +218,6 @@
       </div>
     </div>
 
-    <!-- ═══ DECISION ═══ -->
-    <div class="decision-banner">
-      <div class="decision-info">
-        <div class="decision-action" id="decisionAction">Enhanced Due Diligence (EDD) · Passive NFE — all UBOs screened</div>
-      </div>
-      <div class="decision-badge" id="decisionBadge" style="color:#d97706">REVIEW</div>
-    </div>
-
     <!-- ═══ SCREENING ═══ -->
     <div class="section-label">Screening Results
       <span style="font-size:9px;color:#888;font-weight:400;margin-left:auto">Direction:
@@ -456,19 +448,8 @@ function updateCRS() {
   document.getElementById('originatorSub').textContent =
     d.investor + ' Investor · ' + d.label + ' · UAE';
 
-  // 2. Decision banner
-  var actionMap = {
-    'Simplified':     'Simplified CDD · Institutional path — KYB verified',
-    'Standard':       'Standard CDD · SoW/SoF verified · UBOs identified',
-    'Enhanced (EDD)': 'Enhanced Due Diligence (EDD) · ' + d.label + (d.uboScreen === 'all' ? ' — ALL UBOs screened' : ' — controlling UBOs screened'),
-  };
-  document.getElementById('decisionAction').textContent = actionMap[d.cdd];
 
-  var badge = document.getElementById('decisionBadge');
-  badge.textContent = d.badge;
-  badge.style.color = d.badgeColor;
-
-  // 3. CDD onboarding summary + rules sync
+  // 2. CDD onboarding summary + rules sync
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
 
   // Update onboarding summary banner
