@@ -550,17 +550,12 @@ function updateCRS() {
   document.getElementById('onboardSummary').textContent =
     d.investor + ' Investor · CRS: ' + d.label + ' · KYB Verified · SoW/SoF ' + sowText + ' · Threshold ' + thresholdText;
 
-  // Update factor catalog + rules
+  // Factor catalog updates with CRS
   var fc = document.getElementById('factorCustType');
-  if (fc) fc.innerHTML = '<strong>' + d.investor + ' Investor</strong> <span style="color:#aaa">(' + d.label + '</span>)';
+  if (fc) fc.innerHTML = '<strong>' + d.investor + ' Investor</strong> <span style="color:#aaa">(' + d.label + ')</span>';
   var fs = document.getElementById('factorSow');
   if (fs) { fs.textContent = d.cdd === 'Simplified' ? 'N/A (Institutional)' : 'Verified'; fs.style.color = d.cdd === 'Simplified' ? '#aaa' : '#16a34a'; }
 
-  // Sync onboarding rules to CRS
-  RULES[6].hit = (d.cat === 'FI');
-  RULES[6].hitNote = d.cat === 'FI' ? 'CRS = ' + d.label : 'CRS = ' + d.label + ' (not FI)';
-  RULES[7].hit = (d.label === 'Passive NFE');
-  RULES[7].hitNote = d.label === 'Passive NFE' ? 'Customer is Passive NFE' : 'CRS = ' + d.label + ' (not Passive NFE)';
   renderRules();
 
   var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
@@ -713,14 +708,10 @@ var RULES = [
     cond:'Travel Rule Capable = No',
     action:'reject',
     hit:false, hitNote:'TR Capable = Yes' },
-  { name:'Simplified Due Diligence', src:'CRS / FATCA',
-    cond:'CRS = Financial Institution',
-    action:'pass',
-    hit:false, hitNote:'CRS = Passive NFE' },
-  { name:'Enhanced Due Diligence', src:'CRS / FATCA',
-    cond:'CRS = Passive NFE',
-    action:'review',
-    hit:true, hitNote:'Customer is Passive NFE' },
+  { name:'Not Onboarded', src:'Onboarding',
+    cond:'Customer not onboarded',
+    action:'reject',
+    hit:false, hitNote:'Customer is onboarded ✓' },
   { name:'Sanctions Hit Reject', src:'UN / OFAC / EU',
     cond:'Entity or UBO screening = Hit',
     action:'reject',
