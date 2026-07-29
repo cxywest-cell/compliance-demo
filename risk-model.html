@@ -296,6 +296,13 @@
           <div class="cdd-card">
             <div class="cdd-card-title">Onboarding Status</div>
             <div class="cdd-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+              <select id="onboardState" class="crs-dropdown" onchange="updateOnboardState()" style="margin-bottom:6px">
+                <option value="onboarded" selected>Onboarded</option>
+                <option value="pending">Pending</option>
+                <option value="labeled">Labeled</option>
+                <option value="frozen">Frozen</option>
+                <option value="offboarded">Offboarded</option>
+              </select>
               <span><span class="cdd-check">✓</span> <span id="customerTypeItem">Customer Type: Qualified Investor</span></span>
               <span style="font-size:10px;color:#888;margin-left:22px">Proof (CRS/FATCA):
                 <select id="crsSelect" class="crs-dropdown" onchange="updateCRS()">
@@ -543,9 +550,52 @@ function toggleScreenTag(el) {
   }
 }
 
+function updateOnboardState() {
+  var sel = document.getElementById('onboardState');
+  if (!sel) return;
+  var state = sel.value;
+  var labels = {
+    onboarded: 'Onboarded',
+    pending: 'Pending',
+    labeled: 'Labeled',
+    frozen: 'Frozen',
+    offboarded: 'Offboarded'
+  };
+  var icons = {
+    onboarded: '✓',
+    pending: '⏳',
+    labeled: '🏷',
+    frozen: '❄',
+    offboarded: '✕'
+  };
+  var colors = {
+    onboarded: '#16a34a',
+    pending: '#d97706',
+    labeled: '#d97706',
+    frozen: '#dc2626',
+    offboarded: '#dc2626'
+  };
+
+  // Update banner
+  var banner = sel.closest('.section-body').querySelector('div[style*="f0fdf4"]');
+  if (banner) {
+    banner.style.background = state === 'onboarded' ? '#f0fdf4' : state === 'pending' || state === 'labeled' ? '#fffbeb' : '#fef2f2';
+    banner.style.borderColor = state === 'onboarded' ? '#bbf7d0' : state === 'pending' || state === 'labeled' ? '#fde68a' : '#fecaca';
+    var titleEl = banner.querySelector('span:nth-child(2)');
+    var summaryEl = banner.querySelector('span:nth-child(3)');
+    if (titleEl) { titleEl.textContent = 'Onboarding ' + labels[state]; titleEl.style.color = colors[state]; }
+    if (banner.querySelector('span:first-child')) banner.querySelector('span:first-child').textContent = icons[state];
+  }
+
+  updateOnboardingRule();
+}
+
 function updateOnboardingRule() {
   var kybSection = document.getElementById('kybSection');
   if (!kybSection) return;
+  var onboardSel = document.getElementById('onboardState');
+  var onboardVal = onboardSel ? onboardSel.value : 'onboarded';
+  var labels = { onboarded:'Onboarded', pending:'Pending', labeled:'Labeled', frozen:'Frozen', offboarded:'Offboarded' };
   var activeTags = kybSection.querySelectorAll('.screen-tag.active');
   // Find the Onboarding & Screening rule
   var rule = null;
@@ -566,7 +616,10 @@ function updateOnboardingRule() {
       hits.push(person + ': ' + label);
     }
     rule.hit = true;
-    rule.hitNote = 'Onboarded ⚠ · ' + hits.join(' · ');
+    rule.hitNote = labels[onboardVal] + ' ⚠ · ' + hits.join(' · ');
+  } else if (onboardVal !== 'onboarded') {
+    rule.hit = true;
+    rule.hitNote = labels[onboardVal] + ' · No screening hits';
   } else {
     rule.hit = false;
     rule.hitNote = 'Onboarded ✓ · All screening clear';
@@ -746,7 +799,7 @@ function renderFactorCatalog() {
     { d:'TRAVEL RULE',  f:'Regulatory',          field:'vasp_regulatory' },
     { d:'TRAVEL RULE',  f:'Travel Rule Capable', field:'tr_capable' },
     { d:'TRAVEL RULE',  f:'IVMS101 PII',         field:'ivms101_valid' },
-    { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarded' },
+    { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarding_state' },
   ];
 
   common.forEach(function(r) {
@@ -802,7 +855,7 @@ var RULES = [
     action:'review',
     hit:false, hitNote:'PII Valid ✓' },
   { name:'Onboarding & Screening', src:'KYB / FATF R.10',
-    cond:'Not onboarded, or entity/UBO screening = Hit',
+    cond:'Onboarding != Onboarded, or entity/UBO screening = Hit',
     action:'reject',
     hit:false, hitNote:'Onboarded ✓ · All screening clear' },
   { name:'Clean Chain Auto-Pass', src:'Chain risk policy',
