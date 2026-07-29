@@ -414,19 +414,18 @@
         <span style="margin-left:auto;font-size:11px;color:#999" id="factorArrow">▼</span>
       </div>
       <div class="section-body" id="factorBody" style="padding:0">
+        <div style="padding:8px 14px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:10px">
+          <label style="font-size:11px;font-weight:600;color:#555">Direction:</label>
+          <select id="factorDirection" onchange="renderFactorCatalog()" style="font-size:11px;padding:3px 8px;border:1px solid #d0d0d0;border-radius:4px;background:#fff">
+            <option value="outgoing">Outgoing</option>
+            <option value="incoming">Incoming</option>
+          </select>
+        </div>
         <table class="rules-table">
           <thead>
             <tr><th style="width:120px">Domain</th><th>Factor</th><th style="width:200px">Field</th></tr>
           </thead>
-          <tbody>
-            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Amount Threshold</td><td style="font-family:monospace;font-size:10px;color:#666">amount_threshold (USD)</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Jurisdiction</td><td style="font-family:monospace;font-size:10px;color:#666">counterparty_jurisdiction</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>VASP Status</td><td style="font-family:monospace;font-size:10px;color:#666">vasp_status</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Regulatory</td><td style="font-family:monospace;font-size:10px;color:#666">vasp_regulatory</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Travel Rule Capable</td><td style="font-family:monospace;font-size:10px;color:#666">tr_capable</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>IVMS101 PII</td><td style="font-family:monospace;font-size:10px;color:#666">ivms101_available</td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Onboarding Status</td><td style="font-family:monospace;font-size:10px;color:#666">onboarded</td></tr>
-            <tr><td><span class="factor-domain">ON-CHAIN</span></td><td>Address Exposure</td><td style="font-family:monospace;font-size:10px;color:#666">chain_exposure</td></tr>
+          <tbody id="factorTbody">
           </tbody>
         </table>
       </div>
@@ -734,6 +733,43 @@ function updateDirection() {
   }
 }
 
+// ── Factor Catalog (direction-aware) ──
+function renderFactorCatalog() {
+  var dir = document.getElementById('factorDirection').value;
+  var rows = [
+    { d:'AMOUNT',       f:'Amount Threshold',    field:'amount_threshold (USD)' },
+    { d:'COUNTERPARTY', f:'Jurisdiction',        field:'counterparty_jurisdiction' },
+    { d:'COUNTERPARTY', f:'VASP Status',         field:'vasp_status' },
+    { d:'COUNTERPARTY', f:'Regulatory',          field:'vasp_regulatory' },
+    { d:'COUNTERPARTY', f:'Travel Rule Capable', field:'tr_capable' },
+    { d:'COUNTERPARTY', f:'IVMS101 PII',         field:'ivms101_available' },
+    { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarded' },
+  ];
+
+  if (dir === 'outgoing') {
+    rows.push(
+      { d:'SCREENING', f:'VASP Screening',       field:'screening.vasp' },
+      { d:'SCREENING', f:'Beneficiary Screening',field:'screening.beneficiary_entity' },
+      { d:'SCREENING', f:'Originator Address',   field:'screening.originator_address' },
+      { d:'SCREENING', f:'Beneficiary Address',  field:'screening.beneficiary_address' }
+    );
+  } else {
+    rows.push(
+      { d:'SCREENING', f:'VASP Screening',       field:'screening.vasp' },
+      { d:'SCREENING', f:'Originator Screening', field:'screening.originator_entity' },
+      { d:'SCREENING', f:'Incoming Transaction', field:'screening.incoming_tx' }
+    );
+  }
+
+  rows.push({ d:'ON-CHAIN', f:'Address Exposure', field:'chain_exposure' });
+
+  document.getElementById('factorTbody').innerHTML = rows.map(function(r) {
+    return '<tr><td><span class="factor-domain">' + r.d + '</span></td>' +
+      '<td>' + r.f + '</td>' +
+      '<td style="font-family:monospace;font-size:10px;color:#666">' + r.field + '</td></tr>';
+  }).join('');
+}
+
 // ── Rule Engine ──
 var RULES = [
   { name:'Travel Rule Threshold', src:'FATF R.16 · VARA',
@@ -818,6 +854,7 @@ function renderRules() {
 }
 
 renderRules();
+renderFactorCatalog();
 updateDirection();
 
 function switchTab(tab) {
