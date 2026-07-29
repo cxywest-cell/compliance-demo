@@ -442,20 +442,20 @@
       <div class="section-body" id="factorBody" style="padding:0">
         <table class="rules-table">
           <thead>
-            <tr><th style="width:120px">Domain</th><th>Factor</th><th>This Transaction</th></tr>
+            <tr><th style="width:120px">Domain</th><th>Factor</th><th style="width:200px">Field</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Transaction Amount</td><td><strong>3,500 USD</strong> <span style="color:#aaa">(at TR threshold)</span></td></tr>
-            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Velocity</td><td>1 tx / 24h</td></tr>
-            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Structuring Pattern</td><td style="color:#16a34a">Not detected</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Jurisdiction</td><td><strong>AE</strong> (UAE)</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>FATF List</td><td style="color:#16a34a">Not listed</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>VASP Status</td><td>Exempt</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Regulatory</td><td style="color:#d97706;font-weight:600">Unverified</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Travel Rule Capable</td><td style="color:#16a34a;font-weight:600">Yes</td></tr>
-            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>IVMS101 PII</td><td style="color:#16a34a">Full</td></tr>
-            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Onboarding Status</td><td id="factorSow" style="color:#16a34a">Onboarded ✓</td></tr>
-            <tr><td><span class="factor-domain">ON-CHAIN</span></td><td>Address Exposure</td><td style="color:#16a34a">None detected</td></tr>
+            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Transaction Amount</td><td style="font-family:monospace;font-size:10px;color:#666">amount (USD)</td></tr>
+            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Velocity</td><td style="font-family:monospace;font-size:10px;color:#666">tx_count_24h</td></tr>
+            <tr><td><span class="factor-domain">AMOUNT</span></td><td>Structuring Pattern</td><td style="font-family:monospace;font-size:10px;color:#666">sub_threshold_pattern</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Jurisdiction</td><td style="font-family:monospace;font-size:10px;color:#666">counterparty_jurisdiction</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>FATF List</td><td style="font-family:monospace;font-size:10px;color:#666">fatf_list_status</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>VASP Status</td><td style="font-family:monospace;font-size:10px;color:#666">vasp_status</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Regulatory</td><td style="font-family:monospace;font-size:10px;color:#666">vasp_regulatory</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>Travel Rule Capable</td><td style="font-family:monospace;font-size:10px;color:#666">tr_capable</td></tr>
+            <tr><td><span class="factor-domain">COUNTERPARTY</span></td><td>IVMS101 PII</td><td style="font-family:monospace;font-size:10px;color:#666">ivms101_available</td></tr>
+            <tr><td><span class="factor-domain">ONBOARDING</span></td><td>Onboarding Status</td><td style="font-family:monospace;font-size:10px;color:#666">onboarded</td></tr>
+            <tr><td><span class="factor-domain">ON-CHAIN</span></td><td>Address Exposure</td><td style="font-family:monospace;font-size:10px;color:#666">chain_exposure</td></tr>
           </tbody>
         </table>
       </div>
