@@ -244,7 +244,7 @@
         <div class="screen-panel-header entity">IVMS101 PII Exchange</div>
         <div class="screen-panel-body">
           <div class="screened-party">
-            <div class="sp-header">Originator <span style="font-weight:400;color:#16a34a">· Complete ✓</span></div>
+            <div class="sp-header">Originator <span style="font-weight:400;color:#16a34a">· Valid ✓</span></div>
             <div style="font-size:10px;color:#666;line-height:1.8">
               <div><strong>Lorem Mockrime LLC</strong> (legalPerson)</div>
               <div>natId: US-2024-002 · Country: USA</div>
@@ -252,7 +252,7 @@
             </div>
           </div>
           <div class="screened-party">
-            <div class="sp-header">Beneficiary <span style="font-weight:400;color:#16a34a">· Complete ✓</span></div>
+            <div class="sp-header">Beneficiary <span style="font-weight:400;color:#16a34a">· Valid ✓</span></div>
             <div style="font-size:10px;color:#666;line-height:1.8">
               <div><strong>John Doe</strong> (naturalPerson)</div>
               <div>natId: AE-1990-12345 · Country: UAE</div>
@@ -745,7 +745,7 @@ function renderFactorCatalog() {
     { d:'TRAVEL RULE',  f:'VASP Status',         field:'vasp_status' },
     { d:'TRAVEL RULE',  f:'Regulatory',          field:'vasp_regulatory' },
     { d:'TRAVEL RULE',  f:'Travel Rule Capable', field:'tr_capable' },
-    { d:'TRAVEL RULE',  f:'IVMS101 PII',         field:'ivms101_available' },
+    { d:'TRAVEL RULE',  f:'IVMS101 PII',         field:'ivms101_valid' },
     { d:'ONBOARDING',   f:'Onboarding Status',   field:'onboarded' },
   ];
 
@@ -797,6 +797,10 @@ var RULES = [
     cond:'Travel Rule Capable = No',
     action:'reject',
     hit:false, hitNote:'TR Capable = Yes' },
+  { name:'Invalid PII Review', src:'FATF R.16',
+    cond:'IVMS101 PII = Invalid',
+    action:'review',
+    hit:false, hitNote:'PII Valid ✓' },
   { name:'Onboarding & Screening', src:'KYB / FATF R.10',
     cond:'Not onboarded, or entity/UBO screening = Hit',
     action:'reject',
