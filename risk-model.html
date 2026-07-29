@@ -83,6 +83,9 @@
 
   /* Screening summary (clear state) */
   .screen-summary { display: flex; align-items: center; gap: 6px; padding: 6px 0; }
+  .screen-select { font-size: 10px; padding: 2px 4px; border-radius: 4px; border: 1px solid #d0d0d0; background: #fff; font-family: inherit; }
+  .screen-select.hit { border-color: #dc2626; background: #fef2f2; color: #dc2626; font-weight: 600; }
+  .screen-select.clear { border-color: #16a34a; background: #f0fdf4; color: #16a34a; font-weight: 600; }
 
   /* VASP identity properties */
   .vasp-prop { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: 11px; }
@@ -238,9 +241,16 @@
           <div class="screened-party">
             <div class="sp-header">Beneficiary Screening — John Doe</div>
             <div class="screen-summary">
-              <span class="rule-icon clear">✓</span>
-              <span class="rule-result clear">CLEAR</span>
-              <span style="font-size:10px;color:#888;margin-left:4px">No hits across sanctions, PEP, crime, adverse media</span>
+              <span class="rule-icon clear" id="beneIcon">✓</span>
+              <select id="beneScreen" class="screen-select clear" onchange="onScreenSelect(this, 'beneIcon')">
+                <option value="CLEAR" selected>CLEAR</option>
+                <option value="OFAC SDN List">OFAC SDN List</option>
+                <option value="EU Consolidated List">EU Consolidated List</option>
+                <option value="UN Security Council">UN Security Council</option>
+                <option value="PEP — Foreign Official">PEP — Foreign Official</option>
+                <option value="Adverse Media — Fraud">Adverse Media — Fraud</option>
+                <option value="Criminal — Drug Trafficking">Criminal — Drug Trafficking</option>
+              </select>
             </div>
           </div>
 
@@ -264,9 +274,16 @@
             <div class="sp-header">Originator Address <span style="font-weight:400;color:#888">· Outgoing</span></div>
             <div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>
             <div class="screen-summary">
-              <span class="rule-icon clear">✓</span>
-              <span class="rule-result clear">CLEAR</span>
-              <span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft. Exposure depth &gt; 5 hops</span>
+              <span class="rule-icon clear" id="chainIcon1">✓</span>
+              <select id="chainScreen1" class="screen-select clear" onchange="onScreenSelect(this, 'chainIcon1')">
+                <option value="CLEAR" selected>CLEAR</option>
+                <option value="Mixer / Tumbler (Direct)">Mixer / Tumbler (Direct)</option>
+                <option value="Darknet Market (Direct)">Darknet Market (Direct)</option>
+                <option value="Ransomware (Direct)">Ransomware (Direct)</option>
+                <option value="Sanctions Address (OFAC)">Sanctions Address (OFAC)</option>
+                <option value="Theft / Scam (Direct)">Theft / Scam (Direct)</option>
+                <option value="Structuring Pattern">Structuring Pattern</option>
+              </select>
             </div>
           </div>
 
@@ -274,9 +291,16 @@
             <div class="sp-header">Beneficiary Address <span style="font-weight:400;color:#888">· Outgoing</span></div>
             <div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>
             <div class="screen-summary">
-              <span class="rule-icon clear">✓</span>
-              <span class="rule-result clear">CLEAR</span>
-              <span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft. Exposure depth &gt; 5 hops</span>
+              <span class="rule-icon clear" id="chainIcon2">✓</span>
+              <select id="chainScreen2" class="screen-select clear" onchange="onScreenSelect(this, 'chainIcon2')">
+                <option value="CLEAR" selected>CLEAR</option>
+                <option value="Mixer / Tumbler (Direct)">Mixer / Tumbler (Direct)</option>
+                <option value="Darknet Market (Direct)">Darknet Market (Direct)</option>
+                <option value="Ransomware (Direct)">Ransomware (Direct)</option>
+                <option value="Sanctions Address (OFAC)">Sanctions Address (OFAC)</option>
+                <option value="Theft / Scam (Direct)">Theft / Scam (Direct)</option>
+                <option value="Structuring Pattern">Structuring Pattern</option>
+              </select>
             </div>
           </div>
 
@@ -320,22 +344,62 @@
               <div class="kyb-row">
                 <div class="kyb-name">Lorem Mockrime LLC</div>
                 <div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span></div>
-                <div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>
+                <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
+                  <select class="screen-select clear" onchange="onScreenSelect(this)">
+                    <option value="CLEAR" selected>CLEAR</option>
+                    <option value="OFAC SDN List">OFAC SDN List</option>
+                    <option value="EU Consolidated List">EU Consolidated List</option>
+                    <option value="UN Security Council">UN Security Council</option>
+                    <option value="PEP — Foreign Official">PEP — Foreign Official</option>
+                    <option value="Adverse Media — Fraud">Adverse Media — Fraud</option>
+                    <option value="Criminal — Money Laundering">Criminal — Money Laundering</option>
+                  </select>
+                </div>
                 <div class="kyb-sub-tier">
                   <div class="kyb-row">
                     <div class="kyb-name">Sarah Mitchell<span class="ubo-pct">38%</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
-                    <div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>
+                    <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
+                      <select class="screen-select clear" onchange="onScreenSelect(this)">
+                        <option value="CLEAR" selected>CLEAR</option>
+                        <option value="OFAC SDN List">OFAC SDN List</option>
+                        <option value="EU Consolidated List">EU Consolidated List</option>
+                        <option value="UN Security Council">UN Security Council</option>
+                        <option value="PEP — Foreign Official">PEP — Foreign Official</option>
+                        <option value="Adverse Media — Fraud">Adverse Media — Fraud</option>
+                        <option value="Criminal — Money Laundering">Criminal — Money Laundering</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="kyb-row">
                     <div class="kyb-name">James Okonkwo<span class="ubo-pct">35%</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
-                    <div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>
+                    <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
+                      <select class="screen-select clear" onchange="onScreenSelect(this)">
+                        <option value="CLEAR" selected>CLEAR</option>
+                        <option value="OFAC SDN List">OFAC SDN List</option>
+                        <option value="EU Consolidated List">EU Consolidated List</option>
+                        <option value="UN Security Council">UN Security Council</option>
+                        <option value="PEP — Foreign Official">PEP — Foreign Official</option>
+                        <option value="Adverse Media — Fraud">Adverse Media — Fraud</option>
+                        <option value="Criminal — Money Laundering">Criminal — Money Laundering</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="kyb-row">
                     <div class="kyb-name">Li Wei<span class="ubo-pct">27%</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
-                    <div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>
+                    <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
+                      <select class="screen-select clear" onchange="onScreenSelect(this)">
+                        <option value="CLEAR" selected>CLEAR</option>
+                        <option value="OFAC SDN List">OFAC SDN List</option>
+                        <option value="EU Consolidated List">EU Consolidated List</option>
+                        <option value="UN Security Council">UN Security Council</option>
+                        <option value="PEP — Foreign Official">PEP — Foreign Official</option>
+                        <option value="Adverse Media — Fraud">Adverse Media — Fraud</option>
+                        <option value="Criminal — Money Laundering">Criminal — Money Laundering</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -554,25 +618,49 @@ function updateCRS() {
   // 3. CDD section
   document.getElementById('customerTypeItem').textContent = 'Customer Type: ' + d.investor + ' Investor';
 
-  // KYB section — UBOs are sub-tier of corporate entity
-  var kybSection = document.getElementById('kybSection');
+  // Entity screening dropdown options
+  var ENTITY_HITS = '' +
+    '<option value="CLEAR">CLEAR</option>' +
+    '<option value="OFAC SDN List">OFAC SDN List</option>' +
+    '<option value="EU Consolidated List">EU Consolidated List</option>' +
+    '<option value="UN Security Council">UN Security Council</option>' +
+    '<option value="PEP — Foreign Official">PEP — Foreign Official</option>' +
+    '<option value="Adverse Media — Fraud">Adverse Media — Fraud</option>' +
+    '<option value="Criminal — Money Laundering">Criminal — Money Laundering</option>';
+
+  var CHAIN_HITS = '' +
+    '<option value="CLEAR">CLEAR</option>' +
+    '<option value="Mixer / Tumbler (Direct)">Mixer / Tumbler (Direct)</option>' +
+    '<option value="Darknet Market (Direct)">Darknet Market (Direct)</option>' +
+    '<option value="Ransomware (Direct)">Ransomware (Direct)</option>' +
+    '<option value="Sanctions Address (OFAC)">Sanctions Address (OFAC)</option>' +
+    '<option value="Theft / Scam (Direct)">Theft / Scam (Direct)</option>' +
+    '<option value="Structuring Pattern">Structuring Pattern</option>';
+
+  var screenIdCounter = 0;
+
+  function screenSelect(opts) {
+    var id = 'screenIcon_' + (screenIdCounter++);
+    return '<select class="screen-select clear" onchange="onScreenSelect(this, \'' + id + '\')">' + opts + '</select>';
+  }
 
   function uboRow(name, pct) {
     return '<div class="kyb-row">' +
       '<div class="kyb-name">' + name + '<span class="ubo-pct">' + pct + '</span></div>' +
       '<div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>' +
-      '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>' +
+      '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenSelect(ENTITY_HITS) + '</div>' +
     '</div>';
   }
 
   var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
 
+  var kybSection = document.getElementById('kybSection');
   kybSection.innerHTML =
     '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
     '<div class="kyb-row">' +
       '<div class="kyb-name">Lorem Mockrime LLC</div>' +
       '<div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Registration ✓</span><span class="ubo-tag ok">License ✓</span><span class="ubo-tag ok">Legal Docs ✓</span></div>' +
-      '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span><span class="ubo-tag ok">Sanc ✓</span><span class="ubo-tag ok">PEP ✓</span><span class="ubo-tag ok">Crime ✓</span></div>' +
+      '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenSelect(ENTITY_HITS) + '</div>' +
       (d.uboScreen === 'none'
         ? ''
         : '<div class="kyb-sub-tier">' + ubos + '</div>') +
@@ -635,6 +723,16 @@ function updateFin() {
   }
 }
 
+function onScreenSelect(sel, iconId) {
+  if (sel.value === 'CLEAR') {
+    sel.className = 'screen-select clear';
+    if (iconId) { var el = document.getElementById(iconId); if (el) { el.className = 'rule-icon clear'; el.textContent = '✓'; } }
+  } else {
+    sel.className = 'screen-select hit';
+    if (iconId) { var el2 = document.getElementById(iconId); if (el2) { el2.className = 'rule-icon hit'; el2.textContent = '✗'; } }
+  }
+}
+
 function updateDirection() {
   var dir = document.getElementById('txDirection').value;
   var body = document.getElementById('onchainBody');
@@ -644,22 +742,19 @@ function updateDirection() {
       '<div class="screened-party">' +
         '<div class="sp-header">Originator Address <span style="font-weight:400;color:#888">· Outgoing</span></div>' +
         '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xCA79D8bcF574956736E5B1C0F0f73ABF458F2d26</div>' +
-        '<div class="screen-summary"><span class="rule-icon clear">✓</span><span class="rule-result clear">CLEAR</span>' +
-        '<span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft. Exposure depth &gt; 5 hops</span></div>' +
+        '<div class="screen-summary"><select class="screen-select clear" onchange="onScreenSelect(this)">' + CHAIN_HITS + '</select></div>' +
       '</div>' +
       '<div class="screened-party">' +
         '<div class="sp-header">Beneficiary Address <span style="font-weight:400;color:#888">· Outgoing</span></div>' +
         '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20BED6c015a8e9579eae17762aA65d78d2E0b75</div>' +
-        '<div class="screen-summary"><span class="rule-icon clear">✓</span><span class="rule-result clear">CLEAR</span>' +
-        '<span style="font-size:10px;color:#888;margin-left:4px">No exposure: mixer, darknet, ransomware, sanctions, theft. Exposure depth &gt; 5 hops</span></div>' +
+        '<div class="screen-summary"><select class="screen-select clear" onchange="onScreenSelect(this)">' + CHAIN_HITS + '</select></div>' +
       '</div>';
   } else {
     body.innerHTML =
       '<div class="screened-party">' +
         '<div class="sp-header">Incoming Transaction <span style="font-weight:400;color:#888">· Incoming</span></div>' +
         '<div style="font-size:10px;color:#888;margin-bottom:8px;font-family:monospace">0xb20B…0b75 ← 0xCA79…2d26 · 3,500 USDT</div>' +
-        '<div class="screen-summary"><span class="rule-icon clear">✓</span><span class="rule-result clear">CLEAR</span>' +
-        '<span style="font-size:10px;color:#888;margin-left:4px">Tx hash verified on-chain. No exposure: mixer, darknet, ransomware, sanctions, theft. Counterparty VASP screening relied upon.</span></div>' +
+        '<div class="screen-summary"><select class="screen-select clear" onchange="onScreenSelect(this)">' + CHAIN_HITS + '</select></div>' +
       '</div>';
   }
 }
