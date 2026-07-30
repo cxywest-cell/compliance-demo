@@ -332,11 +332,31 @@
                 </select>
               </span>
             </div>
-            <div id="kybSection">
-              <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>
+            <div id="identitySection">
+              <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">Identity Verification</div>
               <div class="kyb-row">
                 <div class="kyb-name">Lorem Mockrime LLC</div>
                 <div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
+                <div class="kyb-sub-tier">
+                  <div class="kyb-row">
+                    <div class="kyb-name">Sarah Mitchell<span class="ubo-pct">38%</span></div>
+                    <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
+                  </div>
+                  <div class="kyb-row">
+                    <div class="kyb-name">James Okonkwo<span class="ubo-pct">35%</span></div>
+                    <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
+                  </div>
+                  <div class="kyb-row">
+                    <div class="kyb-name">Li Wei<span class="ubo-pct">27%</span></div>
+                    <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="screeningSection">
+              <div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">Screening</div>
+              <div class="kyb-row">
+                <div class="kyb-name">Lorem Mockrime LLC</div>
                 <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                   <div class="screen-tags">
                     <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
@@ -351,7 +371,6 @@
                 <div class="kyb-sub-tier">
                   <div class="kyb-row">
                     <div class="kyb-name">Sarah Mitchell<span class="ubo-pct">38%</span></div>
-                    <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                       <div class="screen-tags">
                         <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
@@ -366,7 +385,6 @@
                   </div>
                   <div class="kyb-row">
                     <div class="kyb-name">James Okonkwo<span class="ubo-pct">35%</span></div>
-                    <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                       <div class="screen-tags">
                         <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
@@ -381,7 +399,6 @@
                   </div>
                   <div class="kyb-row">
                     <div class="kyb-name">Li Wei<span class="ubo-pct">27%</span></div>
-                    <div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>
                     <div class="kyb-prop"><span class="kyb-prop-label">Screening</span>
                       <div class="screen-tags">
                         <span class="screen-clear-badge">CLEAR</span> <span class="screen-or">or</span>
@@ -482,18 +499,29 @@ function updateCRS() {
   document.getElementById('onboardSummary').textContent =
     d.investor + ' Investor · CRS: ' + d.label + ' · KYB Verified · SoW/SoF ' + sowText + ' · Threshold ' + thresholdText;
 
-  var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
+  var ubosIdentity = uboRowIdentity('Sarah Mitchell', '38%') + uboRowIdentity('James Okonkwo', '35%') + uboRowIdentity('Li Wei', '27%');
+  var ubosScreening = uboRowScreening('Sarah Mitchell', '38%') + uboRowScreening('James Okonkwo', '35%') + uboRowScreening('Li Wei', '27%');
 
-  var kybSection = document.getElementById('kybSection');
-  kybSection.innerHTML =
-  '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">KYB</div>' +
+  var identitySection = document.getElementById('identitySection');
+  identitySection.innerHTML =
+  '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">Identity Verification</div>' +
   '<div class="kyb-row">' +
     '<div class="kyb-name">Lorem Mockrime LLC</div>' +
     '<div class="kyb-prop"><span class="kyb-prop-label">Corporate Identity</span><span class="ubo-tag ok">Verified ✓</span></div>' +
+    (d.uboScreen === 'none'
+      ? ''
+      : '<div class="kyb-sub-tier">' + ubosIdentity + '</div>') +
+  '</div>';
+
+  var screeningSection = document.getElementById('screeningSection');
+  screeningSection.innerHTML =
+  '<div style="font-size:11px;font-weight:700;color:#555;margin:8px 0 6px;padding-bottom:4px;border-bottom:1px solid #f0f0f0">Screening</div>' +
+  '<div class="kyb-row">' +
+    '<div class="kyb-name">Lorem Mockrime LLC</div>' +
     '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenTags(ENTITY_HIT_LABELS) + '</div>' +
     (d.uboScreen === 'none'
       ? ''
-      : '<div class="kyb-sub-tier">' + ubos + '</div>') +
+      : '<div class="kyb-sub-tier">' + ubosScreening + '</div>') +
   '</div>';
 
   // SoW/SoF rows — Institutional (Simplified) doesn't require these
@@ -520,9 +548,9 @@ function toggleScreenTag(el) {
   if (anyActive) { clearBadge.classList.add('hidden'); orEl.classList.add('hidden'); }
   else { clearBadge.classList.remove('hidden'); orEl.classList.remove('hidden'); }
 
-  // If this tag is inside the KYB section, update the onboarding & screening rule
-  var kybSection = document.getElementById('kybSection');
-  if (kybSection && kybSection.contains(el)) {
+  // If this tag is inside the screening section, update the onboarding & screening rule
+  var screeningSection = document.getElementById('screeningSection');
+  if (screeningSection && screeningSection.contains(el)) {
     updateOnboardingRule();
   }
 }
@@ -587,10 +615,16 @@ function screenTags(labels) {
 
 var screenIdCounter = 0;
 
-function uboRow(name, pct) {
+function uboRowIdentity(name, pct) {
   return '<div class="kyb-row">' +
     '<div class="kyb-name">' + name + '<span class="ubo-pct">' + pct + '</span></div>' +
     '<div class="kyb-prop"><span class="kyb-prop-label">Identity</span><span class="ubo-tag ok">Verified ✓</span></div>' +
+  '</div>';
+}
+
+function uboRowScreening(name, pct) {
+  return '<div class="kyb-row">' +
+    '<div class="kyb-name">' + name + '<span class="ubo-pct">' + pct + '</span></div>' +
     '<div class="kyb-prop"><span class="kyb-prop-label">Screening</span>' + screenTags(ENTITY_HIT_LABELS) + '</div>' +
   '</div>';
 }
