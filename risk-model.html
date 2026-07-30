@@ -760,7 +760,7 @@ function renderFactorCatalog() {
     rows += factorRow('DECISION', 'Decision', 'decision (auto_reject | submit_for_review.review_flow_id)');
     rows += factorRow('DECISION', 'Scope', 'scope (global | merchant:<id>)');
   } else {
-    rows += factorRow('DECISION', 'Decision', 'decision (hold_for_review.review_flow_id)');
+    rows += factorRow('DECISION', 'Decision', 'decision (auto_reject | hold_for_review.review_flow_id)');
     rows += factorRow('DECISION', 'Scope', 'scope (global | merchant:<id>)');
   }
 
