@@ -431,34 +431,6 @@
       </div>
     </div>
 
-    <!-- Active Rules -->
-    <div class="section">
-      <div class="section-header">
-        <span class="rule-tier-badge universal">RULES</span>
-        <div class="section-title">Active Rules <span style="font-weight:400;color:#aaa;font-size:11px">— each rule is independent, evaluated against this transaction</span></div>
-      </div>
-      <div class="section-body" style="padding:0">
-        <table class="rules-table">
-          <thead>
-            <tr><th style="width:180px">Rule</th><th>Condition (When)</th><th style="width:130px">Action</th><th style="width:170px">Result</th></tr>
-          </thead>
-          <tbody id="rulesBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Evaluation -->
-    <div class="rules-summary">
-      <div class="rules-summary-box" id="rulesSummary">
-        <span class="rules-summary-icon">⚖</span>
-        <div id="rulesSummaryText"></div>
-      </div>
-    </div>
-
-    <div style="text-align:center;padding:12px;color:#aaa;font-size:10px">
-      Priority: Auto Reject &gt; Submit for Review &gt; Auto Pass. If multiple rules trigger, the most severe action wins.
-    </div>
-
     </div><!-- /tab-rules -->
 
   </div>
@@ -502,8 +474,6 @@ function updateCRS() {
   var thresholdText = document.getElementById('finSelect') ? document.getElementById('finSelect').value : 'Met';
   document.getElementById('onboardSummary').textContent =
     d.investor + ' Investor · CRS: ' + d.label + ' · KYB Verified · SoW/SoF ' + sowText + ' · Threshold ' + thresholdText;
-
-  renderRules();
 
   var ubos = uboRow('Sarah Mitchell', '38%') + uboRow('James Okonkwo', '35%') + uboRow('Li Wei', '27%');
 
@@ -591,40 +561,7 @@ function updateOnboardState() {
 }
 
 function updateOnboardingRule() {
-  var kybSection = document.getElementById('kybSection');
-  if (!kybSection) return;
-  var onboardSel = document.getElementById('onboardState');
-  var onboardVal = onboardSel ? onboardSel.value : 'onboarded';
-  var labels = { onboarded:'Onboarded', pending:'Pending', labeled:'Labeled', frozen:'Frozen', offboarded:'Offboarded' };
-  var activeTags = kybSection.querySelectorAll('.screen-tag.active');
-  // Find the Onboarding & Screening rule
-  var rule = null;
-  for (var i = 0; i < RULES.length; i++) {
-    if (RULES[i].name === 'Onboarding & Screening') { rule = RULES[i]; break; }
-  }
-  if (!rule) return;
-
-  if (activeTags.length > 0) {
-    var hits = [];
-    for (var j = 0; j < activeTags.length; j++) {
-      var tag = activeTags[j];
-      var label = tag.textContent;
-      // Walk up to find who this tag belongs to
-      var row = tag.closest('.kyb-row');
-      var nameEl = row ? row.querySelector('.kyb-name') : null;
-      var person = nameEl ? nameEl.textContent.trim() : 'Unknown';
-      hits.push(person + ': ' + label);
-    }
-    rule.hit = true;
-    rule.hitNote = labels[onboardVal] + ' ⚠ · ' + hits.join(' · ');
-  } else if (onboardVal !== 'onboarded') {
-    rule.hit = true;
-    rule.hitNote = labels[onboardVal] + ' · No screening hits';
-  } else {
-    rule.hit = false;
-    rule.hitNote = 'Onboarded ✓ · All screening clear';
-  }
-  renderRules();
+  // No-op: rules table removed, screening tags still toggle visually
 }
 
 var ENTITY_HIT_LABELS = ['OFAC SDN', 'EU List', 'UN Security', 'PEP', 'Adverse Media', 'Criminal'];
@@ -834,94 +771,6 @@ function factorRow(d, f, field) {
     '<td style="font-family:monospace;font-size:10px;color:#666">' + field + '</td></tr>';
 }
 
-// ── Rule Engine ──
-var RULES = [
-  { name:'Travel Rule Threshold', src:'FATF R.16 · VARA',
-    cond:'Amount ≥ 3,500 USD',
-    action:'review',
-    hit:true, hitNote:'3,500 ≥ threshold' },
-  { name:'High-Value Review', src:'Internal policy',
-    cond:'Amount > 50,000 USD',
-    action:'review',
-    hit:false, hitNote:'3,500 < 50,000' },
-  { name:'FATF Blacklist Reject', src:'FATF list monitoring',
-    cond:'Jurisdiction on FATF Blacklist',
-    action:'reject',
-    hit:false, hitNote:'AE not on blacklist' },
-  { name:'Unverified VASP Review', src:'VASP directory',
-    cond:'Regulatory = Unverified',
-    action:'review',
-    hit:true, hitNote:'Counterparty is Unverified' },
-  { name:'Non-TR Reject', src:'FATF R.16',
-    cond:'Travel Rule Capable = No',
-    action:'reject',
-    hit:false, hitNote:'TR Capable = Yes' },
-  { name:'Invalid PII Review', src:'FATF R.16',
-    cond:'IVMS101 PII = Invalid',
-    action:'review',
-    hit:false, hitNote:'PII Valid ✓' },
-  { name:'Onboarding & Screening', src:'KYB / FATF R.10',
-    cond:'Onboarding != Onboarded, or entity/UBO screening = Hit',
-    action:'reject',
-    hit:false, hitNote:'Onboarded ✓ · All screening clear' },
-  { name:'Clean Chain Auto-Pass', src:'Chain risk policy',
-    cond:'No mixer/darknet/sanctions exposure',
-    action:'pass',
-    hit:true, hitNote:'No exposure detected' },
-  { name:'Mixer Exposure Reject', src:'Chain risk policy',
-    cond:'Direct mixer exposure',
-    action:'reject',
-    hit:false, hitNote:'No mixer exposure' },
-];
-
-var ACTION_META = {
-  pass:   { label:'Auto Pass',         cls:'action-pass' },
-  reject: { label:'Auto Reject',       cls:'action-reject' },
-  review: { label:'Submit for Review', cls:'action-review' },
-};
-
-function renderRules() {
-  var body = document.getElementById('rulesBody');
-  if (!body) return;
-  var html = '';
-  for (var i = 0; i < RULES.length; i++) {
-    var r = RULES[i];
-    var a = ACTION_META[r.action];
-    html += '<tr class="' + (r.hit ? 'rule-triggered' : 'rule-miss') + '">';
-    html += '<td><strong>' + r.name + '</strong><div class="rule-src">' + r.src + '</div></td>';
-    html += '<td style="font-size:11px">' + r.cond + '</td>';
-    html += '<td><span class="rs ' + a.cls + '">' + a.label + '</span></td>';
-    if (r.hit) {
-      html += '<td><span style="color:#d97706;font-weight:600">✓ Triggered</span><div class="rule-note">' + r.hitNote + '</div></td>';
-    } else {
-      html += '<td><span style="color:#aaa">○ Not triggered</span><div class="rule-note">' + r.hitNote + '</div></td>';
-    }
-    html += '</tr>';
-  }
-  body.innerHTML = html;
-
-  var hits = RULES.filter(function(r) { return r.hit; });
-  var anyReject = hits.some(function(r) { return r.action === 'reject'; });
-  var anyReview = hits.some(function(r) { return r.action === 'review'; });
-
-  var box = document.getElementById('rulesSummary');
-  var txt = document.getElementById('rulesSummaryText');
-
-  if (anyReject) {
-    box.style.background = '#fef2f2'; box.style.borderColor = '#fecaca';
-    var rejectNames = hits.filter(function(r){return r.action==='reject';}).map(function(r){return r.name;}).join(' · ');
-    txt.innerHTML = '<strong style="color:#dc2626">FINAL: AUTO REJECT</strong><br>' + rejectNames;
-  } else if (anyReview) {
-    box.style.background = '#fffbeb'; box.style.borderColor = '#fcd34d';
-    var reviewNames = hits.filter(function(r){return r.action==='review';}).map(function(r){return r.name;}).join(' · ');
-    txt.innerHTML = '<strong style="color:#d97706">FINAL: SUBMIT FOR REVIEW</strong><br>' + reviewNames;
-  } else {
-    box.style.background = '#f0fdf4'; box.style.borderColor = '#bbf7d0';
-    txt.innerHTML = '<strong style="color:#16a34a">FINAL: AUTO APPROVE</strong><br>All triggered rules are Auto Pass.';
-  }
-}
-
-renderRules();
 renderFactorCatalog();
 updateDirection();
 
