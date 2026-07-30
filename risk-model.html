@@ -757,12 +757,10 @@ function renderFactorCatalog() {
   }
 
   if (dir === 'outgoing') {
-    rows += factorRow('DECISION', 'Decision', 'decision (auto_reject | submit_for_review)');
-    rows += factorRow('DECISION', 'Reviewer', 'reviewer (compliance_team | risk_team | ops_team)');
+    rows += factorRow('DECISION', 'Decision', 'decision (auto_reject | submit_for_review.reviewer)');
     rows += factorRow('DECISION', 'Scope', 'scope (global | merchant:<id>)');
   } else {
-    rows += factorRow('DECISION', 'Decision', 'decision (hold_for_review)');
-    rows += factorRow('DECISION', 'Reviewer', 'reviewer (compliance_team | risk_team | ops_team)');
+    rows += factorRow('DECISION', 'Decision', 'decision (hold_for_review.reviewer)');
     rows += factorRow('DECISION', 'Scope', 'scope (global | merchant:<id>)');
   }
 
